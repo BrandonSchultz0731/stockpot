@@ -66,6 +66,9 @@ yarn-error.log
 # testing
 /coverage
 
+# NestJS server
+server/dist/
+
 # Yarn
 .yarn/*
 !.yarn/patches
