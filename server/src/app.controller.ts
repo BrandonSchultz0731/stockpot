@@ -14,4 +14,9 @@ export class AppController {
   getHealth(): { status: string } {
     return { status: 'ok' };
   }
+
+  @Get('recipes')
+  getRecipes() {
+    return this.appService.getRecipes();
+  }
 }
