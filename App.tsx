@@ -1,11 +1,7 @@
+import './global.css';
+
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import API_BASE_URL from './config';
 
 interface Recipe {
@@ -34,32 +30,36 @@ function App() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#333" />
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#16213E" />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.error}>{error}</Text>
+      <View className="flex-1 items-center justify-center bg-white">
+        <Text className="text-center text-base text-danger px-6">{error}</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>StockPot Recipes</Text>
+    <View className="flex-1 bg-white pt-[60px]">
+      <Text className="text-[28px] font-bold text-center mb-4 text-navy">
+        StockPot Recipes
+      </Text>
       <FlatList
         data={recipes}
         keyExtractor={item => String(item.id)}
-        contentContainerStyle={styles.list}
+        contentContainerClassName="px-4"
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.description}>{item.description}</Text>
-            <Text style={styles.times}>
+          <View className="bg-cream rounded-card p-4 mb-3">
+            <Text className="text-lg font-semibold text-dark mb-1">
+              {item.name}
+            </Text>
+            <Text className="text-sm text-body mb-2">{item.description}</Text>
+            <Text className="text-xs text-muted">
               Prep: {item.prepTime}min | Cook: {item.cookTime}min
             </Text>
           </View>
@@ -68,50 +68,5 @@ function App() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    paddingTop: 60,
-  },
-  header: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 16,
-    color: '#000000',
-  },
-  list: {
-    paddingHorizontal: 16,
-  },
-  card: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 4,
-  },
-  description: {
-    fontSize: 14,
-    color: '#555555',
-    marginBottom: 8,
-  },
-  times: {
-    fontSize: 12,
-    color: '#888888',
-  },
-  error: {
-    fontSize: 16,
-    color: '#cc0000',
-    textAlign: 'center',
-    paddingHorizontal: 24,
-  },
-});
 
 export default App;
