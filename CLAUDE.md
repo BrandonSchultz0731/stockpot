@@ -22,7 +22,7 @@ After installing native dependencies in the app, run `cd ios && pod install`.
 - NativeWind v4 + Tailwind CSS 3 for styling
 - React Navigation (native-stack)
 - TanStack Query for data fetching/mutations
-- AsyncStorage for token persistence
+- react-native-keychain for secure token storage (iOS Keychain / Android Keystore)
 - Lucide React Native for icons
 - Design tokens in `theme/colors.js`
 

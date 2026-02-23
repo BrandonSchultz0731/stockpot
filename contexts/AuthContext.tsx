@@ -7,10 +7,10 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Keychain from 'react-native-keychain';
 import { setAccessToken } from '../services/api';
 
-const STORAGE_KEY = '@stockpot_auth';
+const KEYCHAIN_SERVICE = 'stockpot-auth';
 
 interface TokenPair {
   accessToken: string;
@@ -32,12 +32,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Hydrate tokens from AsyncStorage on mount
+  // Hydrate tokens from Keychain on mount
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then(raw => {
-        if (raw) {
-          const tokens: TokenPair = JSON.parse(raw);
+    Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE })
+      .then(result => {
+        if (result) {
+          const tokens: TokenPair = JSON.parse(result.password);
           setAccessTokenState(tokens.accessToken);
           setRefreshToken(tokens.refreshToken);
           setAccessToken(tokens.accessToken);
@@ -47,14 +47,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveTokens = useCallback(async (tokens: TokenPair) => {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(tokens));
+    await Keychain.setGenericPassword('tokens', JSON.stringify(tokens), {
+      service: KEYCHAIN_SERVICE,
+    });
     setAccessTokenState(tokens.accessToken);
     setRefreshToken(tokens.refreshToken);
     setAccessToken(tokens.accessToken);
   }, []);
 
   const clearTokens = useCallback(async () => {
-    await AsyncStorage.removeItem(STORAGE_KEY);
+    await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
     setAccessTokenState(null);
     setRefreshToken(null);
     setAccessToken(null);
