@@ -6,6 +6,7 @@ interface ButtonProps {
   label: string;
   onPress?: () => void;
   variant?: ButtonVariant;
+  disabled?: boolean;
   className?: string;
 }
 
@@ -34,6 +35,7 @@ export default function Button({
   label,
   onPress,
   variant = 'primary',
+  disabled = false,
   className = '',
 }: ButtonProps) {
   const v = variantStyles[variant];
@@ -41,6 +43,8 @@ export default function Button({
   return (
     <Pressable
       className={`flex-row items-center justify-center rounded-button ${v.container} ${className}`}
+      style={disabled ? { opacity: 0.5 } : undefined}
+      disabled={disabled}
       onPress={onPress}>
       <Text className={v.text} style={{ fontWeight: v.weight }}>
         {label}

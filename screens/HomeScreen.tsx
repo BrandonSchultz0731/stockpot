@@ -1,8 +1,12 @@
-import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import API_BASE_URL from '../config';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../services/api';
+import { ROUTES } from '../services/routes';
+import { QUERY_KEYS } from '../services/queryKeys';
+import { useAuth } from '../contexts/AuthContext';
 import colors from '../theme/colors';
+import Button from '../components/Button';
 
 interface Recipe {
   id: number;
@@ -13,22 +17,23 @@ interface Recipe {
 }
 
 export default function HomeScreen() {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { clearTokens, refreshToken } = useAuth();
 
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/recipes`)
-      .then(res => {
-        if (!res.ok) throw new Error(`Server error: ${res.status}`);
-        return res.json();
-      })
-      .then(data => setRecipes(data))
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: recipes, isLoading, error } = useQuery({
+    queryKey: QUERY_KEYS.RECIPES,
+    queryFn: () => api.get<Recipe[]>(ROUTES.RECIPES),
+  });
 
-  if (loading) {
+  const handleSignOut = async () => {
+    try {
+      await api.post(ROUTES.AUTH.LOGOUT, { refreshToken });
+    } catch {
+      // best-effort logout
+    }
+    await clearTokens();
+  };
+
+  if (isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" color={colors.navy.DEFAULT} />
@@ -39,16 +44,26 @@ export default function HomeScreen() {
   if (error) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <Text className="text-center text-base text-danger px-6">{error}</Text>
+        <Text className="text-center text-base text-danger px-6">
+          {error.message}
+        </Text>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <Text className="text-[28px] font-bold text-center mb-4 text-navy">
-        StockPot Recipes
-      </Text>
+      <View className="flex-row items-center justify-between px-4 mb-4">
+        <Text className="text-[28px] font-bold text-navy">
+          StockPot Recipes
+        </Text>
+        <Button
+          variant="outline"
+          label="Sign Out"
+          onPress={handleSignOut}
+          className="px-3 py-1.5"
+        />
+      </View>
       <FlatList
         data={recipes}
         keyExtractor={item => String(item.id)}

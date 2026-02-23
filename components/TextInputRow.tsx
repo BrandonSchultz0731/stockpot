@@ -29,7 +29,7 @@ export default function TextInputRow({
       className={`flex-row items-center bg-white rounded-input border border-border px-3.5 py-3 gap-2.5 ${className}`}>
       {Icon && <Icon size={18} color={colors.muted} />}
       <TextInput
-        className="flex-1 text-sm text-dark p-0"
+        className="flex-1 text-[14px] leading-[18px] text-dark"
         placeholderTextColor={colors.muted}
         {...inputProps}
       />
