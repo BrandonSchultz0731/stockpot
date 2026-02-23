@@ -15,12 +15,23 @@ import colors from '../theme/colors';
 import Button from '../components/Button';
 import TextInputRow from '../components/TextInputRow';
 import Divider from '../components/Divider';
+import { useLoginMutation } from '../hooks/useLoginMutation';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const { mutateAsync, isPending, error } = useLoginMutation();
+
+  const handleLogin = async () => {
+    try {
+      await mutateAsync({ email, password });
+    } catch {
+      // error is captured by mutation state
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-cream">
@@ -49,6 +60,14 @@ export default function LoginScreen() {
 
           {/* Form */}
           <View className="px-6 flex-1">
+            {error && (
+              <View className="bg-danger-pale rounded-input px-4 py-3 mb-3">
+                <Text className="text-sm text-danger">
+                  {error.message}
+                </Text>
+              </View>
+            )}
+
             <TextInputRow
               icon={Mail}
               placeholder="Email address"
@@ -90,8 +109,9 @@ export default function LoginScreen() {
             </Pressable>
 
             <Button
-              label="Log In"
-              onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Home' }] })}
+              label={isPending ? 'Logging in...' : 'Log In'}
+              onPress={handleLogin}
+              disabled={isPending || !email || !password}
               className="mb-5"
             />
 

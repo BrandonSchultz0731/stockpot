@@ -16,6 +16,7 @@ import colors from '../theme/colors';
 import Button from '../components/Button';
 import TextInputRow from '../components/TextInputRow';
 import Divider from '../components/Divider';
+import { useRegisterMutation } from '../hooks/useRegisterMutation';
 
 function getStrengthColors(password: string) {
   let score = 0;
@@ -37,8 +38,40 @@ export default function SignUpScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
+  const { mutateAsync, isPending, error } = useRegisterMutation();
   const strengthColors = getStrengthColors(password);
+
+  const displayError = validationError ?? error?.message ?? null;
+
+  const handleRegister = async () => {
+    setValidationError(null);
+
+    if (password.length < 8) {
+      setValidationError('Password must be at least 8 characters');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setValidationError('Passwords do not match');
+      return;
+    }
+    if (!agreedToTerms) {
+      setValidationError('You must agree to the Terms of Service');
+      return;
+    }
+
+    try {
+      await mutateAsync({
+        email,
+        password,
+        firstName,
+        ...(lastName ? { lastName } : {}),
+      });
+    } catch {
+      // error is captured by mutation state
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-cream">
@@ -67,6 +100,14 @@ export default function SignUpScreen() {
 
           {/* Form */}
           <View className="px-6 flex-1">
+            {displayError && (
+              <View className="bg-danger-pale rounded-input px-4 py-3 mb-3">
+                <Text className="text-sm text-danger">
+                  {displayError}
+                </Text>
+              </View>
+            )}
+
             {/* Name row — stays inline (unique side-by-side layout) */}
             <View className="flex-row gap-2.5 mb-3">
               <View className="flex-1 flex-row items-center bg-white rounded-input border border-border px-3.5 py-3 gap-2.5">
@@ -173,10 +214,9 @@ export default function SignUpScreen() {
             </Pressable>
 
             <Button
-              label="Create Account"
-              onPress={() =>
-                navigation.reset({ index: 0, routes: [{ name: 'Home' }] })
-              }
+              label={isPending ? 'Creating account...' : 'Create Account'}
+              onPress={handleRegister}
+              disabled={isPending}
               className="mb-4"
             />
 
