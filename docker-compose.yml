@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: stockpot-postgres
+    environment:
+      POSTGRES_USER: stockpot
+      POSTGRES_PASSWORD: stockpot_dev
+      POSTGRES_DB: stockpot
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
