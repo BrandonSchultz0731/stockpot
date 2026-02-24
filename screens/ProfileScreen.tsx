@@ -258,7 +258,7 @@ function NutritionGoalsCard({
           label={row.label}
           value={row.value}
           color={row.color}
-          progress={0}
+          progress={Math.random()} // TODO: Get real data
           isLast={i === rows.length - 1}
         />
       ))}
