@@ -7,6 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { UserSession } from './user-session.entity';
+import { SubscriptionTier } from '@shared/enums';
 import type { DietaryProfile, NutritionalGoals } from '@shared/enums';
 
 @Entity('users')
@@ -38,6 +39,14 @@ export class User {
     default: false,
   })
   onboardingComplete: boolean;
+
+  @Column({
+    type: 'varchar',
+    length: 20,
+    name: 'subscription_tier',
+    default: SubscriptionTier.Free,
+  })
+  subscriptionTier: SubscriptionTier;
 
   @Column({ type: 'jsonb', name: 'dietary_profile', nullable: true })
   dietaryProfile: DietaryProfile;

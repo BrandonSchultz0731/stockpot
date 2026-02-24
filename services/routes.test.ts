@@ -13,6 +13,10 @@ describe('ROUTES', () => {
     expect(ROUTES.USERS.COMPLETE_ONBOARDING).toBe('/users/me/onboarding');
   });
 
+  it('should have correct usage routes', () => {
+    expect(ROUTES.USAGE.CURRENT).toBe('/usage/current');
+  });
+
   it('should have correct recipes route', () => {
     expect(ROUTES.RECIPES).toBe('/recipes');
   });

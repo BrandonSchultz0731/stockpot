@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { UsageTrackingModule } from './usage-tracking/usage-tracking.module';
 
 @Module({
   imports: [
@@ -16,11 +17,14 @@ import { AuthModule } from './auth/auth.module';
         type: 'postgres',
         url: config.get<string>('DATABASE_URL'),
         autoLoadEntities: true,
-        synchronize: true, // dev only — use migrations in production
+        synchronize: false,
+        migrations: [__dirname + '/migrations/*{.ts,.js}'],
+        migrationsRun: true,
       }),
     }),
     UsersModule,
     AuthModule,
+    UsageTrackingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

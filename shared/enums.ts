@@ -1,3 +1,9 @@
+export enum SubscriptionTier {
+  Free = 'Free',
+  Plus = 'Plus',
+  Pro = 'Pro',
+}
+
 export enum DietaryPreference {
   Vegetarian = 'Vegetarian',
   Vegan = 'Vegan',
