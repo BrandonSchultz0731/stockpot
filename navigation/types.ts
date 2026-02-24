@@ -15,10 +15,20 @@ export type OnboardingParamList = {
 
 export type TabParamList = {
   Home: undefined;
-  Pantry: undefined;
+  PantryStack: undefined;
   Meals: undefined;
   AIChef: undefined;
   Profile: undefined;
+};
+
+export type PantryStackParamList = {
+  PantryList: undefined;
+  AddItemPicker: undefined;
+  ReceiptScan: undefined;
+  ReceiptReview: { items: Partial<import('../hooks/usePantryMutations').CreatePantryItemRequest>[] };
+  BarcodeScan: undefined;
+  ManualEntry: undefined;
+  EditItem: { item: import('../hooks/usePantryQuery').PantryItem };
 };
 
 declare global {

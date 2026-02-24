@@ -13,4 +13,15 @@ export const ROUTES = {
     CURRENT: '/usage/current',
   },
   RECIPES: '/recipes',
+  FOOD: {
+    SEARCH: '/food/search',
+    BARCODE: (code: string) => `/food/barcode/${code}`,
+  },
+  PANTRY: {
+    LIST: '/pantry',
+    CREATE: '/pantry',
+    BULK_CREATE: '/pantry/bulk',
+    UPDATE: (id: string) => `/pantry/${id}`,
+    DELETE: (id: string) => `/pantry/${id}`,
+  },
 } as const;
