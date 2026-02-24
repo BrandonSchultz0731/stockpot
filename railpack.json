@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "node",
+  "packages": {
+    "node": "22"
+  },
+  "steps": {
+    "install": {
+      "commands": [
+        "cd server && npm i -g pnpm && pnpm install --frozen-lockfile"
+      ]
+    },
+    "build": {
+      "commands": [
+        "cd server && pnpm build"
+      ]
+    }
+  }
+}

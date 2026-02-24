@@ -1,10 +1,9 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
-    "builder": "RAILPACK",
-    "buildCommand": "cd server && pnpm build"
+    "builder": "RAILPACK"
   },
   "deploy": {
-    "startCommand": "cd server && pnpm start:prod"
+    "startCommand": "node -r tsconfig-paths/register server/dist/server/src/main"
   }
 }
