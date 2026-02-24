@@ -4,4 +4,5 @@ export const QUERY_KEYS = {
   USAGE_CURRENT: ['usage', 'current'],
   PANTRY_ITEMS: ['pantry', 'items'],
   FOOD_SEARCH: (query: string) => ['food', 'search', query],
+  FOOD_BARCODE: (code: string) => ['food', 'barcode', code],
 } as const;
