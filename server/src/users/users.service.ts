@@ -103,8 +103,8 @@ export class UsersService {
 
   async completeOnboarding(userId: string, dto: CompleteOnboardingDto) {
     await this.usersRepo.update(userId, {
-      dietaryProfile: dto.dietaryProfile,
-      nutritionalGoals: dto.nutritionalGoals,
+      dietaryProfile: dto.dietaryProfile as any,
+      nutritionalGoals: dto.nutritionalGoals as any,
       onboardingComplete: true,
     });
     return { success: true };
