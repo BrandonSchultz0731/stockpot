@@ -7,6 +7,8 @@ import * as Keychain from 'react-native-keychain';
 jest.mock('../services/api', () => ({
   api: { post: jest.fn(), get: jest.fn(), patch: jest.fn() },
   setAccessToken: jest.fn(),
+  setRefreshToken: jest.fn(),
+  setOnTokensRefreshed: jest.fn(),
 }));
 
 describe('useUsageQuery', () => {

@@ -6,6 +6,8 @@ import { createAuthWrapper } from '../test-utils/wrapper';
 jest.mock('../services/api', () => ({
   api: { post: jest.fn(), get: jest.fn(), patch: jest.fn() },
   setAccessToken: jest.fn(),
+  setRefreshToken: jest.fn(),
+  setOnTokensRefreshed: jest.fn(),
 }));
 
 const wrapper = createAuthWrapper();

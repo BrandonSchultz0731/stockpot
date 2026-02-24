@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import * as Keychain from 'react-native-keychain';
-import { setAccessToken } from '../services/api';
+import { setAccessToken, setRefreshToken as setApiRefreshToken, setOnTokensRefreshed } from '../services/api';
 
 const KEYCHAIN_SERVICE = 'stockpot-auth';
 
@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAccessTokenState(tokens.accessToken);
           setRefreshToken(tokens.refreshToken);
           setAccessToken(tokens.accessToken);
+          setApiRefreshToken(tokens.refreshToken);
         }
       })
       .finally(() => setIsLoading(false));
@@ -53,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessTokenState(tokens.accessToken);
     setRefreshToken(tokens.refreshToken);
     setAccessToken(tokens.accessToken);
+    setApiRefreshToken(tokens.refreshToken);
   }, []);
 
   const clearTokens = useCallback(async () => {
@@ -60,7 +62,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessTokenState(null);
     setRefreshToken(null);
     setAccessToken(null);
+    setApiRefreshToken(null);
   }, []);
+
+  // Register callback so the API layer can persist refreshed tokens
+  useEffect(() => {
+    setOnTokensRefreshed((tokens) => {
+      saveTokens(tokens);
+    });
+    return () => setOnTokensRefreshed(null);
+  }, [saveTokens]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
