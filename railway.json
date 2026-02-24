@@ -4,6 +4,6 @@
     "builder": "RAILPACK"
   },
   "deploy": {
-    "startCommand": "node -r tsconfig-paths/register server/dist/server/src/main"
+    "startCommand": "node server/dist/server/src/main"
   }
 }
