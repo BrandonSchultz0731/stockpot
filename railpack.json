@@ -6,14 +6,10 @@
   },
   "steps": {
     "install": {
-      "commands": [
-        "cd /app/server && npm i -g pnpm && pnpm install --frozen-lockfile"
-      ]
+      "commands": ["...", "npm i -g pnpm && cd server && pnpm install --frozen-lockfile"]
     },
     "build": {
-      "commands": [
-        "cd /app/server && pnpm build"
-      ]
+      "commands": ["...", "cd server && pnpm build"]
     }
   }
 }
