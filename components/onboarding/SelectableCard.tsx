@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
-import colors from '../../theme/colors';
+import clsx from 'clsx';
 
 interface SelectableCardProps {
   title: string;
@@ -17,14 +17,13 @@ export default function SelectableCard({
 }: SelectableCardProps) {
   return (
     <Pressable
-      className={`flex-row items-center rounded-2xl px-4 py-4 mb-3 border ${
-        selected ? 'bg-orange-pale border-orange' : 'bg-white border-border'
-      }`}
+      className={clsx(
+        'flex-row items-center rounded-2xl px-4 py-4 mb-3 border',
+        selected ? 'bg-orange-pale border-orange' : 'bg-white border-border',
+      )}
       onPress={onPress}>
       <View className="flex-1">
-        <Text
-          className={`text-[15px] ${selected ? 'text-dark' : 'text-dark'}`}
-          style={{ fontWeight: '600' }}>
+        <Text className="text-[15px] text-dark" style={{ fontWeight: '600' }}>
           {title}
         </Text>
         {description ? (

@@ -1,5 +1,6 @@
 import { Pressable, Text } from 'react-native';
 import { Check, X } from 'lucide-react-native';
+import clsx from 'clsx';
 import colors from '../../theme/colors';
 
 interface PillButtonProps {
@@ -17,21 +18,23 @@ export default function PillButton({
 }: PillButtonProps) {
   const isDiet = variant === 'diet';
 
-  const containerClass = selected
-    ? isDiet
-      ? 'bg-navy flex-row items-center rounded-full px-4 py-2.5 mr-2 mb-2'
-      : 'bg-danger-pale flex-row items-center rounded-full px-4 py-2.5 mr-2 mb-2'
-    : 'bg-white border border-border flex-row items-center rounded-full px-4 py-2.5 mr-2 mb-2';
-
-  const textClass = selected
-    ? isDiet
-      ? 'text-sm text-white'
-      : 'text-sm text-danger'
-    : 'text-sm text-dark';
-
   return (
-    <Pressable className={containerClass} onPress={onPress}>
-      <Text className={textClass} style={{ fontWeight: selected ? '600' : '400' }}>
+    <Pressable
+      className={clsx(
+        'flex-row items-center rounded-full px-4 py-2.5 mr-2 mb-2',
+        selected && isDiet && 'bg-navy',
+        selected && !isDiet && 'bg-danger-pale',
+        !selected && 'bg-white border border-border',
+      )}
+      onPress={onPress}>
+      <Text
+        className={clsx(
+          'text-sm',
+          selected && isDiet && 'text-white',
+          selected && !isDiet && 'text-danger',
+          !selected && 'text-dark',
+        )}
+        style={{ fontWeight: selected ? '600' : '400' }}>
         {label}
       </Text>
       {selected && isDiet && (
