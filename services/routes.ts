@@ -9,5 +9,8 @@ export const ROUTES = {
     ME: '/users/me',
     COMPLETE_ONBOARDING: '/users/me/onboarding',
   },
+  USAGE: {
+    CURRENT: '/usage/current',
+  },
   RECIPES: '/recipes',
 } as const;

@@ -8,4 +8,8 @@ describe('QUERY_KEYS', () => {
   it('should have correct USER_PROFILE key', () => {
     expect(QUERY_KEYS.USER_PROFILE).toEqual(['user', 'profile']);
   });
+
+  it('should have correct USAGE_CURRENT key', () => {
+    expect(QUERY_KEYS.USAGE_CURRENT).toEqual(['usage', 'current']);
+  });
 });

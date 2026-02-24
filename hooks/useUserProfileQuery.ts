@@ -3,13 +3,15 @@ import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
 import { useAuth } from '../contexts/AuthContext';
+import { SubscriptionTier } from '../shared/enums';
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   email: string;
   firstName: string;
   lastName: string | null;
   onboardingComplete: boolean;
+  subscriptionTier: SubscriptionTier;
   dietaryProfile: Record<string, any> | null;
   nutritionalGoals: Record<string, any> | null;
 }
