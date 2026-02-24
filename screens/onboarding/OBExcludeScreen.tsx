@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Zap } from 'lucide-react-native';
@@ -10,10 +10,6 @@ import colors from '../../theme/colors';
 import type { OnboardingParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<OnboardingParamList, 'OBExclude'>;
-
-const styles = StyleSheet.create({
-  iconOffset: { marginTop: 1 },
-});
 
 export default function OBExcludeScreen() {
   const navigation = useNavigation<Nav>();
@@ -71,7 +67,7 @@ export default function OBExcludeScreen() {
 
       {data.excludedIngredients.length > 0 && (
         <View className="bg-orange-pale rounded-2xl p-4 mt-5 flex-row items-start">
-          <Zap size={18} color={colors.orange.DEFAULT} style={styles.iconOffset} />
+          <Zap size={18} color={colors.orange.DEFAULT} className="mt-px" />
           <Text
             className="text-sm leading-5 text-dark flex-1 ml-2.5">
             We'll automatically filter out recipes containing{' '}

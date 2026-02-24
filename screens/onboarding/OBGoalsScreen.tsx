@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Info } from 'lucide-react-native';
@@ -19,10 +19,6 @@ const GOAL_EMOJIS: Record<GoalType, string> = {
 };
 
 const MACRO_MAX = { calories: 3000, protein: 250, carbs: 400, fat: 100 };
-
-const styles = StyleSheet.create({
-  iconOffset: { marginTop: 1 },
-});
 
 interface MacroRowProps {
   label: string;
@@ -131,7 +127,7 @@ export default function OBGoalsScreen() {
 
       {/* Info note */}
       <View className="flex-row items-start bg-orange-pale rounded-2xl p-4 mt-2">
-        <Info size={16} color={colors.orange.DEFAULT} style={styles.iconOffset} />
+        <Info size={16} color={colors.orange.DEFAULT} className="mt-px" />
         <Text
           className="text-sm leading-5 text-dark flex-1 ml-2.5">
           You can adjust these anytime in your profile.
