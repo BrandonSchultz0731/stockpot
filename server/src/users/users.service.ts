@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { UserSession } from './entities/user-session.entity';
+import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 
 @Injectable()
 export class UsersService {
@@ -89,5 +90,23 @@ export class UsersService {
 
   async deleteAllUserSessions(userId: string): Promise<void> {
     await this.sessionsRepo.delete({ userId });
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const { passwordHash, ...profile } = user;
+    return profile;
+  }
+
+  async completeOnboarding(userId: string, dto: CompleteOnboardingDto) {
+    await this.usersRepo.update(userId, {
+      dietaryProfile: dto.dietaryProfile as any,
+      nutritionalGoals: dto.nutritionalGoals as any,
+      onboardingComplete: true,
+    });
+    return { success: true };
   }
 }

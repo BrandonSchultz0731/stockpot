@@ -12,6 +12,7 @@ export interface TokenPair {
   accessToken: string;
   refreshToken: string;
   expiresIn: string;
+  user: { onboardingComplete: boolean };
 }
 
 @Injectable()
@@ -29,7 +30,7 @@ export class AuthService {
     lastName?: string;
   }): Promise<TokenPair> {
     const user = await this.usersService.createUser(data);
-    return this.issueTokenPair(user.id, user.email);
+    return this.issueTokenPair(user.id, user.email, false);
   }
 
   async login(email: string, password: string): Promise<TokenPair> {
@@ -46,7 +47,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.issueTokenPair(user.id, user.email);
+    return this.issueTokenPair(user.id, user.email, user.onboardingComplete);
   }
 
   async refresh(refreshToken: string): Promise<TokenPair> {
@@ -88,7 +89,7 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    return this.issueTokenPair(user.id, user.email);
+    return this.issueTokenPair(user.id, user.email, user.onboardingComplete);
   }
 
   async logout(refreshToken: string): Promise<void> {
@@ -108,6 +109,7 @@ export class AuthService {
   private async issueTokenPair(
     userId: string,
     email: string,
+    onboardingComplete: boolean,
   ): Promise<TokenPair> {
     const accessExpiry = this.configService.get<string>('JWT_ACCESS_EXPIRY');
     const refreshExpiry = this.configService.get<string>('JWT_REFRESH_EXPIRY');
@@ -143,6 +145,7 @@ export class AuthService {
       accessToken,
       refreshToken,
       expiresIn: accessExpiry,
+      user: { onboardingComplete },
     };
   }
 

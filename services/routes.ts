@@ -5,5 +5,9 @@ export const ROUTES = {
     REFRESH: '/auth/refresh',
     LOGOUT: '/auth/logout',
   },
+  USERS: {
+    ME: '/users/me',
+    COMPLETE_ONBOARDING: '/users/me/onboarding',
+  },
   RECIPES: '/recipes',
 } as const;
