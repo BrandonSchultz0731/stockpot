@@ -1,11 +1,7 @@
 import 'reflect-metadata';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import {
-  CompleteOnboardingDto,
-  DietaryProfileDto,
-  NutritionalGoalsDto,
-} from './complete-onboarding.dto';
+import { CompleteOnboardingDto } from './complete-onboarding.dto';
 import {
   DietaryPreference,
   GoalType,

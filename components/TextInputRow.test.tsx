@@ -4,7 +4,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import TextInputRow from './TextInputRow';
 
 // Simple icon mock
-const MockIcon = (props: any) => <Text testID="mock-icon">icon</Text>;
+const MockIcon = (_props: any) => <Text testID="mock-icon">icon</Text>;
 
 describe('TextInputRow', () => {
   it('should render with placeholder', () => {

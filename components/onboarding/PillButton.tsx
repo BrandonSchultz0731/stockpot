@@ -33,15 +33,15 @@ export default function PillButton({
           selected && isDiet && 'text-white',
           selected && !isDiet && 'text-danger',
           !selected && 'text-dark',
-        )}
-        style={{ fontWeight: selected ? '600' : '400' }}>
+          selected ? 'font-semibold' : 'font-normal',
+        )}>
         {label}
       </Text>
       {selected && isDiet && (
-        <Check size={14} color="#fff" style={{ marginLeft: 6 }} />
+        <Check size={14} color="#fff" className="ml-1.5" />
       )}
       {selected && !isDiet && (
-        <X size={14} color={colors.danger.DEFAULT} style={{ marginLeft: 6 }} />
+        <X size={14} color={colors.danger.DEFAULT} className="ml-1.5" />
       )}
     </Pressable>
   );

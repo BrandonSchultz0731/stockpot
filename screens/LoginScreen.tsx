@@ -48,9 +48,7 @@ export default function LoginScreen() {
               source={require('../assets/app-icon.png')}
               className="w-16 h-16 rounded-[18px] mb-4"
             />
-            <Text
-              className="text-[28px] text-navy mb-1"
-              style={{ fontWeight: '800', letterSpacing: -0.5 }}>
+            <Text className="text-[28px] font-extrabold tracking-[-0.5px] text-navy mb-1">
               StockPot
             </Text>
             <Text className="text-[13px] text-muted">
@@ -101,9 +99,7 @@ export default function LoginScreen() {
 
             {/* Forgot password */}
             <Pressable className="self-end mb-5">
-              <Text
-                className="text-xs text-orange"
-                style={{ fontWeight: '600' }}>
+              <Text className="text-xs font-semibold text-orange">
                 Forgot password?
               </Text>
             </Pressable>
@@ -135,8 +131,7 @@ export default function LoginScreen() {
             <Text className="text-[13px] text-muted">
               Don't have an account?{' '}
               <Text
-                className="text-orange"
-                style={{ fontWeight: '700' }}
+                className="font-bold text-orange"
                 onPress={() =>
                   navigation.navigate('SignUp')
                 }>

@@ -12,22 +12,19 @@ interface ButtonProps {
 
 const variantStyles: Record<
   ButtonVariant,
-  { container: string; text: string; weight: '600' | '700' }
+  { container: string; text: string }
 > = {
   primary: {
     container: 'bg-orange py-3.5',
-    text: 'text-[15px] text-white',
-    weight: '700',
+    text: 'text-[15px] font-bold text-white',
   },
   outline: {
     container: 'bg-white border border-border py-3',
-    text: 'text-sm text-dark',
-    weight: '600',
+    text: 'text-sm font-semibold text-dark',
   },
   dark: {
     container: 'bg-dark py-3',
-    text: 'text-sm text-white',
-    weight: '600',
+    text: 'text-sm font-semibold text-white',
   },
 };
 
@@ -42,11 +39,10 @@ export default function Button({
 
   return (
     <Pressable
-      className={`flex-row items-center justify-center rounded-button ${v.container} ${className}`}
-      style={disabled ? { opacity: 0.5 } : undefined}
+      className={`flex-row items-center justify-center rounded-button ${v.container} ${disabled ? 'opacity-50' : ''} ${className}`}
       disabled={disabled}
       onPress={onPress}>
-      <Text className={v.text} style={{ fontWeight: v.weight }}>
+      <Text className={v.text}>
         {label}
       </Text>
     </Pressable>
