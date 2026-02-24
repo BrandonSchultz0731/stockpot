@@ -7,6 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { UserSession } from './user-session.entity';
+import type { DietaryProfile, NutritionalGoals } from '@shared/enums';
 
 @Entity('users')
 export class User {
@@ -39,10 +40,10 @@ export class User {
   onboardingComplete: boolean;
 
   @Column({ type: 'jsonb', name: 'dietary_profile', nullable: true })
-  dietaryProfile: Record<string, any>;
+  dietaryProfile: DietaryProfile;
 
   @Column({ type: 'jsonb', name: 'nutritional_goals', nullable: true })
-  nutritionalGoals: Record<string, any>;
+  nutritionalGoals: NutritionalGoals;
 
   @Column({ type: 'jsonb', name: 'notification_prefs', nullable: true })
   notificationPrefs: Record<string, any>;
