@@ -1,3 +1,10 @@
+export enum StorageLocation {
+  Fridge = 'Fridge',
+  Freezer = 'Freezer',
+  Pantry = 'Pantry',
+  Counter = 'Counter',
+}
+
 export enum SubscriptionTier {
   Free = 'Free',
   Plus = 'Plus',
@@ -25,6 +32,35 @@ export enum GoalType {
   LoseWeight = 'Lose Weight',
   Maintain = 'Maintain',
   BuildMuscle = 'Build Muscle',
+}
+
+export enum UnitOfMeasure {
+  // Weight
+  Lb = 'lb',
+  Oz = 'oz',
+  G = 'g',
+  Kg = 'kg',
+  // Volume
+  Cup = 'cup',
+  Tbsp = 'tbsp',
+  Tsp = 'tsp',
+  FlOz = 'fl_oz',
+  Gallon = 'gallon',
+  Quart = 'quart',
+  Pint = 'pint',
+  Liter = 'liter',
+  Ml = 'ml',
+  // Produce / Packaging
+  Count = 'count',
+  Bunch = 'bunch',
+  Clove = 'clove',
+  Head = 'head',
+  Slice = 'slice',
+  Stick = 'stick',
+  Bag = 'bag',
+  Can = 'can',
+  Bottle = 'bottle',
+  Package = 'package',
 }
 
 export enum CookingSkill {

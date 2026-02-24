@@ -7,6 +7,8 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { UsageTrackingModule } from './usage-tracking/usage-tracking.module';
+import { FoodCacheModule } from './food-cache/food-cache.module';
+import { PantryModule } from './pantry/pantry.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { UsageTrackingModule } from './usage-tracking/usage-tracking.module';
     UsersModule,
     AuthModule,
     UsageTrackingModule,
+    FoodCacheModule,
+    PantryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,0 +1,218 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, ILike } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { FoodCache } from './entities/food-cache.entity';
+
+interface UsdaFoodNutrient {
+  nutrientNumber: string;
+  value: number;
+}
+
+interface UsdaSearchFood {
+  fdcId: number;
+  description: string;
+  dataType: string;
+  brandOwner?: string;
+  gtinUpc?: string;
+  foodNutrients?: UsdaFoodNutrient[];
+}
+
+interface UsdaSearchResponse {
+  foods: UsdaSearchFood[];
+  totalHits: number;
+}
+
+export interface FoodSearchResult {
+  id?: string;
+  fdcId?: number;
+  name: string;
+  usdaDescription?: string;
+  usdaDataType?: string;
+  category?: string;
+  brand?: string;
+  barcode?: string;
+  nutritionPer100g?: Record<string, number>;
+  source: 'cache' | 'usda';
+}
+
+const NUTRIENT_MAP: Record<string, string> = {
+  '1008': 'calories',
+  '1003': 'protein',
+  '1004': 'totalFat',
+  '1005': 'carbohydrate',
+  '1079': 'fiber',
+  '2000': 'totalSugars',
+  '1093': 'sodium',
+};
+
+@Injectable()
+export class FoodCacheService {
+  private readonly logger = new Logger(FoodCacheService.name);
+  private readonly usdaApiKey: string;
+  private readonly usdaBaseUrl = 'https://api.nal.usda.gov/fdc/v1';
+
+  constructor(
+    @InjectRepository(FoodCache)
+    private readonly foodCacheRepo: Repository<FoodCache>,
+    private readonly configService: ConfigService,
+  ) {
+    this.usdaApiKey = this.configService.get<string>('FOOD_DATA_CENTRAL_API_KEY') || 'DEMO_KEY';
+  }
+
+  async search(query: string, limit = 20): Promise<FoodSearchResult[]> {
+    const localResults = await this.searchLocal(query, limit);
+
+    if (localResults.length >= limit) {
+      return localResults.slice(0, limit);
+    }
+
+    const remaining = limit - localResults.length;
+    const localFdcIds = new Set(
+      localResults.filter((r) => r.fdcId).map((r) => r.fdcId),
+    );
+
+    const usdaResults = await this.searchUsda(query, remaining + 10);
+
+    const deduped = usdaResults.filter(
+      (r) => !localFdcIds.has(r.fdcId),
+    );
+
+    return [...localResults, ...deduped.slice(0, remaining)];
+  }
+
+  async searchLocal(query: string, limit: number): Promise<FoodSearchResult[]> {
+    const results = await this.foodCacheRepo.find({
+      where: [
+        { name: ILike(`%${query}%`) },
+        { usdaDescription: ILike(`%${query}%`) },
+      ],
+      take: limit,
+      order: { name: 'ASC' },
+    });
+
+    return results.map((r) => ({
+      id: r.id,
+      fdcId: r.fdcId,
+      name: r.name,
+      usdaDescription: r.usdaDescription,
+      usdaDataType: r.usdaDataType,
+      category: r.category,
+      brand: r.brand,
+      barcode: r.barcode,
+      nutritionPer100g: r.nutritionPer100g,
+      source: 'cache' as const,
+    }));
+  }
+
+  async searchUsda(query: string, limit: number): Promise<FoodSearchResult[]> {
+    try {
+      const params = new URLSearchParams({
+        query,
+        pageSize: String(Math.min(limit, 50)),
+        dataType: 'SR Legacy,Foundation,Branded',
+        api_key: this.usdaApiKey,
+      });
+
+      const response = await fetch(
+        `${this.usdaBaseUrl}/foods/search?${params.toString()}`,
+      );
+
+      if (!response.ok) {
+        this.logger.warn(
+          `USDA API returned ${response.status}: ${response.statusText}`,
+        );
+        return [];
+      }
+
+      const data: UsdaSearchResponse = await response.json();
+
+      return data.foods.map((food) => ({
+        fdcId: food.fdcId,
+        name: this.cleanFoodName(food.description),
+        usdaDescription: food.description,
+        usdaDataType: food.dataType,
+        brand: food.brandOwner || null,
+        barcode: food.gtinUpc || null,
+        nutritionPer100g: this.extractNutrition(food.foodNutrients),
+        source: 'usda' as const,
+      }));
+    } catch (error) {
+      this.logger.error('USDA API search failed', error);
+      return [];
+    }
+  }
+
+  async findById(id: string): Promise<FoodCache | null> {
+    return this.foodCacheRepo.findOne({ where: { id } });
+  }
+
+  async findByFdcId(fdcId: number): Promise<FoodCache | null> {
+    return this.foodCacheRepo.findOne({ where: { fdcId } });
+  }
+
+  async findByBarcode(barcode: string): Promise<FoodSearchResult | null> {
+    const cached = await this.foodCacheRepo.findOne({ where: { barcode } });
+    if (cached) {
+      return {
+        id: cached.id,
+        fdcId: cached.fdcId,
+        name: cached.name,
+        usdaDescription: cached.usdaDescription,
+        usdaDataType: cached.usdaDataType,
+        category: cached.category,
+        brand: cached.brand,
+        barcode: cached.barcode,
+        nutritionPer100g: cached.nutritionPer100g,
+        source: 'cache',
+      };
+    }
+
+    const usdaResults = await this.searchUsda(barcode, 5);
+    const match = usdaResults.find((r) => r.barcode === barcode);
+    return match || null;
+  }
+
+  async cacheUsdaFood(usdaFood: FoodSearchResult): Promise<FoodCache> {
+    if (usdaFood.fdcId) {
+      const existing = await this.findByFdcId(usdaFood.fdcId);
+      if (existing) return existing;
+    }
+
+    const entity = this.foodCacheRepo.create({
+      fdcId: usdaFood.fdcId,
+      name: usdaFood.name,
+      usdaDescription: usdaFood.usdaDescription,
+      usdaDataType: usdaFood.usdaDataType,
+      brand: usdaFood.brand,
+      barcode: usdaFood.barcode,
+      nutritionPer100g: usdaFood.nutritionPer100g,
+    });
+
+    return this.foodCacheRepo.save(entity);
+  }
+
+  private cleanFoodName(description: string): string {
+    return description
+      .split(',')[0]
+      .trim()
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  private extractNutrition(
+    nutrients?: UsdaFoodNutrient[],
+  ): Record<string, number> | null {
+    if (!nutrients?.length) return null;
+
+    const result: Record<string, number> = {};
+    for (const nutrient of nutrients) {
+      const key = NUTRIENT_MAP[nutrient.nutrientNumber];
+      if (key) {
+        result[key] = nutrient.value;
+      }
+    }
+
+    return Object.keys(result).length > 0 ? result : null;
+  }
+}
