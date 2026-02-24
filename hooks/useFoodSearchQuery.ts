@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
@@ -14,9 +15,20 @@ export interface FoodSearchResult {
   barcode: string | null;
 }
 
+function useDebouncedValue(value: string, delayMs: number): string {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+
+  return debounced;
+}
+
 export function useFoodSearchQuery(query: string, limit = 20) {
   const { isAuthenticated } = useAuth();
-  const trimmed = query.trim();
+  const trimmed = useDebouncedValue(query.trim(), 500);
 
   return useQuery({
     queryKey: QUERY_KEYS.FOOD_SEARCH(trimmed),
@@ -24,6 +36,6 @@ export function useFoodSearchQuery(query: string, limit = 20) {
       api.get<FoodSearchResult[]>(
         `${ROUTES.FOOD.SEARCH}?q=${encodeURIComponent(trimmed)}&limit=${limit}`,
       ),
-    enabled: trimmed.length > 0 && isAuthenticated,
+    enabled: trimmed.length >= 2 && isAuthenticated,
   });
 }

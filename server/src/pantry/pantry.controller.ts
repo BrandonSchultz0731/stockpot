@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   UseGuards,
+  HttpCode,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -50,6 +51,7 @@ export class PantryController {
   }
 
   @Delete(':id')
+  @HttpCode(204)
   remove(
     @GetUser('id') userId: string,
     @Param('id') itemId: string,

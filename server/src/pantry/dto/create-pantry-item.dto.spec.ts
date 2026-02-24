@@ -68,16 +68,14 @@ describe('CreatePantryItemDto', () => {
     }
   });
 
-  it('should fail when neither foodCacheId nor fdcId is provided', async () => {
+  it('should pass when neither foodCacheId nor fdcId is provided (manual entry)', async () => {
     const dto = createDto({
       displayName: 'Chicken',
       quantity: 2,
       unit: UnitOfMeasure.Lb,
     });
     const errors = await validate(dto);
-    expect(errors.length).toBeGreaterThan(0);
-    const messages = errors.flatMap((e) => Object.values(e.constraints || {}));
-    expect(messages.some((m) => m.includes('foodCacheId or fdcId'))).toBe(true);
+    expect(errors).toHaveLength(0);
   });
 
   it('should fail with invalid UUID for foodCacheId', async () => {

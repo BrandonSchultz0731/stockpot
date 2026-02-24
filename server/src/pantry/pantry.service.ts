@@ -26,28 +26,30 @@ export class PantryService {
     let foodCacheId = dto.foodCacheId;
 
     if (!foodCacheId && dto.fdcId) {
-      const usdaResults = await this.foodCacheService.searchUsda(
-        dto.displayName,
-        50,
-      );
-      const match = usdaResults.find((r) => r.fdcId === dto.fdcId);
-
-      if (match) {
-        const cached = await this.foodCacheService.cacheUsdaFood(match);
-        foodCacheId = cached.id;
+      // Has a USDA ID — look up or cache the USDA entry
+      const existing = await this.foodCacheService.findByFdcId(dto.fdcId);
+      if (existing) {
+        foodCacheId = existing.id;
       } else {
-        const existing = await this.foodCacheService.findByFdcId(dto.fdcId);
-        if (existing) {
-          foodCacheId = existing.id;
-        } else {
-          const cached = await this.foodCacheService.cacheUsdaFood({
-            fdcId: dto.fdcId,
-            name: dto.displayName,
-            source: 'usda',
-          });
-          foodCacheId = cached.id;
-        }
+        const usdaResults = await this.foodCacheService.searchUsda(
+          dto.displayName,
+          50,
+        );
+        const match = usdaResults.find((r) => r.fdcId === dto.fdcId);
+        const cached = await this.foodCacheService.cacheUsdaFood(
+          match || { fdcId: dto.fdcId, name: dto.displayName, source: 'usda' },
+        );
+        foodCacheId = cached.id;
       }
+    }
+
+    if (!foodCacheId) {
+      // Fully manual entry — create a simple food cache entry
+      const cached = await this.foodCacheService.cacheUsdaFood({
+        name: dto.displayName,
+        source: 'cache',
+      });
+      foodCacheId = cached.id;
     }
 
     const item = this.pantryItemRepo.create({

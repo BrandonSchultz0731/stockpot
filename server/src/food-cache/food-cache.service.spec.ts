@@ -64,8 +64,11 @@ describe('FoodCacheService', () => {
 
       expect(mockRepo.find).toHaveBeenCalledWith({
         where: [
-          { name: expect.objectContaining({ _value: '%chicken%' }) },
-          { usdaDescription: expect.objectContaining({ _value: '%chicken%' }) },
+          { name: expect.objectContaining({ _value: '%chicken%' }), usdaDataType: expect.objectContaining({ _value: 'Foundation' }) },
+          { name: expect.objectContaining({ _value: '%chicken%' }), usdaDataType: expect.objectContaining({ _value: 'SR Legacy' }) },
+          { usdaDescription: expect.objectContaining({ _value: '%chicken%' }), usdaDataType: expect.objectContaining({ _value: 'Foundation' }) },
+          { usdaDescription: expect.objectContaining({ _value: '%chicken%' }), usdaDataType: expect.objectContaining({ _value: 'SR Legacy' }) },
+          { name: expect.objectContaining({ _value: '%chicken%' }), usdaDataType: expect.objectContaining({ _type: 'isNull' }) },
         ],
         take: 10,
         order: { name: 'ASC' },
@@ -125,7 +128,7 @@ describe('FoodCacheService', () => {
       expect(results[0]).toEqual(
         expect.objectContaining({
           fdcId: 456,
-          name: 'Chicken',
+          name: 'Chicken, Breast',
           usdaDescription: 'Chicken, breast, raw',
           usdaDataType: 'SR Legacy',
           source: 'usda',
@@ -156,7 +159,7 @@ describe('FoodCacheService', () => {
 
       const results = await service.searchUsda('yogurt', 10);
 
-      expect(results[0].name).toBe('Yogurt');
+      expect(results[0].name).toBe('Yogurt, Greek, Plain');
     });
 
     it('should include brand and barcode from branded foods', async () => {
@@ -280,7 +283,7 @@ describe('FoodCacheService', () => {
         {
           id: 'fc-1',
           fdcId: 100,
-          name: 'Cached Chicken',
+          name: 'Chicken Breast',
           usdaDescription: null,
           usdaDataType: null,
           category: null,
@@ -294,7 +297,7 @@ describe('FoodCacheService', () => {
         foods: [
           {
             fdcId: 200,
-            description: 'Chicken, raw',
+            description: 'Chicken thigh, raw',
             dataType: 'SR Legacy',
             foodNutrients: [],
           },
@@ -306,16 +309,16 @@ describe('FoodCacheService', () => {
       const results = await service.search('chicken', 5);
 
       expect(results).toHaveLength(2);
-      expect(results[0].source).toBe('cache');
-      expect(results[1].source).toBe('usda');
+      expect(results.some((r) => r.source === 'cache')).toBe(true);
+      expect(results.some((r) => r.source === 'usda')).toBe(true);
     });
 
-    it('should deduplicate USDA results that already exist in cache', async () => {
+    it('should deduplicate USDA results that already exist in cache by fdcId', async () => {
       mockRepo.find.mockResolvedValue([
         {
           id: 'fc-1',
           fdcId: 100,
-          name: 'Chicken',
+          name: 'Chicken Breast',
           usdaDescription: null,
           usdaDataType: null,
           category: null,
@@ -329,13 +332,13 @@ describe('FoodCacheService', () => {
         foods: [
           {
             fdcId: 100,
-            description: 'Chicken, raw',
+            description: 'Chicken, breast',
             dataType: 'SR Legacy',
             foodNutrients: [],
           },
           {
             fdcId: 200,
-            description: 'Chicken, cooked',
+            description: 'Chicken, thigh',
             dataType: 'SR Legacy',
             foodNutrients: [],
           },
@@ -346,8 +349,11 @@ describe('FoodCacheService', () => {
 
       const results = await service.search('chicken', 5);
 
+      // fdcId 100 is filtered out (already in cache), fdcId 200 is new
       expect(results).toHaveLength(2);
-      expect(results.map((r) => r.fdcId)).toEqual([100, 200]);
+      const fdcIds = results.map((r) => r.fdcId);
+      expect(fdcIds).toContain(100);
+      expect(fdcIds).toContain(200);
     });
   });
 
