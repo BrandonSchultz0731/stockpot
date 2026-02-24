@@ -27,6 +27,21 @@ export enum CookingSkill {
   Advanced = 'Advanced',
 }
 
+export interface DietaryProfile {
+  diets: DietaryPreference[];
+  excludedIngredients: string[];
+  householdSize: number;
+  cookingSkill: CookingSkill;
+}
+
+export interface NutritionalGoals {
+  goalType: GoalType;
+  dailyCalories: number;
+  dailyProteinGrams: number;
+  dailyCarbsGrams: number;
+  dailyFatGrams: number;
+}
+
 export const COOKING_SKILL_DESCRIPTIONS: Record<CookingSkill, string> = {
   [CookingSkill.Beginner]: "I'm new to cooking and prefer simple recipes",
   [CookingSkill.Intermediate]: 'I can follow most recipes comfortably',
