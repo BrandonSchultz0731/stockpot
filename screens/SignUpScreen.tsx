@@ -88,9 +88,7 @@ export default function SignUpScreen() {
               source={require('../assets/app-icon.png')}
               className="w-[52px] h-[52px] rounded-[15px] mb-3.5"
             />
-            <Text
-              className="text-[24px] text-navy mb-1"
-              style={{ fontWeight: '800', letterSpacing: -0.3 }}>
+            <Text className="text-[24px] font-extrabold tracking-[-0.3px] text-navy mb-1">
               Create Account
             </Text>
             <Text className="text-xs text-muted">
@@ -193,21 +191,16 @@ export default function SignUpScreen() {
               className="flex-row items-start gap-2.5 mb-4.5"
               onPress={() => setAgreedToTerms(!agreedToTerms)}>
               <View
-                className="w-5 h-5 rounded-[6px] items-center justify-center mt-0.5"
-                style={{
-                  borderWidth: 1.5,
-                  borderColor: colors.orange.DEFAULT,
-                  backgroundColor: agreedToTerms ? colors.orange.pale : 'transparent',
-                }}>
+                className={`w-5 h-5 rounded-[6px] items-center justify-center mt-0.5 border-[1.5px] border-orange ${agreedToTerms ? 'bg-orange-pale' : 'bg-transparent'}`}>
                 {agreedToTerms && <Check size={12} color={colors.orange.DEFAULT} />}
               </View>
               <Text className="text-[11px] text-muted flex-1 leading-4">
                 I agree to the{' '}
-                <Text className="text-orange" style={{ fontWeight: '600' }}>
+                <Text className="font-semibold text-orange">
                   Terms of Service
                 </Text>{' '}
                 and{' '}
-                <Text className="text-orange" style={{ fontWeight: '600' }}>
+                <Text className="font-semibold text-orange">
                   Privacy Policy
                 </Text>
               </Text>
@@ -242,8 +235,7 @@ export default function SignUpScreen() {
             <Text className="text-[13px] text-muted">
               Already have an account?{' '}
               <Text
-                className="text-orange"
-                style={{ fontWeight: '700' }}
+                className="font-bold text-orange"
                 onPress={() => navigation.goBack()}>
                 Log In
               </Text>

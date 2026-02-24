@@ -1,4 +1,4 @@
-import { Pressable, Text } from 'react-native';
+import { StyleSheet, Pressable, Text } from 'react-native';
 import { Check, X } from 'lucide-react-native';
 import clsx from 'clsx';
 import colors from '../../theme/colors';
@@ -9,6 +9,10 @@ interface PillButtonProps {
   onPress: () => void;
   variant?: 'diet' | 'exclude';
 }
+
+const styles = StyleSheet.create({
+  iconMargin: { marginLeft: 6 },
+});
 
 export default function PillButton({
   label,
@@ -33,15 +37,15 @@ export default function PillButton({
           selected && isDiet && 'text-white',
           selected && !isDiet && 'text-danger',
           !selected && 'text-dark',
-        )}
-        style={{ fontWeight: selected ? '600' : '400' }}>
+          selected ? 'font-semibold' : 'font-normal',
+        )}>
         {label}
       </Text>
       {selected && isDiet && (
-        <Check size={14} color="#fff" style={{ marginLeft: 6 }} />
+        <Check size={14} color="#fff" style={styles.iconMargin} />
       )}
       {selected && !isDiet && (
-        <X size={14} color={colors.danger.DEFAULT} style={{ marginLeft: 6 }} />
+        <X size={14} color={colors.danger.DEFAULT} style={styles.iconMargin} />
       )}
     </Pressable>
   );

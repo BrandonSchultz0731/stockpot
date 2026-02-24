@@ -19,7 +19,7 @@ describe('OnboardingLayout', () => {
   });
 
   it('should render 5 progress bar steps', () => {
-    const { getAllByTestId } = render(
+    render(
       <OnboardingLayout {...defaultProps}>
         <Text>Content</Text>
       </OnboardingLayout>,

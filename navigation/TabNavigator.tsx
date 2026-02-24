@@ -1,4 +1,3 @@
-import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { House, LayoutGrid, CookingPot, Zap, User } from 'lucide-react-native';
 import HomeScreen from '../screens/HomeScreen';
@@ -18,11 +17,10 @@ export default function TabNavigator() {
         headerShown: false,
         tabBarActiveTintColor: colors.orange.DEFAULT,
         tabBarInactiveTintColor: colors.muted,
-        tabBarLabel: ({ focused, color, children }) => (
-          <Text style={{ color, fontSize: 10, fontWeight: focused ? '700' : '500' }}>
-            {children}
-          </Text>
-        ),
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '600',
+        },
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,

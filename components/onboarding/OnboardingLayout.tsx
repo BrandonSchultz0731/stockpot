@@ -39,7 +39,7 @@ export default function OnboardingLayout({
 
       {/* Scrollable content */}
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingBottom: 24 }}
+        contentContainerClassName="flex-grow px-6 pb-6"
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
         {children}
@@ -61,14 +61,13 @@ export default function OnboardingLayout({
 
         {/* Action button */}
         <Pressable
-          className="items-center justify-center rounded-button bg-orange py-3.5"
-          style={nextDisabled || isSubmitting ? { opacity: 0.5 } : undefined}
+          className={`items-center justify-center rounded-button bg-orange py-3.5 ${nextDisabled || isSubmitting ? 'opacity-50' : ''}`}
           disabled={nextDisabled || isSubmitting}
           onPress={onNext}>
           {isSubmitting ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text className="text-[15px] text-white" style={{ fontWeight: '700' }}>
+            <Text className="text-[15px] font-bold text-white">
               {nextLabel}
             </Text>
           )}

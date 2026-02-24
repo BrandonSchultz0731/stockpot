@@ -35,12 +35,10 @@ export default function OBDietScreen() {
       step={2}
       onBack={() => navigation.goBack()}
       onNext={() => navigation.navigate('OBExclude')}>
-      <Text
-        className="text-2xl text-dark mb-2 mt-2"
-        style={{ fontWeight: '700' }}>
+      <Text className="text-2xl font-bold text-dark mb-2 mt-2">
         Dietary Preferences
       </Text>
-      <Text className="text-base text-muted mb-6" style={{ lineHeight: 22 }}>
+      <Text className="text-base leading-[22px] text-muted mb-6">
         Select any that apply. Our AI will use these to tailor recipe
         suggestions.
       </Text>

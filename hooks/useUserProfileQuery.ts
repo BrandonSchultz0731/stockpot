@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
 import { useAuth } from '../contexts/AuthContext';
-import { SubscriptionTier } from '../shared/enums';
+import { DietaryProfile, NutritionalGoals, SubscriptionTier } from '../shared/enums';
 
 export interface UserProfile {
   id: string;
@@ -12,8 +12,9 @@ export interface UserProfile {
   lastName: string | null;
   onboardingComplete: boolean;
   subscriptionTier: SubscriptionTier;
-  dietaryProfile: Record<string, any> | null;
-  nutritionalGoals: Record<string, any> | null;
+  dietaryProfile: DietaryProfile | null;
+  nutritionalGoals: NutritionalGoals | null;
+  createdAt: string;
 }
 
 export function useUserProfileQuery() {

@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Info } from 'lucide-react-native';
@@ -20,6 +20,10 @@ const GOAL_EMOJIS: Record<GoalType, string> = {
 
 const MACRO_MAX = { calories: 3000, protein: 250, carbs: 400, fat: 100 };
 
+const styles = StyleSheet.create({
+  iconOffset: { marginTop: 1 },
+});
+
 interface MacroRowProps {
   label: string;
   value: number;
@@ -33,7 +37,7 @@ function MacroRow({ label, value, max, unit }: MacroRowProps) {
   return (
     <View className="mb-4">
       <View className="flex-row justify-between mb-1.5">
-        <Text className="text-sm text-dark" style={{ fontWeight: '500' }}>
+        <Text className="text-sm font-medium text-dark">
           {label}
         </Text>
         <Text className="text-sm text-muted">
@@ -78,12 +82,10 @@ export default function OBGoalsScreen() {
       onNext={handleFinish}
       nextLabel="Finish Setup"
       isSubmitting={mutation.isPending}>
-      <Text
-        className="text-2xl text-dark mb-2 mt-2"
-        style={{ fontWeight: '700' }}>
+      <Text className="text-2xl font-bold text-dark mb-2 mt-2">
         Nutrition Goals
       </Text>
-      <Text className="text-base text-muted mb-6" style={{ lineHeight: 22 }}>
+      <Text className="text-base leading-[22px] text-muted mb-6">
         Choose a goal and we'll set smart defaults for your daily targets.
       </Text>
 
@@ -98,9 +100,7 @@ export default function OBGoalsScreen() {
       ))}
 
       {/* Daily targets */}
-      <Text
-        className="text-lg text-dark mb-4 mt-4"
-        style={{ fontWeight: '600' }}>
+      <Text className="text-lg font-semibold text-dark mb-4 mt-4">
         Daily Targets
       </Text>
 
@@ -131,10 +131,9 @@ export default function OBGoalsScreen() {
 
       {/* Info note */}
       <View className="flex-row items-start bg-orange-pale rounded-2xl p-4 mt-2">
-        <Info size={16} color={colors.orange.DEFAULT} style={{ marginTop: 1 }} />
+        <Info size={16} color={colors.orange.DEFAULT} style={styles.iconOffset} />
         <Text
-          className="text-sm text-dark flex-1 ml-2.5"
-          style={{ lineHeight: 20 }}>
+          className="text-sm leading-5 text-dark flex-1 ml-2.5">
           You can adjust these anytime in your profile.
         </Text>
       </View>

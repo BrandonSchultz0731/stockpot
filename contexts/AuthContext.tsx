@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import * as Keychain from 'react-native-keychain';
-import { setAccessToken, setRefreshToken as setApiRefreshToken, setOnTokensRefreshed } from '../services/api';
+import { setAccessToken, setRefreshToken as setApiRefreshToken, setOnTokensRefreshed, setOnUnauthorized } from '../services/api';
 
 const KEYCHAIN_SERVICE = 'stockpot-auth';
 
@@ -45,6 +45,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       })
       .finally(() => setIsLoading(false));
+  }, []);
+
+  // Clear React state when the API layer detects an expired token
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      setAccessTokenState(null);
+      setRefreshToken(null);
+    });
+    return () => setOnUnauthorized(null);
   }, []);
 
   const saveTokens = useCallback(async (tokens: TokenPair) => {

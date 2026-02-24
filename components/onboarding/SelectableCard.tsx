@@ -23,7 +23,7 @@ export default function SelectableCard({
       )}
       onPress={onPress}>
       <View className="flex-1">
-        <Text className="text-[15px] text-dark" style={{ fontWeight: '600' }}>
+        <Text className="text-[15px] font-semibold text-dark">
           {title}
         </Text>
         {description ? (

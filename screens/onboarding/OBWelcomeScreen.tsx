@@ -16,14 +16,12 @@ export default function OBWelcomeScreen() {
       nextLabel="Let's Go">
       <View className="flex-1 items-center justify-center">
         <View className="w-24 h-24 rounded-3xl bg-orange-pale items-center justify-center mb-6">
-          <Text style={{ fontSize: 48 }}>🍲</Text>
+          <Text className="text-[48px]">🍲</Text>
         </View>
-        <Text
-          className="text-2xl text-dark text-center mb-3"
-          style={{ fontWeight: '700' }}>
+        <Text className="text-2xl font-bold text-dark text-center mb-3">
           Welcome to StockPot
         </Text>
-        <Text className="text-base text-muted text-center px-6" style={{ lineHeight: 22 }}>
+        <Text className="text-base leading-[22px] text-muted text-center px-6">
           Let's personalize your experience so our AI chef can suggest meals
           you'll love.
         </Text>

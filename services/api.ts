@@ -1,10 +1,14 @@
+import * as Keychain from 'react-native-keychain';
 import API_BASE_URL from '../config';
 import { ROUTES } from './routes';
+
+const KEYCHAIN_SERVICE = 'stockpot-auth';
 
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 let refreshPromise: Promise<boolean> | null = null;
 let onTokensRefreshed: ((tokens: { accessToken: string; refreshToken: string }) => void) | null = null;
+let onUnauthorized: (() => void) | null = null;
 
 export function setAccessToken(token: string | null) {
   accessToken = token;
@@ -18,6 +22,10 @@ export function setOnTokensRefreshed(
   callback: ((tokens: { accessToken: string; refreshToken: string }) => void) | null,
 ) {
   onTokensRefreshed = callback;
+}
+
+export function setOnUnauthorized(callback: (() => void) | null) {
+  onUnauthorized = callback;
 }
 
 export class ApiError extends Error {
@@ -88,10 +96,18 @@ async function apiFetch<T>(
       return apiFetch<T>(path, options, true);
     }
 
-    // Refresh failed — fall through to throw ApiError (triggers onUnauthorized)
+    // Refresh failed — fall through to 401 cleanup below
   }
 
   if (!res.ok) {
+    // Expired or invalid token — clear credentials and force re-login
+    if (res.status === 401 && accessToken) {
+      accessToken = null;
+      refreshToken = null;
+      Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
+      onUnauthorized?.();
+    }
+
     let message = `Request failed (${res.status})`;
     try {
       const body = await res.json();

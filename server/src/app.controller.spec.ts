@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 
 describe('AppController', () => {
   let controller: AppController;
-  let service: AppService;
+  let _service: AppService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -13,7 +13,7 @@ describe('AppController', () => {
     }).compile();
 
     controller = module.get<AppController>(AppController);
-    service = module.get<AppService>(AppService);
+    _service = module.get<AppService>(AppService);
   });
 
   it('should be defined', () => {

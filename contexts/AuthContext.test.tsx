@@ -8,6 +8,7 @@ jest.mock('../services/api', () => ({
   setAccessToken: jest.fn(),
   setRefreshToken: jest.fn(),
   setOnTokensRefreshed: jest.fn(),
+  setOnUnauthorized: jest.fn(),
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (

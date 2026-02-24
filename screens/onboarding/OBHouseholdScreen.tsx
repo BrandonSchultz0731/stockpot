@@ -8,7 +8,6 @@ import {
   CookingSkill,
   COOKING_SKILL_DESCRIPTIONS,
 } from '../../shared/enums';
-import colors from '../../theme/colors';
 import type { OnboardingParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<OnboardingParamList, 'OBHousehold'>;
@@ -34,12 +33,10 @@ export default function OBHouseholdScreen() {
       step={4}
       onBack={() => navigation.goBack()}
       onNext={() => navigation.navigate('OBGoals')}>
-      <Text
-        className="text-2xl text-dark mb-2 mt-2"
-        style={{ fontWeight: '700' }}>
+      <Text className="text-2xl font-bold text-dark mb-2 mt-2">
         Your Household
       </Text>
-      <Text className="text-base text-muted mb-6" style={{ lineHeight: 22 }}>
+      <Text className="text-base leading-[22px] text-muted mb-6">
         This helps us scale recipes and shopping lists.
       </Text>
 
@@ -47,21 +44,16 @@ export default function OBHouseholdScreen() {
       <View className="items-center mb-8">
         <View className="flex-row items-center">
           <Pressable
-            className="w-12 h-12 rounded-full border border-border items-center justify-center bg-white"
-            style={data.householdSize <= 1 ? { opacity: 0.3 } : undefined}
+            className={`w-12 h-12 rounded-full border border-border items-center justify-center bg-white ${data.householdSize <= 1 ? 'opacity-30' : ''}`}
             disabled={data.householdSize <= 1}
             onPress={decrement}>
-            <Text
-              className="text-2xl text-dark"
-              style={{ fontWeight: '600', marginTop: -2 }}>
+            <Text className="text-2xl font-semibold -mt-0.5 text-dark">
               −
             </Text>
           </Pressable>
 
           <View className="mx-8 items-center">
-            <Text
-              className="text-5xl text-dark"
-              style={{ fontWeight: '700' }}>
+            <Text className="text-5xl font-bold text-dark">
               {data.householdSize}
             </Text>
             <Text className="text-sm text-muted mt-1">
@@ -70,13 +62,10 @@ export default function OBHouseholdScreen() {
           </View>
 
           <Pressable
-            className="w-12 h-12 rounded-full border border-border items-center justify-center bg-white"
-            style={data.householdSize >= 10 ? { opacity: 0.3 } : undefined}
+            className={`w-12 h-12 rounded-full border border-border items-center justify-center bg-white ${data.householdSize >= 10 ? 'opacity-30' : ''}`}
             disabled={data.householdSize >= 10}
             onPress={increment}>
-            <Text
-              className="text-2xl text-dark"
-              style={{ fontWeight: '600', marginTop: -2 }}>
+            <Text className="text-2xl font-semibold -mt-0.5 text-dark">
               +
             </Text>
           </Pressable>
@@ -84,9 +73,7 @@ export default function OBHouseholdScreen() {
       </View>
 
       {/* Cooking skill */}
-      <Text
-        className="text-lg text-dark mb-3"
-        style={{ fontWeight: '600' }}>
+      <Text className="text-lg font-semibold text-dark mb-3">
         Cooking Skill
       </Text>
 

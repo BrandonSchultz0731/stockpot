@@ -1,4 +1,4 @@
-import { Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Zap } from 'lucide-react-native';
@@ -10,6 +10,10 @@ import colors from '../../theme/colors';
 import type { OnboardingParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<OnboardingParamList, 'OBExclude'>;
+
+const styles = StyleSheet.create({
+  iconOffset: { marginTop: 1 },
+});
 
 export default function OBExcludeScreen() {
   const navigation = useNavigation<Nav>();
@@ -34,12 +38,10 @@ export default function OBExcludeScreen() {
       step={3}
       onBack={() => navigation.goBack()}
       onNext={() => navigation.navigate('OBHousehold')}>
-      <Text
-        className="text-2xl text-dark mb-2 mt-2"
-        style={{ fontWeight: '700' }}>
+      <Text className="text-2xl font-bold text-dark mb-2 mt-2">
         Ingredients to Avoid
       </Text>
-      <Text className="text-base text-muted mb-5" style={{ lineHeight: 22 }}>
+      <Text className="text-base leading-[22px] text-muted mb-5">
         We'll make sure these never show up in your recipes.
       </Text>
 
@@ -51,9 +53,7 @@ export default function OBExcludeScreen() {
         editable={false}
       />
 
-      <Text
-        className="text-xs text-muted mb-3 uppercase"
-        style={{ fontWeight: '600', letterSpacing: 1 }}>
+      <Text className="text-xs font-semibold tracking-[1px] text-muted mb-3 uppercase">
         Common allergens & dislikes
       </Text>
 
@@ -71,10 +71,9 @@ export default function OBExcludeScreen() {
 
       {data.excludedIngredients.length > 0 && (
         <View className="bg-orange-pale rounded-2xl p-4 mt-5 flex-row items-start">
-          <Zap size={18} color={colors.orange.DEFAULT} style={{ marginTop: 1 }} />
+          <Zap size={18} color={colors.orange.DEFAULT} style={styles.iconOffset} />
           <Text
-            className="text-sm text-dark flex-1 ml-2.5"
-            style={{ lineHeight: 20 }}>
+            className="text-sm leading-5 text-dark flex-1 ml-2.5">
             We'll automatically filter out recipes containing{' '}
             {data.excludedIngredients.join(', ')}.
           </Text>
