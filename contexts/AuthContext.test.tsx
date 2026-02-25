@@ -1,5 +1,6 @@
 import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Keychain from 'react-native-keychain';
 import { AuthProvider, useAuth } from './AuthContext';
 import { setAccessToken } from '../services/api';
@@ -11,9 +12,14 @@ jest.mock('../services/api', () => ({
   setOnUnauthorized: jest.fn(),
 }));
 
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <AuthProvider>{children}</AuthProvider>
-);
+const createWrapper = () => {
+  const queryClient = new QueryClient();
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 describe('AuthContext', () => {
   beforeEach(() => {
@@ -31,14 +37,14 @@ describe('AuthContext', () => {
   });
 
   it('should start in loading state', () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
 
     // Initially loading until keychain check completes
     expect(result.current.isLoading).toBe(true);
   });
 
   it('should be unauthenticated when no tokens stored', async () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -56,7 +62,7 @@ describe('AuthContext', () => {
       }),
     });
 
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -68,7 +74,7 @@ describe('AuthContext', () => {
   });
 
   it('should save tokens and update state', async () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -99,7 +105,7 @@ describe('AuthContext', () => {
       }),
     });
 
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isAuthenticated).toBe(true);
