@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import * as Keychain from 'react-native-keychain';
+import { useQueryClient } from '@tanstack/react-query';
 import { setAccessToken, setRefreshToken as setApiRefreshToken, setOnTokensRefreshed, setOnUnauthorized } from '../services/api';
 
 const KEYCHAIN_SERVICE = 'stockpot-auth';
@@ -28,6 +29,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,7 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRefreshToken(null);
     setAccessToken(null);
     setApiRefreshToken(null);
-  }, []);
+    queryClient.clear();
+  }, [queryClient]);
 
   // Register callback so the API layer can persist refreshed tokens
   useEffect(() => {
