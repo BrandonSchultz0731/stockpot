@@ -1,3 +1,4 @@
+/* global jest */
 // Mock react-native-vision-camera (native module not available in Jest)
 jest.mock('react-native-vision-camera', () => ({
   Camera: 'Camera',
