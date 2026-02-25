@@ -36,8 +36,7 @@ export default function ManualEntryScreen() {
             <ChevronLeft size={24} color={colors.navy.DEFAULT} />
           </Pressable>
           <Text
-            className="text-[26px] text-navy mb-4"
-            style={{ fontWeight: '800', letterSpacing: -0.5 }}>
+            className="text-[26px] text-navy mb-4 font-extrabold tracking-[-0.5px]">
             Add Item
           </Text>
         </View>

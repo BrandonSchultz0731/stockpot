@@ -108,8 +108,7 @@ export default function ReceiptReviewScreen() {
           <ChevronLeft size={24} color={colors.navy.DEFAULT} />
         </Pressable>
         <Text
-          className="text-[26px] text-navy mb-1"
-          style={{ fontWeight: '800', letterSpacing: -0.5 }}>
+          className="text-[26px] text-navy mb-1 font-extrabold tracking-[-0.5px]">
           Review Items
         </Text>
         <Text className="text-[14px] text-muted mb-4">
@@ -121,13 +120,12 @@ export default function ReceiptReviewScreen() {
       <FlatList
         data={items}
         keyExtractor={item => item._key}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+        contentContainerClassName="px-5 pb-[100px]"
         renderItem={({ item, index }) => (
           <View className="bg-white rounded-card border border-border p-3.5 mb-2 flex-row items-center">
             <View className="flex-1 mr-2">
               <Text
-                className="text-[14px] text-dark"
-                style={{ fontWeight: '600' }}
+                className="text-[14px] text-dark font-semibold"
                 numberOfLines={1}>
                 {item.displayName || 'Unnamed item'}
               </Text>
@@ -169,8 +167,7 @@ export default function ReceiptReviewScreen() {
         />
         <View className="bg-white rounded-t-2xl pb-8 px-5 pt-5">
           <Text
-            className="text-[18px] text-navy mb-4"
-            style={{ fontWeight: '700' }}>
+            className="text-[18px] text-navy mb-4 font-bold">
             Edit Item
           </Text>
 

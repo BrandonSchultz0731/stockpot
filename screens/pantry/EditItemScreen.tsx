@@ -60,8 +60,7 @@ export default function EditItemScreen() {
             <ChevronLeft size={24} color={colors.navy.DEFAULT} />
           </Pressable>
           <Text
-            className="text-[18px] text-navy"
-            style={{ fontWeight: '700' }}>
+            className="text-[18px] text-navy font-bold">
             Edit Item
           </Text>
           <Pressable onPress={handleDelete}>

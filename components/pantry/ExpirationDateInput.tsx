@@ -84,41 +84,23 @@ export default function ExpirationDateInput({
       </Pressable>
 
       <Modal visible={showPicker} transparent animationType="slide">
-        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+        <View className="flex-1 justify-end">
           <Pressable
-            style={{ flex: 1 }}
+            className="flex-1"
             onPress={() => setShowPicker(false)}
           />
-          <View
-            style={{
-              backgroundColor: '#fff',
-              borderTopLeftRadius: 16,
-              borderTopRightRadius: 16,
-              paddingBottom: 34,
-            }}>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.border,
-              }}>
+          <View className="bg-white rounded-t-2xl pb-[34px]">
+            <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
               <Pressable onPress={handleClear}>
-                <Text
-                  style={{ fontSize: 14, color: colors.muted, fontWeight: '600' }}>
+                <Text className="text-[14px] text-muted font-semibold">
                   Clear
                 </Text>
               </Pressable>
-              <Text
-                style={{ fontSize: 16, color: colors.navy.DEFAULT, fontWeight: '700' }}>
+              <Text className="text-[16px] text-navy font-bold">
                 Expiration Date
               </Text>
               <Pressable onPress={handleConfirm}>
-                <Text
-                  style={{ fontSize: 14, color: colors.orange.DEFAULT, fontWeight: '600' }}>
+                <Text className="text-[14px] text-orange font-semibold">
                   Done
                 </Text>
               </Pressable>
@@ -132,7 +114,7 @@ export default function ExpirationDateInput({
                 if (selected) setTempDate(selected);
               }}
               minimumDate={new Date()}
-              style={{ height: 216 }}
+              className="h-[216px]"
             />
           </View>
         </View>

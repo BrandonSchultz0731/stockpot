@@ -94,8 +94,7 @@ export default function BarcodeScanScreen() {
         <SafeAreaView className="items-center">
           <ScanBarcode size={48} color="rgba(255,255,255,0.3)" />
           <Text
-            className="text-white text-[18px] mt-6 text-center"
-            style={{ fontWeight: '700' }}>
+            className="text-white text-[18px] mt-6 text-center font-bold">
             Camera Permission Required
           </Text>
           <Text className="text-white/50 text-[14px] mt-2 text-center">
@@ -104,7 +103,7 @@ export default function BarcodeScanScreen() {
           <Pressable
             onPress={() => Linking.openSettings()}
             className="mt-6 bg-orange px-6 py-3 rounded-full">
-            <Text className="text-white text-[14px]" style={{ fontWeight: '600' }}>
+            <Text className="text-white text-[14px] font-semibold">
               Open Settings
             </Text>
           </Pressable>
@@ -123,8 +122,7 @@ export default function BarcodeScanScreen() {
         <SafeAreaView className="items-center">
           <ScanBarcode size={48} color="rgba(255,255,255,0.3)" />
           <Text
-            className="text-white text-[18px] mt-6 text-center"
-            style={{ fontWeight: '700' }}>
+            className="text-white text-[18px] mt-6 text-center font-bold">
             No Camera Available
           </Text>
           <Text className="text-white/50 text-[14px] mt-2 text-center">
@@ -141,6 +139,7 @@ export default function BarcodeScanScreen() {
   return (
     <View className="flex-1 bg-dark">
       <Camera
+        // eslint-disable-next-line react-native/no-inline-styles
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         device={device}
         isActive={!scannedCode}
@@ -153,7 +152,7 @@ export default function BarcodeScanScreen() {
           <Pressable onPress={() => navigation.goBack()}>
             <X size={24} color="#FFFFFF" />
           </Pressable>
-          <Text className="text-[16px] text-white" style={{ fontWeight: '700' }}>
+          <Text className="text-[16px] text-white font-bold">
             Scan Barcode
           </Text>
           <View className="w-6" />
@@ -164,8 +163,7 @@ export default function BarcodeScanScreen() {
           <View className="w-full aspect-[2/1] rounded-2xl border-2 border-dashed border-white/30 items-center justify-center overflow-hidden">
             {!scannedCode && (
               <View
-                className="absolute left-4 right-4 h-0.5"
-                style={{ backgroundColor: colors.orange.DEFAULT, top: '50%' }}
+                className="absolute left-4 right-4 h-0.5 bg-orange top-[50%]"
               />
             )}
           </View>

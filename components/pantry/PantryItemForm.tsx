@@ -129,14 +129,14 @@ export default function PantryItemForm({
       </Text>
       <View className="bg-white rounded-input border border-border px-3.5 py-3 mb-6">
         <TextInput
-          className="text-[14px] leading-[18px] text-dark"
+          className="text-[14px] leading-[18px] text-dark min-h-[60px]"
           value={notes}
           onChangeText={setNotes}
           placeholder="Optional notes..."
           placeholderTextColor={colors.muted}
           multiline
           numberOfLines={3}
-          style={{ minHeight: 60, textAlignVertical: 'top' }}
+          textAlignVertical="top"
         />
       </View>
 

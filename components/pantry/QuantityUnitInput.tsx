@@ -56,8 +56,7 @@ export default function QuantityUnitInput({
         <View className="bg-white rounded-t-2xl pb-8 max-h-[50%]">
           <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
             <Text
-              className="text-[16px] text-navy"
-              style={{ fontWeight: '700' }}>
+              className="text-[16px] text-navy font-bold">
               Select Unit
             </Text>
             <Pressable onPress={() => setShowPicker(false)}>
