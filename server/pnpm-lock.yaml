@@ -41,6 +41,9 @@ importers:
       class-validator:
         specifier: ^0.14.3
         version: 0.14.3
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
       passport:
         specifier: ^0.7.0
         version: 0.7.0
