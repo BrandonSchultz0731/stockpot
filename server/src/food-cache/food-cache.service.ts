@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, IsNull } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { FoodCache } from './entities/food-cache.entity';
+import { UnitOfMeasure } from '@shared/enums';
 
 interface UsdaFoodNutrient {
   nutrientNumber: string;
@@ -23,6 +24,18 @@ interface UsdaSearchResponse {
   totalHits: number;
 }
 
+interface OpenFoodFactsResponse {
+  status: number;
+  product?: {
+    product_name?: string;
+    brands?: string;
+    code?: string;
+    quantity?: string;
+    serving_size?: string;
+    nutriments?: Record<string, number>;
+  };
+}
+
 export interface FoodSearchResult {
   id?: string;
   fdcId?: number;
@@ -33,7 +46,9 @@ export interface FoodSearchResult {
   brand?: string;
   barcode?: string;
   nutritionPer100g?: Record<string, number>;
-  source: 'cache' | 'usda';
+  packageQuantity?: number;
+  packageUnit?: string;
+  source: 'cache' | 'usda' | 'openfoodfacts';
 }
 
 const NUTRIENT_MAP: Record<string, string> = {
@@ -44,6 +59,48 @@ const NUTRIENT_MAP: Record<string, string> = {
   '1079': 'fiber',
   '2000': 'totalSugars',
   '1093': 'sodium',
+};
+
+const USDA_UNIT_MAP: Record<string, UnitOfMeasure> = {
+  oz: UnitOfMeasure.Oz,
+  ounce: UnitOfMeasure.Oz,
+  ounces: UnitOfMeasure.Oz,
+  'fl oz': UnitOfMeasure.FlOz,
+  'fluid ounce': UnitOfMeasure.FlOz,
+  'fluid ounces': UnitOfMeasure.FlOz,
+  lb: UnitOfMeasure.Lb,
+  lbs: UnitOfMeasure.Lb,
+  pound: UnitOfMeasure.Lb,
+  pounds: UnitOfMeasure.Lb,
+  g: UnitOfMeasure.G,
+  gram: UnitOfMeasure.G,
+  grams: UnitOfMeasure.G,
+  kg: UnitOfMeasure.Kg,
+  kilogram: UnitOfMeasure.Kg,
+  kilograms: UnitOfMeasure.Kg,
+  ml: UnitOfMeasure.Ml,
+  milliliter: UnitOfMeasure.Ml,
+  milliliters: UnitOfMeasure.Ml,
+  l: UnitOfMeasure.Liter,
+  liter: UnitOfMeasure.Liter,
+  liters: UnitOfMeasure.Liter,
+  cup: UnitOfMeasure.Cup,
+  cups: UnitOfMeasure.Cup,
+  tbsp: UnitOfMeasure.Tbsp,
+  tablespoon: UnitOfMeasure.Tbsp,
+  tablespoons: UnitOfMeasure.Tbsp,
+  tsp: UnitOfMeasure.Tsp,
+  teaspoon: UnitOfMeasure.Tsp,
+  teaspoons: UnitOfMeasure.Tsp,
+  gallon: UnitOfMeasure.Gallon,
+  gallons: UnitOfMeasure.Gallon,
+  gal: UnitOfMeasure.Gallon,
+  quart: UnitOfMeasure.Quart,
+  quarts: UnitOfMeasure.Quart,
+  qt: UnitOfMeasure.Quart,
+  pint: UnitOfMeasure.Pint,
+  pints: UnitOfMeasure.Pint,
+  pt: UnitOfMeasure.Pint,
 };
 
 @Injectable()
@@ -169,9 +226,51 @@ export class FoodCacheService {
       };
     }
 
-    const usdaResults = await this.searchUsda(barcode, 5);
-    const match = usdaResults.find((r) => r.barcode === barcode);
-    return match || null;
+    return this.searchOpenFoodFacts(barcode);
+  }
+
+  private async searchOpenFoodFacts(
+    barcode: string,
+  ): Promise<FoodSearchResult | null> {
+    try {
+      const response = await fetch(
+        `https://world.openfoodfacts.org/api/v2/product/${barcode}?fields=product_name,brands,code,quantity,serving_size,nutriments`,
+      );
+
+      if (!response.ok) {
+        this.logger.warn(
+          `Open Food Facts returned ${response.status} for barcode ${barcode}`,
+        );
+        return null;
+      }
+
+      const data: OpenFoodFactsResponse = await response.json();
+      if (data.status !== 1 || !data.product?.product_name) return null;
+
+      const product = data.product;
+
+      const result: FoodSearchResult = {
+        name: product.product_name,
+        brand: product.brands || null,
+        barcode: product.code || barcode,
+        nutritionPer100g: this.extractOffNutrition(product.nutriments),
+        source: 'openfoodfacts',
+      };
+
+      // Parse package quantity from the quantity field (e.g. "200 ml", "500g")
+      if (product.quantity) {
+        const parsed = this.parseWeightString(product.quantity);
+        if (parsed) {
+          result.packageQuantity = parsed.quantity;
+          result.packageUnit = parsed.unit;
+        }
+      }
+
+      return result;
+    } catch (error) {
+      this.logger.error('Open Food Facts barcode search failed', error);
+      return null;
+    }
   }
 
   async cacheUsdaFood(usdaFood: FoodSearchResult): Promise<FoodCache> {
@@ -269,6 +368,33 @@ export class FoodCacheService {
     return score;
   }
 
+  private parseWeightSegment(
+    segment: string,
+  ): { quantity: number; unit: UnitOfMeasure } | null {
+    const match = segment.trim().match(/^([\d.]+)\s*(.+)$/);
+    if (!match) return null;
+
+    const quantity = parseFloat(match[1]);
+    if (isNaN(quantity) || quantity <= 0) return null;
+
+    const unitStr = match[2].trim().replace(/\.$/, '').toLowerCase();
+    const unit = USDA_UNIT_MAP[unitStr];
+    if (!unit) return null;
+
+    return { quantity, unit };
+  }
+
+  private parseWeightString(
+    raw: string,
+  ): { quantity: number; unit: UnitOfMeasure } | null {
+    const segments = raw.split('/');
+    for (const segment of segments) {
+      const parsed = this.parseWeightSegment(segment);
+      if (parsed) return parsed;
+    }
+    return null;
+  }
+
   private extractNutrition(
     nutrients?: UsdaFoodNutrient[],
   ): Record<string, number> | null {
@@ -279,6 +405,31 @@ export class FoodCacheService {
       const key = NUTRIENT_MAP[nutrient.nutrientNumber];
       if (key) {
         result[key] = nutrient.value;
+      }
+    }
+
+    return Object.keys(result).length > 0 ? result : null;
+  }
+
+  private extractOffNutrition(
+    nutriments?: Record<string, number>,
+  ): Record<string, number> | null {
+    if (!nutriments) return null;
+
+    const map: Record<string, string> = {
+      'energy-kcal_100g': 'calories',
+      proteins_100g: 'protein',
+      fat_100g: 'totalFat',
+      carbohydrates_100g: 'carbohydrate',
+      fiber_100g: 'fiber',
+      sugars_100g: 'totalSugars',
+      sodium_100g: 'sodium',
+    };
+
+    const result: Record<string, number> = {};
+    for (const [offKey, ourKey] of Object.entries(map)) {
+      if (nutriments[offKey] != null) {
+        result[ourKey] = nutriments[offKey];
       }
     }
 

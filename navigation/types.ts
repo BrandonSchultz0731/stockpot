@@ -27,7 +27,11 @@ export type PantryStackParamList = {
   ReceiptScan: undefined;
   ReceiptReview: { items: Partial<import('../hooks/usePantryMutations').CreatePantryItemRequest>[] };
   BarcodeScan: undefined;
-  ManualEntry: undefined;
+  ManualEntry: {
+    displayName?: string;
+    quantity?: string;
+    unit?: string;
+  } | undefined;
   EditItem: { item: import('../hooks/usePantryQuery').PantryItem };
 };
 

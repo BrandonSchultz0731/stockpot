@@ -488,61 +488,67 @@ describe('FoodCacheService', () => {
       );
     });
 
-    it('should fall back to USDA search when not cached locally', async () => {
+    it('should fall back to Open Food Facts when not cached locally', async () => {
       mockRepo.findOne.mockResolvedValue(null);
 
-      const usdaResponse = {
-        foods: [
-          {
-            fdcId: 888,
-            description: 'GREEK YOGURT',
-            dataType: 'Branded',
-            brandOwner: 'Chobani',
-            gtinUpc: '894700010045',
-            foodNutrients: [],
+      const offResponse = {
+        status: 1,
+        product: {
+          product_name: 'Lemon Juice',
+          brands: 'Sicilia',
+          code: '03084984',
+          quantity: '200 ml',
+          nutriments: {
+            'energy-kcal_100g': 40,
+            proteins_100g: 0,
+            fat_100g: 0,
+            carbohydrates_100g: 8,
           },
-        ],
-        totalHits: 1,
+        },
       };
-      global.fetch = jest.fn().mockResolvedValue(mockFetchResponse(usdaResponse));
+      global.fetch = jest.fn().mockResolvedValue(mockFetchResponse(offResponse));
 
-      const result = await service.findByBarcode('894700010045');
+      const result = await service.findByBarcode('03084984');
 
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('https://world.openfoodfacts.org/api/v2/product/03084984'),
+      );
       expect(result).toEqual(
         expect.objectContaining({
-          fdcId: 888,
-          barcode: '894700010045',
-          source: 'usda',
+          name: 'Lemon Juice',
+          brand: 'Sicilia',
+          barcode: '03084984',
+          packageQuantity: 200,
+          packageUnit: 'ml',
+          source: 'openfoodfacts',
+          nutritionPer100g: {
+            calories: 40,
+            protein: 0,
+            totalFat: 0,
+            carbohydrate: 8,
+          },
         }),
       );
     });
 
-    it('should return null when barcode not found anywhere', async () => {
+    it('should return null when product not found in Open Food Facts', async () => {
       mockRepo.findOne.mockResolvedValue(null);
 
-      const usdaResponse = {
-        foods: [
-          {
-            fdcId: 777,
-            description: 'Something Else',
-            dataType: 'Branded',
-            gtinUpc: '000000000000',
-            foodNutrients: [],
-          },
-        ],
-        totalHits: 1,
+      const offResponse = {
+        status: 0,
+        status_verbose: 'product not found',
       };
-      global.fetch = jest.fn().mockResolvedValue(mockFetchResponse(usdaResponse));
+      global.fetch = jest.fn().mockResolvedValue(mockFetchResponse(offResponse));
 
-      const result = await service.findByBarcode('894700010045');
+      const result = await service.findByBarcode('000000000000');
 
       expect(result).toBeNull();
     });
 
-    it('should return null when USDA returns no results', async () => {
+    it('should return null when Open Food Facts API fails', async () => {
       mockRepo.findOne.mockResolvedValue(null);
       global.fetch = jest.fn().mockResolvedValue(
-        mockFetchResponse({ foods: [], totalHits: 0 }),
+        mockFetchResponse({}, false, 500),
       );
 
       const result = await service.findByBarcode('894700010045');
