@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
+import { ACTIVE_MODEL, estimateCostCents } from '../ai-models';
 import { UnitOfMeasure } from '@shared/enums';
 import { ScanReceiptDto } from './dto/scan-receipt.dto';
 
@@ -54,7 +55,7 @@ export class ReceiptScanService {
 
     try {
       response = await this.anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: ACTIVE_MODEL.id,
         max_tokens: 4096,
         messages: [
           {
@@ -90,10 +91,13 @@ export class ReceiptScanService {
     const inputTokens = response.usage?.input_tokens ?? 0;
     const outputTokens = response.usage?.output_tokens ?? 0;
 
+    const costCents = estimateCostCents(inputTokens, outputTokens);
+
     await Promise.all([
       this.usageTrackingService.increment(userId, 'receiptScans'),
       this.usageTrackingService.increment(userId, 'totalInputTokens', inputTokens),
       this.usageTrackingService.increment(userId, 'totalOutputTokens', outputTokens),
+      this.usageTrackingService.increment(userId, 'estimatedCostCents', costCents),
     ]);
 
     const rawText =
