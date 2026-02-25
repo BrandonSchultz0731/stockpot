@@ -25,6 +25,12 @@ jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn(),
 }));
 
+// Mock react-native-image-crop-picker (native module not available in Jest)
+jest.mock('react-native-image-crop-picker', () => ({
+  openCropper: jest.fn(() => Promise.resolve({ data: '', mime: 'image/jpeg' })),
+  openPicker: jest.fn(() => Promise.resolve({ path: '', mime: 'image/jpeg' })),
+}));
+
 // Silence console.warn from NativeWind / React Navigation in tests
 const originalWarn = console.warn;
 console.warn = (...args) => {

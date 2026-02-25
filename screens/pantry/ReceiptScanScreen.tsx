@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  GestureResponderEvent,
   Linking,
   Pressable,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -15,8 +17,8 @@ import {
   useCameraDevice,
   useCameraPermission,
 } from 'react-native-vision-camera';
-import ReactNativeBlobUtil from 'react-native-blob-util';
 import { launchImageLibrary } from 'react-native-image-picker';
+import ImageCropPicker from 'react-native-image-crop-picker';
 import { Camera as CameraIcon, Image, Zap, ZapOff, X } from 'lucide-react-native';
 import { useReceiptScanMutation } from '../../hooks/useReceiptScanMutation';
 import colors from '../../theme/colors';
@@ -27,7 +29,9 @@ type Nav = NativeStackNavigationProp<PantryStackParamList, 'ReceiptScan'>;
 export default function ReceiptScanScreen() {
   const navigation = useNavigation<Nav>();
   const { hasPermission, requestPermission } = useCameraPermission();
-  const device = useCameraDevice('back');
+  const device = useCameraDevice('back', {
+    physicalDevices: ['ultra-wide-angle-camera', 'wide-angle-camera'],
+  });
   const cameraRef = useRef<Camera>(null);
 
   const [flash, setFlash] = useState(false);
@@ -39,16 +43,49 @@ export default function ReceiptScanScreen() {
     }
   }, [hasPermission, requestPermission]);
 
+  const handleFocus = async (e: GestureResponderEvent) => {
+    if (!cameraRef.current) return;
+    try {
+      // Use pageX/pageY since the Camera fills the entire screen
+      await cameraRef.current.focus({
+        x: e.nativeEvent.pageX,
+        y: e.nativeEvent.pageY,
+      });
+    } catch {
+      // Focus may not be supported or point is out of bounds — ignore
+    }
+  };
+
+  const cropAndProcess = async (path: string) => {
+    try {
+      const result = await ImageCropPicker.openCropper({
+        path,
+        mediaType: 'photo',
+        includeBase64: true,
+        compressImageQuality: 0.8,
+        freeStyleCropEnabled: true,
+      });
+
+      if (result.data) {
+        processImage(result.data, result.mime || 'image/jpeg');
+      }
+    } catch {
+      // User dismissed the cropper — do nothing
+    }
+  };
+
   const handleCapture = async () => {
     if (!cameraRef.current || scanMutation.isPending) return;
 
     try {
-      const photo = await cameraRef.current.takePhoto({
-        flash: flash ? 'on' : 'off',
+      // takeSnapshot captures from the video pipeline with physically
+      // correct pixel orientation (no EXIF rotation issues in the cropper).
+      // Torch is handled by the Camera `torch` prop if flash is enabled.
+      const snapshot = await cameraRef.current.takeSnapshot({
+        quality: 100,
       });
 
-      const base64 = await ReactNativeBlobUtil.fs.readFile(photo.path, 'base64');
-      processImage(base64, 'image/jpeg');
+      await cropAndProcess(snapshot.path);
     } catch {
       Alert.alert('Error', 'Failed to capture photo. Please try again.');
     }
@@ -63,22 +100,14 @@ export default function ReceiptScanScreen() {
         maxWidth: 1500,
         maxHeight: 2000,
         quality: 0.8,
-        includeBase64: true,
       },
       (response) => {
         if (response.didCancel || response.errorCode) return;
 
         const asset = response.assets?.[0];
-        if (!asset?.base64) return;
+        if (!asset?.uri) return;
 
-        let mimeType = asset.type || 'image/jpeg';
-        // Normalize non-standard mime types
-        if (mimeType === 'image/jpg') {
-          mimeType = 'image/jpeg';
-        } else if (mimeType === 'image/heic' || mimeType === 'image/heif') {
-          mimeType = 'image/jpeg';
-        }
-        processImage(asset.base64, mimeType);
+        cropAndProcess(asset.uri);
       },
     );
   };
@@ -164,10 +193,11 @@ export default function ReceiptScanScreen() {
     <View className="flex-1 bg-dark">
       <Camera
         ref={cameraRef}
-        className="absolute inset-0"
+        style={StyleSheet.absoluteFill}
         device={device}
         isActive={!scanMutation.isPending}
         photo={true}
+        video={true}
         torch={flash ? 'on' : 'off'}
       />
 
@@ -183,16 +213,14 @@ export default function ReceiptScanScreen() {
           <View className="w-6" />
         </View>
 
-        {/* Viewfinder */}
-        <View className="flex-1 items-center justify-center px-8">
-          <View className="w-full aspect-[3/4] rounded-2xl border-2 border-dashed border-white/30 items-center justify-center">
-            {!scanMutation.isPending && (
-              <Text className="text-white/50 text-[14px] text-center px-8">
-                Position your receipt within the frame
-              </Text>
-            )}
-          </View>
-        </View>
+        {/* Tap-to-focus area + helper text */}
+        <Pressable onPress={handleFocus} className="flex-1 items-center justify-center px-8">
+          {!scanMutation.isPending && (
+            <Text className="text-white/50 text-[14px] text-center">
+              Take a photo of your receipt — you can crop it next
+            </Text>
+          )}
+        </Pressable>
 
         {/* Bottom controls */}
         <View className="flex-row items-center justify-around px-8 pb-8">
