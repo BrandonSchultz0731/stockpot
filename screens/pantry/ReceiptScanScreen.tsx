@@ -16,7 +16,7 @@ export default function ReceiptScanScreen() {
           <Pressable onPress={() => navigation.goBack()}>
             <X size={24} color="#FFFFFF" />
           </Pressable>
-          <Text className="text-[16px] text-white" style={{ fontWeight: '700' }}>
+          <Text className="text-[16px] text-white font-bold">
             Scan Receipt
           </Text>
           <View className="w-6" />

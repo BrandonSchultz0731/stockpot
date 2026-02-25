@@ -49,8 +49,7 @@ function MethodCard({
         <View className="flex-1">
           <View className="flex-row items-center gap-2">
             <Text
-              className={`text-[15px] ${isDark ? 'text-white' : 'text-dark'}`}
-              style={{ fontWeight: '600' }}>
+              className={`text-[15px] font-semibold ${isDark ? 'text-white' : 'text-dark'}`}>
               {title}
             </Text>
             {badge && (
@@ -83,8 +82,7 @@ export default function AddItemPickerScreen() {
           <ChevronLeft size={24} color={colors.navy.DEFAULT} />
         </Pressable>
         <Text
-          className="text-[26px] text-navy mb-2"
-          style={{ fontWeight: '800', letterSpacing: -0.5 }}>
+          className="text-[26px] text-navy mb-2 font-extrabold tracking-[-0.5px]">
           Add Items
         </Text>
         <Text className="text-[14px] text-muted mb-6">
@@ -120,8 +118,7 @@ export default function AddItemPickerScreen() {
           <Lightbulb size={18} color={colors.orange.DEFAULT} />
           <View className="flex-1">
             <Text
-              className="text-[13px] text-dark mb-1"
-              style={{ fontWeight: '600' }}>
+              className="text-[13px] text-dark mb-1 font-semibold">
               Pro tip
             </Text>
             <Text className="text-[12px] text-muted leading-[18px]">

@@ -42,8 +42,7 @@ function PantryCard({
       <View className="flex-row items-center justify-between">
         <View className="flex-1 mr-3">
           <Text
-            className="text-[15px] text-dark mb-0.5"
-            style={{ fontWeight: '600' }}
+            className="text-[15px] text-dark mb-0.5 font-semibold"
             numberOfLines={1}>
             {item.displayName}
           </Text>
@@ -102,8 +101,7 @@ export default function PantryListScreen() {
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
       <View className="px-5 pt-4 pb-2">
         <Text
-          className="text-[26px] text-navy mb-4"
-          style={{ fontWeight: '800', letterSpacing: -0.5 }}>
+          className="text-[26px] text-navy mb-4 font-extrabold tracking-[-0.5px]">
           Pantry
         </Text>
         <TextInputRow
@@ -119,7 +117,7 @@ export default function PantryListScreen() {
       <FlatList
         data={filtered}
         keyExtractor={item => item.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 100 }}
+        contentContainerClassName="px-5 pt-3 pb-[100px]"
         renderItem={({ item }) => (
           <PantryCard
             item={item}
@@ -137,8 +135,7 @@ export default function PantryListScreen() {
           <View className="items-center justify-center pt-20">
             <Package size={48} color={colors.muted} />
             <Text
-              className="text-[17px] text-navy mt-4 mb-2"
-              style={{ fontWeight: '700' }}>
+              className="text-[17px] text-navy mt-4 mb-2 font-bold">
               Your pantry is empty
             </Text>
             <Text className="text-[14px] text-muted text-center px-8">
@@ -150,14 +147,7 @@ export default function PantryListScreen() {
 
       <Pressable
         onPress={() => navigation.navigate('AddItemPicker')}
-        className="absolute bottom-8 right-5 w-14 h-14 rounded-full bg-orange items-center justify-center"
-        style={{
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.2,
-          shadowRadius: 4,
-          elevation: 4,
-        }}>
+        className="absolute bottom-8 right-5 w-14 h-14 rounded-full bg-orange items-center justify-center shadow-md elevation-4">
         <Plus size={28} color="#FFFFFF" />
       </Pressable>
     </SafeAreaView>

@@ -13,6 +13,8 @@ export interface FoodSearchResult {
   category: string | null;
   brand: string | null;
   barcode: string | null;
+  packageQuantity?: number;
+  packageUnit?: string;
 }
 
 function useDebouncedValue(value: string, delayMs: number): string {
