@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   GestureResponderEvent,
+  Image as RNImage,
   Linking,
   Pressable,
   StyleSheet,
@@ -56,10 +57,21 @@ export default function ReceiptScanScreen() {
     }
   };
 
-  const cropAndProcess = async (path: string) => {
+  const cropAndProcess = async (imagePath: string) => {
     try {
+      // openCropper needs a file:// URI — ensure the prefix is present
+      const path = imagePath.startsWith('file://') ? imagePath : `file://${imagePath}`;
+
+      // Get actual image dimensions so the crop box starts at "Original"
+      const { width, height } = await new Promise<{ width: number; height: number }>(
+        (resolve, reject) =>
+          RNImage.getSize(path, (w, h) => resolve({ width: w, height: h }), reject),
+      );
+
       const result = await ImageCropPicker.openCropper({
         path,
+        width,
+        height,
         mediaType: 'photo',
         includeBase64: true,
         compressImageQuality: 0.8,
@@ -104,10 +116,12 @@ export default function ReceiptScanScreen() {
       (response) => {
         if (response.didCancel || response.errorCode) return;
 
-        const asset = response.assets?.[0];
-        if (!asset?.uri) return;
+        const uri = response.assets?.[0]?.uri;
+        if (!uri) return;
 
-        cropAndProcess(asset.uri);
+        // Delay so the image picker modal fully dismisses before
+        // openCropper presents its own modal on iOS
+        setTimeout(() => cropAndProcess(uri), 1000);
       },
     );
   };
