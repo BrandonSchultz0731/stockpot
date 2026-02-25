@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsageTrackingModule } from './usage-tracking/usage-tracking.module';
 import { FoodCacheModule } from './food-cache/food-cache.module';
 import { PantryModule } from './pantry/pantry.module';
+import { ReceiptScanModule } from './receipt-scan/receipt-scan.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PantryModule } from './pantry/pantry.module';
     UsageTrackingModule,
     FoodCacheModule,
     PantryModule,
+    ReceiptScanModule,
   ],
   controllers: [AppController],
   providers: [AppService],

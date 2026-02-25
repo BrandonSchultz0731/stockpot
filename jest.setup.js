@@ -10,6 +10,27 @@ jest.mock('react-native-vision-camera', () => ({
   useCodeScanner: jest.fn(() => null),
 }));
 
+// Mock react-native-blob-util (native module not available in Jest)
+jest.mock('react-native-blob-util', () => ({
+  __esModule: true,
+  default: {
+    fs: {
+      readFile: jest.fn(() => Promise.resolve('')),
+    },
+  },
+}));
+
+// Mock react-native-image-picker (native module not available in Jest)
+jest.mock('react-native-image-picker', () => ({
+  launchImageLibrary: jest.fn(),
+}));
+
+// Mock react-native-image-crop-picker (native module not available in Jest)
+jest.mock('react-native-image-crop-picker', () => ({
+  openCropper: jest.fn(() => Promise.resolve({ data: '', mime: 'image/jpeg' })),
+  openPicker: jest.fn(() => Promise.resolve({ path: '', mime: 'image/jpeg' })),
+}));
+
 // Silence console.warn from NativeWind / React Navigation in tests
 const originalWarn = console.warn;
 console.warn = (...args) => {

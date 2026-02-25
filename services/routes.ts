@@ -17,6 +17,9 @@ export const ROUTES = {
     SEARCH: '/food/search',
     BARCODE: (code: string) => `/food/barcode/${code}`,
   },
+  RECEIPTS: {
+    SCAN: '/receipts/scan',
+  },
   PANTRY: {
     LIST: '/pantry',
     CREATE: '/pantry',
