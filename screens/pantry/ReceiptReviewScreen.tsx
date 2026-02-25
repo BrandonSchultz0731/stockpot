@@ -2,7 +2,9 @@ import { useState } from 'react';
 import {
   Alert,
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -161,6 +163,9 @@ export default function ReceiptReviewScreen() {
 
       {/* Inline edit modal */}
       <Modal visible={editIndex !== null} transparent animationType="slide">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1">
         <Pressable
           className="flex-1 bg-black/40"
           onPress={() => setEditIndex(null)}
@@ -210,6 +215,7 @@ export default function ReceiptReviewScreen() {
 
           <Button label="Save" onPress={saveEdit} />
         </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
