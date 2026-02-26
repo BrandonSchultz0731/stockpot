@@ -4,22 +4,9 @@ import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
 import { useAuth } from '../contexts/AuthContext';
 import { getCurrentWeekStartDate } from '../utils/dayOfWeek';
-import type { MealType, RecipeIngredient, RecipeNutrition } from '../shared/enums';
+import type { MealType, Recipe } from '../shared/enums';
 
-export interface MealPlanRecipe {
-  id: string;
-  title: string;
-  description: string;
-  prepTimeMinutes: number;
-  cookTimeMinutes: number;
-  totalTimeMinutes: number;
-  servings: number;
-  difficulty: string;
-  cuisine: string;
-  mealType: MealType;
-  ingredients: RecipeIngredient[];
-  nutrition: RecipeNutrition | null;
-}
+export type MealPlanRecipe = Omit<Recipe, 'steps' | 'tags' | 'dietaryFlags'>;
 
 export interface MealPlanEntry {
   id: string;

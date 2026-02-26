@@ -16,9 +16,14 @@ export type OnboardingParamList = {
 export type TabParamList = {
   Home: undefined;
   PantryStack: undefined;
-  Meals: undefined;
+  MealsStack: undefined;
   AIChef: undefined;
   Profile: undefined;
+};
+
+export type MealsStackParamList = {
+  MealsList: undefined;
+  RecipeDetail: { recipeId: string; title?: string };
 };
 
 export type PantryStackParamList = {

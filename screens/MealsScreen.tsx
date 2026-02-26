@@ -7,6 +7,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
 import {
   Bookmark,
@@ -22,6 +24,7 @@ import { ROUTES } from '../services/routes';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { MealType, MealPlanStatus } from '../shared/enums';
+import type { MealsStackParamList } from '../navigation/types';
 import { getCurrentWeekStartDate, getTodayDayOfWeek } from '../utils/dayOfWeek';
 import {
   useCurrentMealPlanQuery,
@@ -205,15 +208,17 @@ function MealCard({
   isSwapping,
   onSwap,
   onToggleSave,
+  onPress,
 }: {
   entry: MealPlanEntry;
   isSaved: boolean;
   isSwapping: boolean;
   onSwap: () => void;
   onToggleSave: () => void;
+  onPress: () => void;
 }) {
   return (
-    <View className="mx-4 mb-2.5 flex-row items-center rounded-2xl border border-border bg-white p-3.5">
+    <Pressable onPress={onPress} className="mx-4 mb-2.5 flex-row items-center rounded-2xl border border-border bg-white p-3.5">
       <View className="flex-1">
         <Text className="text-[11px] font-bold uppercase tracking-[0.5px] text-orange">
           {entry.mealType}
@@ -244,7 +249,7 @@ function MealCard({
           />
         </Pressable>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -275,6 +280,7 @@ function SaveTemplateButton() {
 // ---------------------------------------------------------------------------
 
 export default function MealsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<MealsStackParamList>>();
   const { isAuthenticated } = useAuth();
   const weekStart = getCurrentWeekStartDate();
 
@@ -487,6 +493,7 @@ export default function MealsScreen() {
                     isSwapping={swappingEntryId === entry.id}
                     onSwap={() => handleSwap(entry.id)}
                     onToggleSave={() => handleToggleSave(entry.recipe.id)}
+                    onPress={() => navigation.navigate('RecipeDetail', { recipeId: entry.recipe.id, title: entry.recipe.title })}
                   />
                 ))}
               </View>

@@ -155,6 +155,24 @@ export interface RecipeNutrition {
   fat?: number;
 }
 
+export interface Recipe {
+  id: string;
+  title: string;
+  description: string;
+  prepTimeMinutes: number;
+  cookTimeMinutes: number;
+  totalTimeMinutes: number;
+  servings: number;
+  difficulty: string;
+  cuisine: string;
+  mealType: MealType;
+  ingredients: RecipeIngredient[];
+  steps: RecipeStep[];
+  tags: string[];
+  dietaryFlags: string[];
+  nutrition: RecipeNutrition | null;
+}
+
 export enum MealPlanStatus {
   Draft = 'draft',
   Active = 'active',
