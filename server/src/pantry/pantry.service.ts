@@ -7,8 +7,8 @@ import { AnthropicService } from '../anthropic/anthropic.service';
 import { CreatePantryItemDto } from './dto/create-pantry-item.dto';
 import { UpdatePantryItemDto } from './dto/update-pantry-item.dto';
 import { StorageLocation, ShelfLife } from '@shared/enums';
+import { calculateExpirationDate, formatISODate } from '@shared/dates';
 import { CLAUDE_MODELS } from '../ai-models';
-import { formatISODate } from '../utils/format-date';
 
 @Injectable()
 export class PantryService {
@@ -170,11 +170,9 @@ export class PantryService {
 
       if (!shelfLife) return null;
 
-      const expirationDate = this.calculateExpirationDate(
-        shelfLife,
-        storageLocation,
-      );
-      if (!expirationDate) return null;
+      const expiryDate = calculateExpirationDate(shelfLife, storageLocation);
+      if (!expiryDate) return null;
+      const expirationDate = formatISODate(expiryDate);
 
       return { expirationDate, expiryIsEstimated: true };
     } catch (error) {
@@ -244,26 +242,4 @@ export class PantryService {
     }
   }
 
-  private calculateExpirationDate(
-    shelfLife: ShelfLife,
-    storageLocation?: StorageLocation,
-  ): string | null {
-    let days: number | undefined;
-
-    if (storageLocation) {
-      days = shelfLife[storageLocation];
-    }
-
-    // Fallback order: Pantry → Fridge → Freezer
-    if (days === undefined) days = shelfLife[StorageLocation.Pantry];
-    if (days === undefined) days = shelfLife[StorageLocation.Fridge];
-    if (days === undefined) days = shelfLife[StorageLocation.Freezer];
-
-    if (days === undefined || days <= 0) return null;
-
-    const date = new Date();
-    date.setDate(date.getDate() + days);
-
-    return formatISODate(date);
-  }
 }

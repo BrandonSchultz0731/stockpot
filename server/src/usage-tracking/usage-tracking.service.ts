@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsageTracking } from './entities/usage-tracking.entity';
-import { formatISODate } from '../utils/format-date';
+import { formatISODate } from '@shared/dates';
 
 type CounterField =
   | 'receiptScans'

@@ -5,7 +5,7 @@ import StorageLocationPills from './StorageLocationPills';
 import QuantityUnitInput from './QuantityUnitInput';
 import ExpirationDateInput from './ExpirationDateInput';
 import { UnitOfMeasure, StorageLocation } from '../../shared/enums';
-import { formatISODate } from '../../utils/expirationDate';
+import { formatISODate } from '../../shared/dates';
 import colors from '../../theme/colors';
 
 interface PantryItemFormValues {

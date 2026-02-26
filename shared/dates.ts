@@ -1,8 +1,8 @@
-import { StorageLocation, type ShelfLife } from '../shared/enums';
+import { StorageLocation, type ShelfLife } from './enums';
 
 /**
  * Calculate an expiration date from shelf life data and a storage location.
- * Mirrors the backend logic in PantryService.calculateExpirationDate.
+ * Falls back through Pantry → Fridge → Freezer if the given location has no data.
  */
 export function calculateExpirationDate(
   shelfLife: ShelfLife | undefined | null,
@@ -28,9 +28,7 @@ export function calculateExpirationDate(
   return date;
 }
 
-/**
- * Format a Date as an ISO date string (YYYY-MM-DD).
- */
+/** Format a Date as an ISO date string (YYYY-MM-DD). */
 export function formatISODate(date: Date): string {
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, '0');

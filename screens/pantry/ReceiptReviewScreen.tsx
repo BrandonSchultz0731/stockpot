@@ -29,7 +29,7 @@ import type { PantryStackParamList } from '../../navigation/types';
 import {
   calculateExpirationDate,
   formatISODate,
-} from '../../utils/expirationDate';
+} from '../../shared/dates';
 
 type Nav = NativeStackNavigationProp<PantryStackParamList, 'ReceiptReview'>;
 type Route = RouteProp<PantryStackParamList, 'ReceiptReview'>;

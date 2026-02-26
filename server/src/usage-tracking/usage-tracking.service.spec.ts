@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UsageTrackingService } from './usage-tracking.service';
 import { UsageTracking } from './entities/usage-tracking.entity';
-import { formatISODate } from '../utils/format-date';
+import { formatISODate } from '@shared/dates';
 
 const mockRepo = {
   findOne: jest.fn(),
