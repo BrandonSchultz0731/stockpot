@@ -1,6 +1,7 @@
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import BootSplash from 'react-native-bootsplash';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
 import LoginScreen from '../screens/LoginScreen';
@@ -25,7 +26,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer onReady={() => BootSplash.hide({ fade: true })}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           <>
