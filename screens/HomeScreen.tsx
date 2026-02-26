@@ -243,13 +243,11 @@ function StatCard({
   label,
   value,
   icon,
-  iconColor,
   iconBg,
 }: {
   label: string;
   value: string;
   icon: React.ReactNode;
-  iconColor: string;
   iconBg: string;
 }) {
   return (
@@ -300,28 +298,24 @@ function PantryOverview({
           label="Total Items"
           value={String(pantryItemCount)}
           icon={<LayoutGrid size={16} color={colors.navy.DEFAULT} />}
-          iconColor={colors.navy.DEFAULT}
           iconBg={colors.navy.pale}
         />
         <StatCard
           label="Expiring Soon"
           value={String(expiringCount)}
           icon={<Clock size={16} color={colors.warning.icon} />}
-          iconColor={colors.warning.icon}
           iconBg={colors.warning.pale}
         />
         <StatCard
           label="Recipes Saved"
           value={String(savedRecipeCount)}
           icon={<Heart size={16} color={colors.orange.DEFAULT} />}
-          iconColor={colors.orange.DEFAULT}
           iconBg={colors.orange.pale}
         />
         <StatCard
           label="Avg Calories"
           value={avgCalories}
           icon={<Flame size={16} color={colors.success.DEFAULT} />}
-          iconColor={colors.success.DEFAULT}
           iconBg={colors.success.pale}
         />
       </View>
