@@ -14,6 +14,7 @@ import type {
   RecipeStep,
   RecipeNutrition,
 } from '@shared/enums';
+import { MealType } from '@shared/enums';
 
 @Entity('recipes')
 export class Recipe {
@@ -49,7 +50,7 @@ export class Recipe {
   cuisine: string;
 
   @Column({ type: 'varchar', length: 20, name: 'meal_type', nullable: true })
-  mealType: string;
+  mealType: MealType;
 
   @Column({ type: 'varchar', length: 20, default: 'ai' })
   source: string;

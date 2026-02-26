@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { MealPlan } from './meal-plan.entity';
 import { Recipe } from '../../recipes/entities/recipe.entity';
+import { MealType } from '@shared/enums';
 
 @Entity('meal_plan_entries')
 @Index(['mealPlanId', 'dayOfWeek'])
@@ -25,7 +26,7 @@ export class MealPlanEntry {
   dayOfWeek: number;
 
   @Column({ type: 'varchar', length: 20, name: 'meal_type' })
-  mealType: string;
+  mealType: MealType;
 
   @Column({ type: 'int', default: 1 })
   servings: number;
