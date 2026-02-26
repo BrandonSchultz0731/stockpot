@@ -22,6 +22,7 @@ export class MealPlansController {
   constructor(private readonly mealPlansService: MealPlansService) {}
 
   @Post('generate')
+  @HttpCode(202)
   generatePlan(
     @GetUser('id') userId: string,
     @Body() dto: GenerateMealPlanDto,

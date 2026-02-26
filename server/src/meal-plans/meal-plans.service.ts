@@ -60,34 +60,65 @@ export class MealPlansService {
   }
 
   async generatePlan(userId: string, dto: GenerateMealPlanDto): Promise<MealPlan> {
-    const pantryItems = await this.pantryService.findAllForUser(userId);
-    const user = await this.usersService.findById(userId);
-
-    const ingredientList = pantryItems
-      .map((item) => `${item.displayName} (${item.quantity} ${item.unit})`)
-      .join('\n');
-
-    const mealTypes = dto.mealTypes ?? [MealType.Breakfast, MealType.Lunch, MealType.Dinner];
-    const servings = dto.servingsPerMeal ?? user?.dietaryProfile?.householdSize ?? 2;
-
-    const constraints: string[] = [];
-    if (dto.cuisine) constraints.push(`Cuisine preference: ${dto.cuisine}`);
-    if (dto.difficulty) constraints.push(`Difficulty level: ${dto.difficulty}`);
-    if (dto.dietaryFlags?.length) {
-      constraints.push(`Dietary requirements: ${dto.dietaryFlags.join(', ')}`);
-    }
-    if (user?.dietaryProfile?.diets?.length) {
-      constraints.push(`User dietary preferences: ${user.dietaryProfile.diets.join(', ')}`);
-    }
-    if (user?.dietaryProfile?.excludedIngredients?.length) {
-      constraints.push(`Excluded ingredients: ${user.dietaryProfile.excludedIngredients.join(', ')}`);
+    // Remove existing plan for this week if any
+    const existing = await this.mealPlanRepo.findOne({
+      where: { userId, weekStartDate: dto.weekStartDate },
+    });
+    if (existing) {
+      await this.mealPlanRepo.remove(existing);
     }
 
-    const constraintBlock = constraints.length > 0
-      ? `\nConstraints:\n${constraints.join('\n')}\n`
-      : '';
+    // Create draft plan and return immediately
+    const mealPlan = this.mealPlanRepo.create({
+      userId,
+      weekStartDate: dto.weekStartDate,
+      status: 'draft',
+      source: 'ai',
+    });
+    const savedPlan = await this.mealPlanRepo.save(mealPlan);
 
-    const prompt = `You are a meal planning chef. Create a 7-day meal plan (Monday through Sunday) using primarily the following pantry ingredients. It's okay to include a few common ingredients not in the pantry.
+    // Fire off background generation (not awaited)
+    this.processGeneration(userId, savedPlan.id, dto).catch((error) => {
+      this.logger.error(`Background meal plan generation failed for plan ${savedPlan.id}`, error);
+    });
+
+    return savedPlan;
+  }
+
+  private async processGeneration(
+    userId: string,
+    planId: string,
+    dto: GenerateMealPlanDto,
+  ): Promise<void> {
+    try {
+      const pantryItems = await this.pantryService.findAllForUser(userId);
+      const user = await this.usersService.findById(userId);
+
+      const ingredientList = pantryItems
+        .map((item) => `${item.displayName} (${item.quantity} ${item.unit})`)
+        .join('\n');
+
+      const mealTypes = dto.mealTypes ?? [MealType.Breakfast, MealType.Lunch, MealType.Dinner];
+      const servings = dto.servingsPerMeal ?? user?.dietaryProfile?.householdSize ?? 2;
+
+      const constraints: string[] = [];
+      if (dto.cuisine) constraints.push(`Cuisine preference: ${dto.cuisine}`);
+      if (dto.difficulty) constraints.push(`Difficulty level: ${dto.difficulty}`);
+      if (dto.dietaryFlags?.length) {
+        constraints.push(`Dietary requirements: ${dto.dietaryFlags.join(', ')}`);
+      }
+      if (user?.dietaryProfile?.diets?.length) {
+        constraints.push(`User dietary preferences: ${user.dietaryProfile.diets.join(', ')}`);
+      }
+      if (user?.dietaryProfile?.excludedIngredients?.length) {
+        constraints.push(`Excluded ingredients: ${user.dietaryProfile.excludedIngredients.join(', ')}`);
+      }
+
+      const constraintBlock = constraints.length > 0
+        ? `\nConstraints:\n${constraints.join('\n')}\n`
+        : '';
+
+      const prompt = `You are a meal planning chef. Create a 7-day meal plan (Monday through Sunday) using primarily the following pantry ingredients. It's okay to include a few common ingredients not in the pantry.
 
 Pantry ingredients:
 ${ingredientList || 'No pantry items available — suggest common recipes.'}
@@ -114,74 +145,58 @@ Return ONLY a JSON object with a "meals" array where each item has:
 
 No markdown fences, no explanation — only the JSON object.`;
 
-    let response;
-    try {
-      response = await this.anthropicService.sendMessage(userId, {
+      const response = await this.anthropicService.sendMessage(userId, {
         model: ACTIVE_MODEL,
         maxTokens: 16384,
         messages: [{ role: 'user', content: prompt }],
       });
+
+      await this.usageTrackingService.increment(userId, 'mealPlansGenerated');
+
+      const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
+      const meals = this.parseMealPlanResponse(rawText);
+
+      if (meals.length === 0) {
+        throw new Error('No valid meals parsed from AI response');
+      }
+
+      for (const meal of meals) {
+        const recipe = this.recipeRepo.create({
+          userId,
+          title: meal.title,
+          description: meal.description,
+          prepTimeMinutes: meal.prepTimeMinutes,
+          cookTimeMinutes: meal.cookTimeMinutes,
+          totalTimeMinutes: meal.totalTimeMinutes,
+          servings: meal.servings ?? servings,
+          difficulty: meal.difficulty,
+          cuisine: meal.cuisine,
+          mealType: meal.mealType,
+          source: 'ai',
+          ingredients: meal.ingredients ?? [],
+          steps: meal.steps ?? [],
+          tags: meal.tags,
+          dietaryFlags: meal.dietaryFlags,
+          nutrition: meal.nutrition,
+        });
+        const savedRecipe = await this.recipeRepo.save(recipe);
+
+        const entry = this.entryRepo.create({
+          mealPlanId: planId,
+          recipeId: savedRecipe.id,
+          dayOfWeek: meal.dayOfWeek,
+          mealType: meal.mealType,
+          servings: meal.servings ?? servings,
+        });
+        await this.entryRepo.save(entry);
+      }
+
+      await this.mealPlanRepo.update(planId, { status: 'active' });
+      this.logger.log(`Meal plan ${planId} generation completed with ${meals.length} meals`);
     } catch (error) {
-      this.logger.error('Claude API call failed for meal plan generation', error);
-      throw new BadGatewayException('Meal plan generation service unavailable');
+      this.logger.error(`Meal plan ${planId} generation failed`, error);
+      await this.mealPlanRepo.update(planId, { status: 'error' });
     }
-
-    await this.usageTrackingService.increment(userId, 'mealPlansGenerated');
-
-    const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
-    const meals = this.parseMealPlanResponse(rawText);
-
-    // Remove existing plan for this week if any
-    const existing = await this.mealPlanRepo.findOne({
-      where: { userId, weekStartDate: dto.weekStartDate },
-    });
-    if (existing) {
-      await this.mealPlanRepo.remove(existing);
-    }
-
-    const mealPlan = this.mealPlanRepo.create({
-      userId,
-      weekStartDate: dto.weekStartDate,
-      status: 'active',
-      source: 'ai',
-    });
-    const savedPlan = await this.mealPlanRepo.save(mealPlan);
-
-    for (const meal of meals) {
-      const recipe = this.recipeRepo.create({
-        userId,
-        title: meal.title,
-        description: meal.description,
-        prepTimeMinutes: meal.prepTimeMinutes,
-        cookTimeMinutes: meal.cookTimeMinutes,
-        totalTimeMinutes: meal.totalTimeMinutes,
-        servings: meal.servings ?? servings,
-        difficulty: meal.difficulty,
-        cuisine: meal.cuisine,
-        mealType: meal.mealType,
-        source: 'ai',
-        ingredients: meal.ingredients ?? [],
-        steps: meal.steps ?? [],
-        tags: meal.tags,
-        dietaryFlags: meal.dietaryFlags,
-        nutrition: meal.nutrition,
-      });
-      const savedRecipe = await this.recipeRepo.save(recipe);
-
-      const entry = this.entryRepo.create({
-        mealPlanId: savedPlan.id,
-        recipeId: savedRecipe.id,
-        dayOfWeek: meal.dayOfWeek,
-        mealType: meal.mealType,
-        servings: meal.servings ?? servings,
-      });
-      await this.entryRepo.save(entry);
-    }
-
-    return this.mealPlanRepo.findOne({
-      where: { id: savedPlan.id },
-      relations: ['entries', 'entries.recipe'],
-    });
   }
 
   async updateEntry(

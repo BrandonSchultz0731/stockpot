@@ -159,6 +159,7 @@ export enum MealPlanStatus {
   Draft = 'draft',
   Active = 'active',
   Completed = 'completed',
+  Error = 'error',
 }
 
 export enum DayOfWeek {
