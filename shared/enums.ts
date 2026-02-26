@@ -114,3 +114,43 @@ export const EXCLUDED_INGREDIENT_SUGGESTIONS: string[] = [
   'Coconut',
   'Bell Peppers',
 ];
+
+export enum MealType {
+  Breakfast = 'Breakfast',
+  Lunch = 'Lunch',
+  Dinner = 'Dinner',
+  Snack = 'Snack',
+}
+
+export enum Difficulty {
+  Easy = 'Easy',
+  Medium = 'Medium',
+  Hard = 'Hard',
+}
+
+export enum RecipeSource {
+  AI = 'ai',
+  Manual = 'manual',
+  Imported = 'imported',
+}
+
+export interface RecipeIngredient {
+  name: string;
+  quantity: number;
+  unit: string;
+  notes?: string;
+  inPantry?: boolean;
+}
+
+export interface RecipeStep {
+  stepNumber: number;
+  instruction: string;
+  duration?: number;
+}
+
+export interface RecipeNutrition {
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+}

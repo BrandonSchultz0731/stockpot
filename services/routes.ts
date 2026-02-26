@@ -12,7 +12,13 @@ export const ROUTES = {
   USAGE: {
     CURRENT: '/usage/current',
   },
-  RECIPES: '/recipes',
+  RECIPES: {
+    GENERATE: '/recipes/generate',
+    SAVED: '/recipes/saved',
+    DETAIL: (id: string) => `/recipes/${id}`,
+    SAVE: (id: string) => `/recipes/${id}/save`,
+    UPDATE_SAVED: (id: string) => `/recipes/saved/${id}`,
+  },
   FOOD: {
     SEARCH: '/food/search',
     BARCODE: (code: string) => `/food/barcode/${code}`,
