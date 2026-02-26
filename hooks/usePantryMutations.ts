@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
-import { UnitOfMeasure } from '../shared/enums';
+import { UnitOfMeasure, type ShelfLife } from '../shared/enums';
 import type { PantryItem } from './usePantryQuery';
 
 export interface CreatePantryItemRequest {
@@ -16,6 +16,7 @@ export interface CreatePantryItemRequest {
   expiryIsEstimated?: boolean;
   opened?: boolean;
   notes?: string;
+  estimatedShelfLife?: ShelfLife;
 }
 
 export interface UpdatePantryItemRequest {

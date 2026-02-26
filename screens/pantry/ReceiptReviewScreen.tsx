@@ -18,19 +18,36 @@ import { ChevronLeft, Pencil, X } from 'lucide-react-native';
 import Button from '../../components/Button';
 import QuantityUnitInput from '../../components/pantry/QuantityUnitInput';
 import StorageLocationPills from '../../components/pantry/StorageLocationPills';
+import ExpirationDateInput from '../../components/pantry/ExpirationDateInput';
 import {
   useBulkCreatePantryItemsMutation,
   type CreatePantryItemRequest,
 } from '../../hooks/usePantryMutations';
-import { UnitOfMeasure, StorageLocation } from '../../shared/enums';
+import { UnitOfMeasure, StorageLocation, type ShelfLife } from '../../shared/enums';
 import colors from '../../theme/colors';
 import type { PantryStackParamList } from '../../navigation/types';
+import {
+  calculateExpirationDate,
+  formatISODate,
+} from '../../shared/dates';
 
 type Nav = NativeStackNavigationProp<PantryStackParamList, 'ReceiptReview'>;
 type Route = RouteProp<PantryStackParamList, 'ReceiptReview'>;
 
 interface EditableItem extends Partial<CreatePantryItemRequest> {
   _key: string;
+  expirationDate?: string;
+  expiryIsEstimated?: boolean;
+  estimatedShelfLife?: ShelfLife;
+}
+
+function formatDisplayDate(isoDate: string): string {
+  const d = new Date(isoDate + 'T00:00:00');
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 export default function ReceiptReviewScreen() {
@@ -39,7 +56,22 @@ export default function ReceiptReviewScreen() {
   const bulkCreate = useBulkCreatePantryItemsMutation();
 
   const [items, setItems] = useState<EditableItem[]>(() =>
-    params.items.map((item, i) => ({ ...item, _key: `${i}-${Date.now()}` })),
+    params.items.map((item, i) => {
+      const shelfLife = item.estimatedShelfLife;
+      const storageLocation = item.suggestedStorageLocation;
+
+      // Compute estimated expiration from shelf life
+      const estimatedDate = calculateExpirationDate(shelfLife, storageLocation);
+
+      return {
+        ...item,
+        storageLocation,
+        estimatedShelfLife: shelfLife,
+        expirationDate: estimatedDate ? formatISODate(estimatedDate) : undefined,
+        expiryIsEstimated: estimatedDate ? true : undefined,
+        _key: `${i}-${Date.now()}`,
+      };
+    }),
   );
 
   // Inline edit modal state
@@ -48,6 +80,8 @@ export default function ReceiptReviewScreen() {
   const [editQuantity, setEditQuantity] = useState('1');
   const [editUnit, setEditUnit] = useState<UnitOfMeasure>(UnitOfMeasure.Count);
   const [editStorage, setEditStorage] = useState<StorageLocation | null>(null);
+  const [editExpiration, setEditExpiration] = useState<Date | null>(null);
+  const [editExpiryIsEstimated, setEditExpiryIsEstimated] = useState(false);
 
   const openEdit = (index: number) => {
     const item = items[index];
@@ -56,6 +90,47 @@ export default function ReceiptReviewScreen() {
     setEditQuantity(String(item.quantity ?? 1));
     setEditUnit(item.unit ?? UnitOfMeasure.Count);
     setEditStorage((item.storageLocation as StorageLocation) ?? null);
+    setEditExpiration(
+      item.expirationDate ? new Date(item.expirationDate + 'T00:00:00') : null,
+    );
+    setEditExpiryIsEstimated(item.expiryIsEstimated ?? false);
+  };
+
+  const handleStorageChange = (newStorage: StorageLocation | null) => {
+    setEditStorage(newStorage);
+
+    // If the date is still estimated, recalculate from shelf life + new storage
+    if (editExpiryIsEstimated && editIndex !== null) {
+      const item = items[editIndex];
+      if (item.estimatedShelfLife) {
+        const newDate = calculateExpirationDate(
+          item.estimatedShelfLife,
+          newStorage,
+        );
+        setEditExpiration(newDate);
+      }
+    }
+  };
+
+  const handleExpirationChange = (date: Date | null) => {
+    setEditExpiration(date);
+    if (date) {
+      // User manually set a date — no longer estimated
+      setEditExpiryIsEstimated(false);
+    } else if (editIndex !== null) {
+      // User cleared the date — recalculate from shelf life
+      const item = items[editIndex];
+      if (item.estimatedShelfLife) {
+        const recalc = calculateExpirationDate(
+          item.estimatedShelfLife,
+          editStorage,
+        );
+        if (recalc) {
+          setEditExpiration(recalc);
+          setEditExpiryIsEstimated(true);
+        }
+      }
+    }
   };
 
   const saveEdit = () => {
@@ -64,12 +139,18 @@ export default function ReceiptReviewScreen() {
       prev.map((item, i) =>
         i === editIndex
           ? {
-              ...item,
-              displayName: editName.trim(),
-              quantity: parseFloat(editQuantity) || 1,
-              unit: editUnit,
-              storageLocation: editStorage ?? undefined,
-            }
+            ...item,
+            displayName: editName.trim(),
+            quantity: parseFloat(editQuantity) || 1,
+            unit: editUnit,
+            storageLocation: editStorage ?? undefined,
+            expirationDate: editExpiration
+              ? formatISODate(editExpiration)
+              : undefined,
+            expiryIsEstimated: editExpiration
+              ? editExpiryIsEstimated
+              : undefined,
+          }
           : item,
       ),
     );
@@ -94,6 +175,9 @@ export default function ReceiptReviewScreen() {
       storageLocation: i.storageLocation,
       foodCacheId: i.foodCacheId,
       fdcId: i.fdcId,
+      expirationDate: i.expirationDate,
+      expiryIsEstimated: i.expiryIsEstimated,
+      estimatedShelfLife: i.estimatedShelfLife,
     }));
 
     bulkCreate.mutate(payload, {
@@ -135,6 +219,12 @@ export default function ReceiptReviewScreen() {
                 {item.quantity ?? 1} {item.unit ?? 'count'}
                 {item.storageLocation ? `  ·  ${item.storageLocation}` : ''}
               </Text>
+              {item.expirationDate && (
+                <Text className="text-[11px] text-muted mt-0.5">
+                  Expires: {formatDisplayDate(item.expirationDate)}
+                  {item.expiryIsEstimated ? ' (est.)' : ''}
+                </Text>
+              )}
             </View>
             <Pressable onPress={() => openEdit(index)} className="p-2">
               <Pencil size={16} color={colors.muted} />
@@ -166,55 +256,66 @@ export default function ReceiptReviewScreen() {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1">
-        <Pressable
-          className="flex-1 bg-black/40"
-          onPress={() => setEditIndex(null)}
-        />
-        <View className="bg-white rounded-t-2xl pb-8 px-5 pt-5">
-          <Text
-            className="text-[18px] text-navy mb-4 font-bold">
-            Edit Item
-          </Text>
+          <Pressable
+            className="flex-1 bg-black/40"
+            onPress={() => setEditIndex(null)}
+          />
+          <View className="bg-white rounded-t-2xl pb-8 px-5 pt-5">
+            <Text
+              className="text-[18px] text-navy mb-4 font-bold">
+              Edit Item
+            </Text>
 
-          <Text className="text-[13px] text-muted font-semibold mb-1.5">
-            NAME
-          </Text>
-          <View className="bg-cream rounded-input border border-border px-3.5 py-3 mb-4">
-            <TextInput
-              className="text-[14px] leading-[18px] text-dark"
-              value={editName}
-              onChangeText={setEditName}
-              placeholder="Item name"
-              placeholderTextColor={colors.muted}
-            />
-          </View>
-
-          <Text className="text-[13px] text-muted font-semibold mb-1.5">
-            QUANTITY
-          </Text>
-          <View className="mb-4">
-            <QuantityUnitInput
-              quantity={editQuantity}
-              unit={editUnit}
-              onQuantityChange={setEditQuantity}
-              onUnitChange={setEditUnit}
-            />
-          </View>
-
-          <Text className="text-[13px] text-muted font-semibold mb-1.5">
-            STORAGE LOCATION
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View className="mb-4">
-              <StorageLocationPills
-                selected={editStorage}
-                onSelect={setEditStorage}
+            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+              NAME
+            </Text>
+            <View className="bg-cream rounded-input border border-border px-3.5 py-3 mb-4">
+              <TextInput
+                className="text-[14px] leading-[18px] text-dark"
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="Item name"
+                placeholderTextColor={colors.muted}
               />
             </View>
-          </ScrollView>
 
-          <Button label="Save" onPress={saveEdit} />
-        </View>
+            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+              QUANTITY
+            </Text>
+            <View className="mb-4">
+              <QuantityUnitInput
+                quantity={editQuantity}
+                unit={editUnit}
+                onQuantityChange={setEditQuantity}
+                onUnitChange={setEditUnit}
+              />
+            </View>
+
+            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+              STORAGE LOCATION
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View className="mb-4">
+                <StorageLocationPills
+                  selected={editStorage}
+                  onSelect={handleStorageChange}
+                />
+              </View>
+            </ScrollView>
+
+            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+              EXPIRATION DATE
+              {editExpiryIsEstimated && editExpiration ? ' (estimated)' : ''}
+            </Text>
+            <View className="mb-4">
+              <ExpirationDateInput
+                date={editExpiration}
+                onChange={handleExpirationChange}
+              />
+            </View>
+
+            <Button label="Save" onPress={saveEdit} />
+          </View>
         </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>

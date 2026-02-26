@@ -4,6 +4,7 @@ import { NotFoundException } from '@nestjs/common';
 import { PantryService } from './pantry.service';
 import { PantryItem } from './entities/pantry-item.entity';
 import { FoodCacheService } from '../food-cache/food-cache.service';
+import { AnthropicService } from '../anthropic/anthropic.service';
 import { StorageLocation, UnitOfMeasure } from '@shared/enums';
 
 const mockPantryRepo = {
@@ -20,6 +21,10 @@ const mockFoodCacheService = {
   findByFdcId: jest.fn(),
 };
 
+const mockAnthropicService = {
+  sendMessage: jest.fn(),
+};
+
 describe('PantryService', () => {
   let service: PantryService;
 
@@ -31,6 +36,7 @@ describe('PantryService', () => {
         PantryService,
         { provide: getRepositoryToken(PantryItem), useValue: mockPantryRepo },
         { provide: FoodCacheService, useValue: mockFoodCacheService },
+        { provide: AnthropicService, useValue: mockAnthropicService },
       ],
     }).compile();
 
@@ -101,7 +107,7 @@ describe('PantryService', () => {
         unit: UnitOfMeasure.Lb,
         storageLocation: StorageLocation.Fridge,
         expirationDate: undefined,
-        expiryIsEstimated: true,
+        expiryIsEstimated: false,
         opened: false,
         notes: undefined,
       });
@@ -213,9 +219,10 @@ describe('PantryService', () => {
 
       await service.create('u1', dto);
 
+      // No expiration date provided and estimation returns nothing → expiryIsEstimated defaults to false
       expect(mockPantryRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          expiryIsEstimated: true,
+          expiryIsEstimated: false,
           opened: false,
         }),
       );

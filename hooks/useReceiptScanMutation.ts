@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
-import { UnitOfMeasure } from '../shared/enums';
+import { UnitOfMeasure, type ShelfLife } from '../shared/enums';
 
 export interface ScanReceiptRequest {
   imageBase64: string;
@@ -12,6 +12,8 @@ export interface ReceiptScanItem {
   displayName: string;
   quantity: number;
   unit: UnitOfMeasure;
+  estimatedShelfLife?: ShelfLife;
+  suggestedStorageLocation?: string;
 }
 
 export interface ScanReceiptResponse {

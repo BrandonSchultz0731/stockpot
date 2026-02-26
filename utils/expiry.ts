@@ -28,18 +28,27 @@ export function getExpiryStatus(expirationDate: string | null): ExpiryStatus {
 }
 
 /**
- * Returns a human-readable expiry label.
- * Examples: "Expired", "Today", "2d left", "1w left"
+ * Returns a human-readable expiry label in natural language.
+ * Examples: "today", "in 5 days", "in 2 weeks", "3 months ago"
  */
 export function getExpiryLabel(expirationDate: string | null): string | null {
   const days = daysUntilExpiry(expirationDate);
   if (days === null) return null;
-  if (days < 0) return 'Expired';
-  if (days === 0) return 'Today';
-  if (days === 1) return '1d left';
-  if (days <= 7) return `${days}d left`;
+
+  const absDays = Math.abs(days);
+  const label = formatDayCount(absDays);
+
+  if (days === 0) return 'today';
+  return days > 0 ? `in ${label}` : `${label} ago`;
+}
+
+function formatDayCount(days: number): string {
+  if (days === 1) return '1 day';
+  if (days < 14) return `${days} days`;
   const weeks = Math.floor(days / 7);
-  if (weeks <= 4) return `${weeks}w left`;
-  const months = Math.floor(days / 30);
-  return `${months}mo left`;
+  if (weeks < 9) return weeks === 1 ? '1 week' : `${weeks} weeks`;
+  const months = Math.round(days / 30.44);
+  if (months < 12) return months === 1 ? '1 month' : `${months} months`;
+  const years = Math.round(days / 365.25);
+  return years === 1 ? '1 year' : `${years} years`;
 }

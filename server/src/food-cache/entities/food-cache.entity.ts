@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   Index,
 } from 'typeorm';
+import { ShelfLife } from '@shared/enums';
 
 @Entity('food_cache')
 export class FoodCache {
@@ -31,7 +32,7 @@ export class FoodCache {
   isPerishable: boolean;
 
   @Column({ type: 'jsonb', name: 'shelf_life', nullable: true })
-  shelfLife: { fridge?: number; freezer?: number; pantry?: number };
+  shelfLife: ShelfLife;
 
   @Column({ type: 'jsonb', name: 'nutrition_per_100g', nullable: true })
   nutritionPer100g: Record<string, number>;
