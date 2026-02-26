@@ -35,7 +35,7 @@ After installing native dependencies in the app, run `cd ios && pod install`.
 
 ## Key Conventions
 
-- Styling: Use NativeWind `className` props, not inline `StyleSheet`. Use inline `style` only for values NativeWind can't handle (fontWeight, letterSpacing, dynamic backgroundColor).
+- Styling: Use NativeWind `className` props, not inline `StyleSheet`. Always use Tailwind classes for fontWeight (`font-bold`, `font-semibold`, etc.), letterSpacing (`tracking-tight`, `tracking-[0.5px]`), textTransform (`uppercase`), and opacity (`opacity-50`). Use inline `style` only for truly dynamic values (e.g. computed backgroundColor). Never introduce `react-native/no-inline-styles` lint warnings — fix them with Tailwind classes.
 - API layer: Use `services/api.ts` (`api.get`/`api.post`) — not raw `fetch`. Route paths come from `services/routes.ts`.
 - Data fetching: Use TanStack Query (`useQuery`/`useMutation`). Query keys come from `services/queryKeys.ts`.
 - Auth state: Managed by `contexts/AuthContext.tsx` — use `useAuth()` hook for `isAuthenticated`, `saveTokens`, `clearTokens`.
