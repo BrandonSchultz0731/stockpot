@@ -12,6 +12,8 @@
 		746868E401139640E6B6C34B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		2DEA43195E7848F1A9796C4D /* BootSplash.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B26917951AF04C1A83C3CB8A /* BootSplash.storyboard */; };
+		3BCEE23D1D004AA79A42AB00 /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 77C2A1C7A6B64BABA776EEC4 /* Colors.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +27,8 @@
 		95ADB13EF04613A29267BBE7 /* Pods-StockPot.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StockPot.release.xcconfig"; path = "Target Support Files/Pods-StockPot/Pods-StockPot.release.xcconfig"; sourceTree = "<group>"; };
 		9A2DF04E8F2FE548FB0AF5AF /* libPods-StockPot.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-StockPot.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		B26917951AF04C1A83C3CB8A /* BootSplash.storyboard */ = {isa = PBXFileReference; name = "BootSplash.storyboard"; path = "StockPot/BootSplash.storyboard"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		77C2A1C7A6B64BABA776EEC4 /* Colors.xcassets */ = {isa = PBXFileReference; name = "Colors.xcassets"; path = "StockPot/Colors.xcassets"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = folder.assetcatalog; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,6 +51,8 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				B26917951AF04C1A83C3CB8A /* BootSplash.storyboard */,
+				77C2A1C7A6B64BABA776EEC4 /* Colors.xcassets */,
 			);
 			name = StockPot;
 			sourceTree = "<group>";
@@ -162,6 +168,8 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				746868E401139640E6B6C34B /* PrivacyInfo.xcprivacy in Resources */,
+				2DEA43195E7848F1A9796C4D /* BootSplash.storyboard in Resources */,
+				3BCEE23D1D004AA79A42AB00 /* Colors.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
