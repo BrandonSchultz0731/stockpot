@@ -1,12 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
 import { ModelConfig, ACTIVE_MODEL, estimateCostCents } from '../ai-models';
+import { FAKE_RESPONSES } from './fake-responses';
+
+export type MessageType =
+  | 'meal-plan'
+  | 'meal-swap'
+  | 'recipe-generation'
+  | 'shelf-life'
+  | 'receipt-scan';
 
 @Injectable()
 export class AnthropicService {
+  private readonly logger = new Logger(AnthropicService.name);
   private readonly anthropic: Anthropic;
+  private readonly useFakeData: boolean;
 
   constructor(
     private readonly configService: ConfigService,
@@ -15,6 +25,10 @@ export class AnthropicService {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('ANTHROPIC_API_KEY'),
     });
+    this.useFakeData = this.configService.get<string>('USE_FAKE_DATA') === 'true';
+    if (this.useFakeData) {
+      this.logger.warn('USE_FAKE_DATA is enabled — AI calls will return fake responses');
+    }
   }
 
   async sendMessage(
@@ -23,8 +37,17 @@ export class AnthropicService {
       model?: ModelConfig;
       maxTokens: number;
       messages: Anthropic.MessageParam[];
+      messageType?: MessageType;
     },
   ): Promise<Anthropic.Message> {
+    if (this.useFakeData) {
+      if (!params.messageType) {
+        throw new Error('USE_FAKE_DATA is enabled but no messageType was provided to sendMessage');
+      }
+      this.logger.log(`Returning fake data for messageType: ${params.messageType}`);
+      return this.buildFakeResponse(params.messageType);
+    }
+
     const model = params.model ?? ACTIVE_MODEL;
 
     const response = await this.anthropic.messages.create({
@@ -36,6 +59,20 @@ export class AnthropicService {
     await this.trackUsage(userId, response, model);
 
     return response;
+  }
+
+  private buildFakeResponse(messageType: MessageType): Anthropic.Message {
+    const text = FAKE_RESPONSES[messageType] ?? '{}';
+    return {
+      id: 'fake-msg-id',
+      type: 'message',
+      role: 'assistant',
+      model: 'fake',
+      content: [{ type: 'text', text }],
+      stop_reason: 'end_turn',
+      stop_sequence: null,
+      usage: { input_tokens: 0, output_tokens: 0 },
+    } as unknown as Anthropic.Message;
   }
 
   private async trackUsage(

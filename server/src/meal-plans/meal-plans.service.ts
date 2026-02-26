@@ -149,6 +149,7 @@ No markdown fences, no explanation — only the JSON object.`;
         model: ACTIVE_MODEL,
         maxTokens: 16384,
         messages: [{ role: 'user', content: prompt }],
+        messageType: 'meal-plan',
       });
 
       await this.usageTrackingService.increment(userId, 'mealPlansGenerated');
@@ -279,6 +280,7 @@ No markdown fences, no explanation — only the JSON object.`;
         model: ACTIVE_MODEL,
         maxTokens: 2048,
         messages: [{ role: 'user', content: prompt }],
+        messageType: 'meal-swap',
       });
     } catch (error) {
       this.logger.error('Claude API call failed for meal swap', error);
