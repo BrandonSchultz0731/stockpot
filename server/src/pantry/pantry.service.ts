@@ -8,6 +8,7 @@ import { CreatePantryItemDto } from './dto/create-pantry-item.dto';
 import { UpdatePantryItemDto } from './dto/update-pantry-item.dto';
 import { StorageLocation, ShelfLife } from '@shared/enums';
 import { CLAUDE_MODELS } from '../ai-models';
+import { formatISODate } from '../utils/format-date';
 
 @Injectable()
 export class PantryService {
@@ -263,9 +264,6 @@ export class PantryService {
     const date = new Date();
     date.setDate(date.getDate() + days);
 
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
+    return formatISODate(date);
   }
 }

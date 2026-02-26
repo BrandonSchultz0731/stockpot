@@ -5,6 +5,7 @@ import StorageLocationPills from './StorageLocationPills';
 import QuantityUnitInput from './QuantityUnitInput';
 import ExpirationDateInput from './ExpirationDateInput';
 import { UnitOfMeasure, StorageLocation } from '../../shared/enums';
+import { formatISODate } from '../../utils/expirationDate';
 import colors from '../../theme/colors';
 
 interface PantryItemFormValues {
@@ -60,7 +61,7 @@ export default function PantryItemForm({
     }
 
     const formattedDate = expirationDate
-      ? `${expirationDate.getFullYear()}-${String(expirationDate.getMonth() + 1).padStart(2, '0')}-${String(expirationDate.getDate()).padStart(2, '0')}`
+      ? formatISODate(expirationDate)
       : undefined;
 
     onSubmit({

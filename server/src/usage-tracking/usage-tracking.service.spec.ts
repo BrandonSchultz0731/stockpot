@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UsageTrackingService } from './usage-tracking.service';
 import { UsageTracking } from './entities/usage-tracking.entity';
+import { formatISODate } from '../utils/format-date';
 
 const mockRepo = {
   findOne: jest.fn(),
@@ -40,7 +41,8 @@ describe('UsageTrackingService', () => {
 
   describe('getCurrentPeriod', () => {
     const now = new Date();
-    const expectedPeriodStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    now.setDate(1);
+    const expectedPeriodStart = formatISODate(now);
 
     it('should return existing record when found', async () => {
       const existing = {

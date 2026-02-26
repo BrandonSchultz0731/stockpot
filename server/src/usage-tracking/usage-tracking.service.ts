@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsageTracking } from './entities/usage-tracking.entity';
+import { formatISODate } from '../utils/format-date';
 
 type CounterField =
   | 'receiptScans'
@@ -22,7 +23,8 @@ export class UsageTrackingService {
 
   async getCurrentPeriod(userId: string): Promise<UsageTracking> {
     const now = new Date();
-    const periodStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    now.setDate(1);
+    const periodStart = formatISODate(now);
 
     let record = await this.usageRepo.findOne({
       where: { userId, periodStart },
