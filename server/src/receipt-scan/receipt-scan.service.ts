@@ -8,16 +8,19 @@ import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
 import { ACTIVE_MODEL, estimateCostCents } from '../ai-models';
-import { UnitOfMeasure } from '@shared/enums';
+import { UnitOfMeasure, StorageLocation, ShelfLife } from '@shared/enums';
 import { ScanReceiptDto } from './dto/scan-receipt.dto';
 
 export interface ScannedItem {
   displayName: string;
   quantity: number;
   unit: string;
+  estimatedShelfLife?: ShelfLife;
+  suggestedStorageLocation?: string;
 }
 
 const VALID_UNITS = new Set(Object.values(UnitOfMeasure));
+const VALID_STORAGE_LOCATIONS = new Set(Object.values(StorageLocation));
 
 const SYSTEM_PROMPT = `You are a grocery receipt parser. Extract food and grocery items from the receipt image.
 
@@ -25,6 +28,8 @@ Return a JSON array of objects with these fields:
 - "displayName": Human-readable product name. Expand common receipt abbreviations (e.g. "ORG" → "Organic", "GRN" → "Green", "BNLS" → "Boneless", "SKNLS" → "Skinless", "WHL" → "Whole", "BLK" → "Black", "WHT" → "White", "FRZ" → "Frozen", "BRST" → "Breast", "GRND" → "Ground"). Use title case.
 - "quantity": Number of items (default 1 if not clear).
 - "unit": One of these exact values: ${Object.values(UnitOfMeasure).join(', ')}. Use "count" if unsure.
+- "estimatedShelfLife": An object with estimated shelf life in days for each storage method: { "${StorageLocation.Fridge}": number, "${StorageLocation.Freezer}": number, "${StorageLocation.Pantry}": number }. Use typical values for an unopened product. Omit a key if that storage method is not applicable (e.g. omit "${StorageLocation.Fridge}" for raw meat).
+- "suggestedStorageLocation": The most common storage location for this item. One of: ${Object.values(StorageLocation).join(', ')}.
 
 Rules:
 - Only include food/grocery items. Skip taxes, discounts, subtotals, rewards, coupons, bag fees, and non-food items.
@@ -161,6 +166,28 @@ export class ReceiptScanService {
             ? item.quantity
             : 1,
         unit: VALID_UNITS.has(item.unit) ? item.unit : UnitOfMeasure.Count,
+        ...(item.estimatedShelfLife && {
+          estimatedShelfLife: this.parseShelfLife(item.estimatedShelfLife),
+        }),
+        ...(VALID_STORAGE_LOCATIONS.has(item.suggestedStorageLocation) && {
+          suggestedStorageLocation: item.suggestedStorageLocation,
+        }),
       }));
+  }
+
+  private parseShelfLife(raw: unknown): ShelfLife | undefined {
+    if (!raw || typeof raw !== 'object') return undefined;
+
+    const result: ShelfLife = {};
+    const obj = raw as Record<string, unknown>;
+
+    for (const loc of Object.values(StorageLocation)) {
+      const val = Number(obj[loc]);
+      if (Number.isFinite(val) && val > 0) {
+        result[loc] = Math.round(val);
+      }
+    }
+
+    return Object.keys(result).length > 0 ? result : undefined;
   }
 }

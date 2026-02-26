@@ -15,10 +15,10 @@ export interface ModelConfig {
 }
 
 export const CLAUDE_MODELS = {
-  'haiku-3.5': {
-    id: 'claude-3-5-haiku-20241022',
-    inputPerMTok: 0.8,
-    outputPerMTok: 4,
+  'haiku-4.5': {
+    id: 'claude-haiku-4-5-20251001',
+    inputPerMTok: 1,
+    outputPerMTok: 5,
   },
   'sonnet-4': {
     id: 'claude-sonnet-4-20250514',

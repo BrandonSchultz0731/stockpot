@@ -2,8 +2,9 @@ export enum StorageLocation {
   Fridge = 'Fridge',
   Freezer = 'Freezer',
   Pantry = 'Pantry',
-  Counter = 'Counter',
 }
+
+export type ShelfLife = Partial<Record<StorageLocation, number>>;
 
 export enum SubscriptionTier {
   Free = 'Free',

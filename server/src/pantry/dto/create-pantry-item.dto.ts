@@ -6,9 +6,10 @@ import {
   IsEnum,
   IsBoolean,
   IsDateString,
+  IsObject,
   Min,
 } from 'class-validator';
-import { StorageLocation, UnitOfMeasure } from '@shared/enums';
+import { StorageLocation, UnitOfMeasure, ShelfLife } from '@shared/enums';
 
 export class CreatePantryItemDto {
   @IsOptional()
@@ -48,4 +49,8 @@ export class CreatePantryItemDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsObject()
+  estimatedShelfLife?: ShelfLife;
 }

@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
 import { useAuth } from '../contexts/AuthContext';
-import { UnitOfMeasure } from '../shared/enums';
+import { UnitOfMeasure, type ShelfLife } from '../shared/enums';
 
 export interface FoodCacheItem {
   id: string;
@@ -13,7 +13,7 @@ export interface FoodCacheItem {
   usdaDataType: string | null;
   category: string | null;
   isPerishable: boolean | null;
-  shelfLife: { fridge?: number; freezer?: number; pantry?: number } | null;
+  shelfLife: ShelfLife | null;
   nutritionPer100g: Record<string, number> | null;
   barcode: string | null;
   brand: string | null;

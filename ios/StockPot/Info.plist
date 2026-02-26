@@ -37,8 +37,6 @@
 	<string>StockPot needs camera access to scan barcodes and receipt photos</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>StockPot needs access to your photo library to select receipt images</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

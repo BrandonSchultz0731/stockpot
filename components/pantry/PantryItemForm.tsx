@@ -13,6 +13,7 @@ interface PantryItemFormValues {
   unit: UnitOfMeasure;
   storageLocation?: StorageLocation;
   expirationDate?: string;
+  expiryIsEstimated?: boolean;
   notes?: string;
 }
 
@@ -58,14 +59,19 @@ export default function PantryItemForm({
       return;
     }
 
+    const formattedDate = expirationDate
+      ? `${expirationDate.getFullYear()}-${String(expirationDate.getMonth() + 1).padStart(2, '0')}-${String(expirationDate.getDate()).padStart(2, '0')}`
+      : undefined;
+
     onSubmit({
       displayName: displayName.trim(),
       quantity: qty,
       unit,
       storageLocation: storageLocation ?? undefined,
-      expirationDate: expirationDate
-        ? `${expirationDate.getFullYear()}-${String(expirationDate.getMonth() + 1).padStart(2, '0')}-${String(expirationDate.getDate()).padStart(2, '0')}`
-        : undefined,
+      expirationDate: formattedDate,
+      // When user provides a date, mark it as not estimated.
+      // When blank, omit so the backend can estimate.
+      expiryIsEstimated: formattedDate ? false : undefined,
       notes: notes.trim() || undefined,
     });
   };

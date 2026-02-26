@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, IsNull } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { FoodCache } from './entities/food-cache.entity';
-import { UnitOfMeasure } from '@shared/enums';
+import { UnitOfMeasure, ShelfLife } from '@shared/enums';
 
 interface UsdaFoodNutrient {
   nutrientNumber: string;
@@ -199,6 +199,24 @@ export class FoodCacheService {
       this.logger.error('USDA API search failed', error);
       return [];
     }
+  }
+
+  async getShelfLife(foodCacheId: string): Promise<ShelfLife | null> {
+    const entry = await this.foodCacheRepo.findOne({
+      where: { id: foodCacheId },
+      select: ['id', 'shelfLife'],
+    });
+    return entry?.shelfLife ?? null;
+  }
+
+  async updateShelfLife(foodCacheId: string, shelfLife: ShelfLife): Promise<void> {
+    // Only write if currently null to avoid overwriting user-corrected data
+    await this.foodCacheRepo
+      .createQueryBuilder()
+      .update(FoodCache)
+      .set({ shelfLife })
+      .where('id = :id AND shelf_life IS NULL', { id: foodCacheId })
+      .execute();
   }
 
   async findById(id: string): Promise<FoodCache | null> {
