@@ -35,8 +35,11 @@ export class RecipesController {
   }
 
   @Get(':id')
-  findById(@Param('id') recipeId: string) {
-    return this.recipesService.findById(recipeId);
+  findById(
+    @GetUser('id') userId: string,
+    @Param('id') recipeId: string,
+  ) {
+    return this.recipesService.findById(recipeId, userId);
   }
 
   @Post(':id/save')

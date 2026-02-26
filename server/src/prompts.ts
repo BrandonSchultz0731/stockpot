@@ -1,0 +1,138 @@
+import { UnitOfMeasure, StorageLocation } from '@shared/enums';
+
+export function buildRecipeGenerationPrompt(
+  ingredientList: string,
+  numberOfRecipes: number,
+  filterBlock: string,
+): string {
+  return `You are a creative chef. Based on the following pantry ingredients, suggest ${numberOfRecipes} recipes that can be made primarily with these items. It's okay to include a few common ingredients not in the pantry.
+
+Pantry ingredients:
+${ingredientList}
+${filterBlock}
+Return ONLY a JSON array of ${numberOfRecipes} recipe objects with these fields:
+- "title": string (recipe name)
+- "description": string (1-2 sentence description)
+- "prepTimeMinutes": number
+- "cookTimeMinutes": number
+- "totalTimeMinutes": number
+- "servings": number
+- "difficulty": "Easy" | "Medium" | "Hard"
+- "cuisine": string
+- "mealType": "Breakfast" | "Lunch" | "Dinner" | "Snack"
+- "ingredients": array of { "name": string, "quantity": number, "unit": string, "notes": string (optional) }
+- "steps": array of { "stepNumber": number, "instruction": string, "duration": number (optional, in minutes) }
+- "tags": array of strings
+- "dietaryFlags": array of strings
+- "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
+
+No markdown fences, no explanation — only the JSON array.`;
+}
+
+export function buildMealPlanPrompt(
+  ingredientList: string,
+  mealTypes: string[],
+  servings: number,
+  constraintBlock: string,
+): string {
+  return `You are a meal planning chef. Create a 7-day meal plan (Monday through Sunday) using primarily the following pantry ingredients. It's okay to include a few common ingredients not in the pantry.
+
+IMPORTANT: The quantities listed are the total available for the entire week. Ensure the combined usage of each ingredient across all meals does not exceed the available amount.
+
+Pantry ingredients:
+${ingredientList || 'No pantry items available — suggest common recipes.'}
+
+Meal types to plan: ${mealTypes.join(', ')}
+Servings per meal: ${servings}
+${constraintBlock}
+Return ONLY a JSON object with a "meals" array where each item has:
+- "dayOfWeek": number (0=Monday, 1=Tuesday, ..., 6=Sunday)
+- "mealType": "${mealTypes.join('" | "')}"
+- "title": string (recipe name)
+- "description": string (1-2 sentence description)
+- "prepTimeMinutes": number
+- "cookTimeMinutes": number
+- "totalTimeMinutes": number
+- "servings": number
+- "difficulty": "Easy" | "Medium" | "Hard"
+- "cuisine": string
+- "ingredients": array of { "name": string, "quantity": number, "unit": string, "notes": string (optional) }
+- "steps": array of { "stepNumber": number, "instruction": string, "duration": number (optional, in minutes) }
+- "tags": array of strings
+- "dietaryFlags": array of strings
+- "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
+
+No markdown fences, no explanation — only the JSON object.`;
+}
+
+export function buildMealSwapPrompt(
+  ingredientList: string,
+  dayName: string,
+  mealType: string,
+  currentTitle: string,
+  constraintBlock: string,
+): string {
+  return `You are a meal planning chef. Suggest a single replacement recipe for ${dayName} ${mealType} using primarily the following pantry ingredients. It's okay to include a few common ingredients not in the pantry.
+
+The current meal is: "${currentTitle}" — please suggest something different.
+
+Pantry ingredients:
+${ingredientList || 'No pantry items available — suggest a common recipe.'}
+${constraintBlock}
+Return ONLY a JSON object with:
+- "title": string (recipe name)
+- "description": string (1-2 sentence description)
+- "prepTimeMinutes": number
+- "cookTimeMinutes": number
+- "totalTimeMinutes": number
+- "servings": number
+- "difficulty": "Easy" | "Medium" | "Hard"
+- "cuisine": string
+- "ingredients": array of { "name": string, "quantity": number, "unit": string, "notes": string (optional) }
+- "steps": array of { "stepNumber": number, "instruction": string, "duration": number (optional, in minutes) }
+- "tags": array of strings
+- "dietaryFlags": array of strings
+- "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
+
+No markdown fences, no explanation — only the JSON object.`;
+}
+
+export function buildShelfLifePrompt(displayName: string): string {
+  const storageKeys = Object.values(StorageLocation).join(', ');
+  return `How many days does "${displayName}" typically last when stored properly? Return ONLY a JSON object with numeric values for applicable storage methods: { "${StorageLocation.Fridge}": days, "${StorageLocation.Freezer}": days, "${StorageLocation.Pantry}": days }. Valid keys: ${storageKeys}. Omit a key if that storage method is not applicable. No explanation.`;
+}
+
+export function buildIngredientResolutionPrompt(
+  unresolvedNames: string[],
+  candidateList: { id: string; name: string }[],
+): string {
+  return `For each ingredient name below, pick the best matching food item from the candidates list, or respond "NONE" if no candidate is a good match. Consider synonyms (e.g. Scallions = Green Onions, Heavy Cream = Whipping Cream, Cilantro = Coriander).
+
+Ingredient names:
+${unresolvedNames.map((n) => `- "${n}"`).join('\n')}
+
+Candidates:
+${candidateList.map((c) => `- { "id": "${c.id}", "name": "${c.name}" }`).join('\n')}
+
+Return ONLY a JSON object mapping each ingredient name to the matched candidate id, or "NONE". Example: { "Scallions": "abc-123", "Dragon Fruit": "NONE" }
+
+No markdown fences, no explanation — only the JSON object.`;
+}
+
+export function buildReceiptScanPrompt(): string {
+  return `You are a grocery receipt parser. Extract food and grocery items from the receipt image.
+
+Return a JSON array of objects with these fields:
+- "displayName": Human-readable product name. Expand common receipt abbreviations (e.g. "ORG" → "Organic", "GRN" → "Green", "BNLS" → "Boneless", "SKNLS" → "Skinless", "WHL" → "Whole", "BLK" → "Black", "WHT" → "White", "FRZ" → "Frozen", "BRST" → "Breast", "GRND" → "Ground"). Use title case.
+- "quantity": Number of items (default 1 if not clear).
+- "unit": One of these exact values: ${Object.values(UnitOfMeasure).join(', ')}. Use "count" if unsure.
+- "estimatedShelfLife": An object with estimated shelf life in days for each storage method: { "${StorageLocation.Fridge}": number, "${StorageLocation.Freezer}": number, "${StorageLocation.Pantry}": number }. Use typical values for an unopened product. Omit a key if that storage method is not applicable (e.g. omit "${StorageLocation.Fridge}" for raw meat).
+- "suggestedStorageLocation": The most common storage location for this item. One of: ${Object.values(StorageLocation).join(', ')}.
+
+Rules:
+- Only include food/grocery items. Skip taxes, discounts, subtotals, rewards, coupons, bag fees, and non-food items.
+- If a line shows a quantity multiplier (e.g. "2 @ $3.99"), use that quantity.
+- If the receipt is unreadable or contains no food items, return an empty array: []
+
+Return ONLY the JSON array, no markdown fences, no explanation.`;
+}

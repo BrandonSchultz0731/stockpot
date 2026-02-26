@@ -183,7 +183,7 @@ function TodaysMeals() {
       return (
         <View className="mx-4 items-center rounded-2xl border border-border bg-white py-6">
           <Text className="text-sm text-muted">No meal plan yet</Text>
-          <Pressable onPress={() => navigation.navigate('Meals')}>
+          <Pressable onPress={() => navigation.navigate('MealsStack')}>
             <Text className="mt-2 text-sm font-semibold text-orange">
               Generate Plan
             </Text>
@@ -211,7 +211,7 @@ function TodaysMeals() {
         <Text className="text-[17px] font-bold text-navy">
           Today's Meals
         </Text>
-        <Pressable onPress={() => navigation.navigate('Meals')}>
+        <Pressable onPress={() => navigation.navigate('MealsStack')}>
           <Text className="text-xs font-semibold text-orange">
             View Week →
           </Text>

@@ -8,6 +8,7 @@ import { AnthropicService } from '../anthropic/anthropic.service';
 import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
 import { ACTIVE_MODEL } from '../ai-models';
 import { UnitOfMeasure, StorageLocation, ShelfLife } from '@shared/enums';
+import { buildReceiptScanPrompt } from '../prompts';
 import { ScanReceiptDto } from './dto/scan-receipt.dto';
 
 export interface ScannedItem {
@@ -20,22 +21,6 @@ export interface ScannedItem {
 
 const VALID_UNITS = new Set(Object.values(UnitOfMeasure));
 const VALID_STORAGE_LOCATIONS = new Set(Object.values(StorageLocation));
-
-const SYSTEM_PROMPT = `You are a grocery receipt parser. Extract food and grocery items from the receipt image.
-
-Return a JSON array of objects with these fields:
-- "displayName": Human-readable product name. Expand common receipt abbreviations (e.g. "ORG" → "Organic", "GRN" → "Green", "BNLS" → "Boneless", "SKNLS" → "Skinless", "WHL" → "Whole", "BLK" → "Black", "WHT" → "White", "FRZ" → "Frozen", "BRST" → "Breast", "GRND" → "Ground"). Use title case.
-- "quantity": Number of items (default 1 if not clear).
-- "unit": One of these exact values: ${Object.values(UnitOfMeasure).join(', ')}. Use "count" if unsure.
-- "estimatedShelfLife": An object with estimated shelf life in days for each storage method: { "${StorageLocation.Fridge}": number, "${StorageLocation.Freezer}": number, "${StorageLocation.Pantry}": number }. Use typical values for an unopened product. Omit a key if that storage method is not applicable (e.g. omit "${StorageLocation.Fridge}" for raw meat).
-- "suggestedStorageLocation": The most common storage location for this item. One of: ${Object.values(StorageLocation).join(', ')}.
-
-Rules:
-- Only include food/grocery items. Skip taxes, discounts, subtotals, rewards, coupons, bag fees, and non-food items.
-- If a line shows a quantity multiplier (e.g. "2 @ $3.99"), use that quantity.
-- If the receipt is unreadable or contains no food items, return an empty array: []
-
-Return ONLY the JSON array, no markdown fences, no explanation.`;
 
 @Injectable()
 export class ReceiptScanService {
@@ -75,7 +60,7 @@ export class ReceiptScanService {
               },
               {
                 type: 'text',
-                text: SYSTEM_PROMPT,
+                text: buildReceiptScanPrompt(),
               },
             ],
           },

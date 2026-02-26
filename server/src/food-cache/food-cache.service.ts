@@ -4,6 +4,9 @@ import { Repository, ILike, IsNull } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { FoodCache } from './entities/food-cache.entity';
 import { UnitOfMeasure, ShelfLife } from '@shared/enums';
+import { AnthropicService } from '../anthropic/anthropic.service';
+import { CLAUDE_MODELS } from '../ai-models';
+import { buildIngredientResolutionPrompt } from '../prompts';
 
 interface UsdaFoodNutrient {
   nutrientNumber: string;
@@ -113,6 +116,7 @@ export class FoodCacheService {
     @InjectRepository(FoodCache)
     private readonly foodCacheRepo: Repository<FoodCache>,
     private readonly configService: ConfigService,
+    private readonly anthropicService: AnthropicService,
   ) {
     this.usdaApiKey = this.configService.get<string>('FOOD_DATA_CENTRAL_API_KEY') || 'DEMO_KEY';
   }
@@ -133,6 +137,127 @@ export class FoodCacheService {
     const combined = [...localResults, ...usdaResults];
     const dedupedAndRanked = this.dedupeAndRank(combined, query);
     return dedupedAndRanked.slice(0, limit);
+  }
+
+  async resolveIngredientNames(
+    ingredientNames: string[],
+    pantryFoodItems: { foodCacheId: string; displayName: string }[],
+    userId: string,
+  ): Promise<Map<string, string>> {
+    const result = new Map<string, string>();
+    if (ingredientNames.length === 0) return result;
+
+    // 1. Deduplicate ingredient names (case-insensitive)
+    const uniqueNames = new Map<string, string>();
+    for (const name of ingredientNames) {
+      const lower = name.toLowerCase();
+      if (!uniqueNames.has(lower)) {
+        uniqueNames.set(lower, name);
+      }
+    }
+
+    // 2. Gather candidates for each unique name
+    const unresolvedNames: string[] = [];
+    const allCandidates = new Map<string, { id: string; name: string }>();
+
+    // Build pantry candidate pool by foodCacheId
+    const pantryById = new Map<string, string>();
+    for (const item of pantryFoodItems) {
+      pantryById.set(item.foodCacheId, item.displayName);
+    }
+
+    for (const [lower, originalName] of uniqueNames) {
+      // Search local food_cache for matches
+      const localResults = await this.searchLocal(originalName, 3);
+
+      // Combine local results with pantry items
+      const candidatePool = new Map<string, string>();
+      for (const r of localResults) {
+        if (r.id) candidatePool.set(r.id, r.name);
+      }
+      for (const item of pantryFoodItems) {
+        if (!candidatePool.has(item.foodCacheId)) {
+          candidatePool.set(item.foodCacheId, item.displayName);
+        }
+      }
+
+      // Check for exact case-insensitive match
+      let exactMatch: string | null = null;
+      for (const [id, name] of candidatePool) {
+        if (name.toLowerCase() === lower) {
+          exactMatch = id;
+          break;
+        }
+      }
+
+      if (exactMatch) {
+        result.set(lower, exactMatch);
+      } else {
+        unresolvedNames.push(originalName);
+        // Add candidates to the global pool for the AI call
+        for (const [id, name] of candidatePool) {
+          allCandidates.set(id, { id, name });
+        }
+      }
+    }
+
+    // 3. AI batch resolution for unresolved names
+    const aiResolved = new Map<string, string>();
+    if (unresolvedNames.length > 0 && allCandidates.size > 0) {
+      const candidateList = Array.from(allCandidates.values());
+      const prompt = buildIngredientResolutionPrompt(unresolvedNames, candidateList);
+
+      try {
+        const response = await this.anthropicService.sendMessage(userId, {
+          model: CLAUDE_MODELS['haiku-4.5'],
+          maxTokens: 1024,
+          messages: [{ role: 'user', content: prompt }],
+          messageType: 'ingredient-resolution',
+        });
+
+        const rawText =
+          response.content[0]?.type === 'text' ? response.content[0].text : '';
+        let parsed: Record<string, string> = {};
+        try {
+          parsed = JSON.parse(rawText);
+        } catch {
+          const objectMatch = rawText.match(/\{[\s\S]*\}/);
+          if (objectMatch) {
+            try {
+              parsed = JSON.parse(objectMatch[0]);
+            } catch {
+              // fall through
+            }
+          }
+        }
+
+        for (const [name, id] of Object.entries(parsed)) {
+          if (id && id !== 'NONE') {
+            aiResolved.set(name.toLowerCase(), id);
+          }
+        }
+      } catch (error) {
+        this.logger.error('AI ingredient resolution failed', error);
+      }
+    }
+
+    // Merge AI results
+    for (const [lower, id] of aiResolved) {
+      result.set(lower, id);
+    }
+
+    // 4. Create food_cache entries for still-unresolved names
+    for (const [lower, originalName] of uniqueNames) {
+      if (!result.has(lower)) {
+        const cached = await this.cacheUsdaFood({
+          name: originalName,
+          source: 'cache',
+        });
+        result.set(lower, cached.id);
+      }
+    }
+
+    return result;
   }
 
   async searchLocal(query: string, limit: number): Promise<FoodSearchResult[]> {

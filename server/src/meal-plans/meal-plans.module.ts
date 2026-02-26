@@ -9,6 +9,7 @@ import { PantryModule } from '../pantry/pantry.module';
 import { AnthropicModule } from '../anthropic/anthropic.module';
 import { UsageTrackingModule } from '../usage-tracking/usage-tracking.module';
 import { UsersModule } from '../users/users.module';
+import { FoodCacheModule } from '../food-cache/food-cache.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UsersModule } from '../users/users.module';
     AnthropicModule,
     UsageTrackingModule,
     UsersModule,
+    FoodCacheModule,
   ],
   controllers: [MealPlansController],
   providers: [MealPlansService],
