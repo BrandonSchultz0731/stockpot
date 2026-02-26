@@ -25,7 +25,7 @@ export type PantryStackParamList = {
   PantryList: undefined;
   AddItemPicker: undefined;
   ReceiptScan: undefined;
-  ReceiptReview: { items: Partial<import('../hooks/usePantryMutations').CreatePantryItemRequest>[] };
+  ReceiptReview: { items: import('../hooks/useReceiptScanMutation').ReceiptScanItem[] };
   BarcodeScan: undefined;
   ManualEntry: {
     displayName?: string;

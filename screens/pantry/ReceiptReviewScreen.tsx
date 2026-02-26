@@ -57,9 +57,8 @@ export default function ReceiptReviewScreen() {
 
   const [items, setItems] = useState<EditableItem[]>(() =>
     params.items.map((item, i) => {
-      const shelfLife = (item as any).estimatedShelfLife;
-      const suggestedStorage = (item as any).suggestedStorageLocation as string | undefined;
-      const storageLocation = item.storageLocation ?? suggestedStorage;
+      const shelfLife = item.estimatedShelfLife;
+      const storageLocation = item.suggestedStorageLocation;
 
       // Compute estimated expiration from shelf life
       const estimatedDate = calculateExpirationDate(shelfLife, storageLocation);
@@ -140,18 +139,18 @@ export default function ReceiptReviewScreen() {
       prev.map((item, i) =>
         i === editIndex
           ? {
-              ...item,
-              displayName: editName.trim(),
-              quantity: parseFloat(editQuantity) || 1,
-              unit: editUnit,
-              storageLocation: editStorage ?? undefined,
-              expirationDate: editExpiration
-                ? formatISODate(editExpiration)
-                : undefined,
-              expiryIsEstimated: editExpiration
-                ? editExpiryIsEstimated
-                : undefined,
-            }
+            ...item,
+            displayName: editName.trim(),
+            quantity: parseFloat(editQuantity) || 1,
+            unit: editUnit,
+            storageLocation: editStorage ?? undefined,
+            expirationDate: editExpiration
+              ? formatISODate(editExpiration)
+              : undefined,
+            expiryIsEstimated: editExpiration
+              ? editExpiryIsEstimated
+              : undefined,
+          }
           : item,
       ),
     );
@@ -257,66 +256,66 @@ export default function ReceiptReviewScreen() {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1">
-        <Pressable
-          className="flex-1 bg-black/40"
-          onPress={() => setEditIndex(null)}
-        />
-        <View className="bg-white rounded-t-2xl pb-8 px-5 pt-5">
-          <Text
-            className="text-[18px] text-navy mb-4 font-bold">
-            Edit Item
-          </Text>
+          <Pressable
+            className="flex-1 bg-black/40"
+            onPress={() => setEditIndex(null)}
+          />
+          <View className="bg-white rounded-t-2xl pb-8 px-5 pt-5">
+            <Text
+              className="text-[18px] text-navy mb-4 font-bold">
+              Edit Item
+            </Text>
 
-          <Text className="text-[13px] text-muted font-semibold mb-1.5">
-            NAME
-          </Text>
-          <View className="bg-cream rounded-input border border-border px-3.5 py-3 mb-4">
-            <TextInput
-              className="text-[14px] leading-[18px] text-dark"
-              value={editName}
-              onChangeText={setEditName}
-              placeholder="Item name"
-              placeholderTextColor={colors.muted}
-            />
-          </View>
-
-          <Text className="text-[13px] text-muted font-semibold mb-1.5">
-            QUANTITY
-          </Text>
-          <View className="mb-4">
-            <QuantityUnitInput
-              quantity={editQuantity}
-              unit={editUnit}
-              onQuantityChange={setEditQuantity}
-              onUnitChange={setEditUnit}
-            />
-          </View>
-
-          <Text className="text-[13px] text-muted font-semibold mb-1.5">
-            STORAGE LOCATION
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View className="mb-4">
-              <StorageLocationPills
-                selected={editStorage}
-                onSelect={handleStorageChange}
+            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+              NAME
+            </Text>
+            <View className="bg-cream rounded-input border border-border px-3.5 py-3 mb-4">
+              <TextInput
+                className="text-[14px] leading-[18px] text-dark"
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="Item name"
+                placeholderTextColor={colors.muted}
               />
             </View>
-          </ScrollView>
 
-          <Text className="text-[13px] text-muted font-semibold mb-1.5">
-            EXPIRATION DATE
-            {editExpiryIsEstimated && editExpiration ? ' (estimated)' : ''}
-          </Text>
-          <View className="mb-4">
-            <ExpirationDateInput
-              date={editExpiration}
-              onChange={handleExpirationChange}
-            />
+            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+              QUANTITY
+            </Text>
+            <View className="mb-4">
+              <QuantityUnitInput
+                quantity={editQuantity}
+                unit={editUnit}
+                onQuantityChange={setEditQuantity}
+                onUnitChange={setEditUnit}
+              />
+            </View>
+
+            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+              STORAGE LOCATION
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View className="mb-4">
+                <StorageLocationPills
+                  selected={editStorage}
+                  onSelect={handleStorageChange}
+                />
+              </View>
+            </ScrollView>
+
+            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+              EXPIRATION DATE
+              {editExpiryIsEstimated && editExpiration ? ' (estimated)' : ''}
+            </Text>
+            <View className="mb-4">
+              <ExpirationDateInput
+                date={editExpiration}
+                onChange={handleExpirationChange}
+              />
+            </View>
+
+            <Button label="Save" onPress={saveEdit} />
           </View>
-
-          <Button label="Save" onPress={saveEdit} />
-        </View>
         </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
