@@ -20,8 +20,8 @@ export default function HomeScreen() {
   const { clearTokens, refreshToken } = useAuth();
 
   const { data: recipes, isLoading, error } = useQuery({
-    queryKey: QUERY_KEYS.RECIPES,
-    queryFn: () => api.get<Recipe[]>(ROUTES.RECIPES),
+    queryKey: QUERY_KEYS.RECIPES.SAVED,
+    queryFn: () => api.get<Recipe[]>(ROUTES.RECIPES.SAVED),
   });
 
   const handleSignOut = async () => {

@@ -33,6 +33,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>StockPot does not use your location. This permission is required by a third-party library.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>StockPot needs camera access to scan barcodes and receipt photos</string>
 	<key>NSPhotoLibraryUsageDescription</key>

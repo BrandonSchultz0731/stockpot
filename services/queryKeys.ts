@@ -1,5 +1,8 @@
 export const QUERY_KEYS = {
-  RECIPES: ['recipes'],
+  RECIPES: {
+    SAVED: ['recipes', 'saved'],
+    DETAIL: (id: string) => ['recipes', id],
+  },
   USER_PROFILE: ['user', 'profile'],
   USAGE_CURRENT: ['usage', 'current'],
   PANTRY_ITEMS: ['pantry', 'items'],

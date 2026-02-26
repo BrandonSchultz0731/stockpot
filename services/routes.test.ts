@@ -17,7 +17,11 @@ describe('ROUTES', () => {
     expect(ROUTES.USAGE.CURRENT).toBe('/usage/current');
   });
 
-  it('should have correct recipes route', () => {
-    expect(ROUTES.RECIPES).toBe('/recipes');
+  it('should have correct recipes routes', () => {
+    expect(ROUTES.RECIPES.GENERATE).toBe('/recipes/generate');
+    expect(ROUTES.RECIPES.SAVED).toBe('/recipes/saved');
+    expect(ROUTES.RECIPES.DETAIL('abc')).toBe('/recipes/abc');
+    expect(ROUTES.RECIPES.SAVE('abc')).toBe('/recipes/abc/save');
+    expect(ROUTES.RECIPES.UPDATE_SAVED('abc')).toBe('/recipes/saved/abc');
   });
 });
