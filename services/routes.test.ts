@@ -24,4 +24,13 @@ describe('ROUTES', () => {
     expect(ROUTES.RECIPES.SAVE('abc')).toBe('/recipes/abc/save');
     expect(ROUTES.RECIPES.UPDATE_SAVED('abc')).toBe('/recipes/saved/abc');
   });
+
+  it('should have correct meal plans routes', () => {
+    expect(ROUTES.MEAL_PLANS.GENERATE).toBe('/meal-plans/generate');
+    expect(ROUTES.MEAL_PLANS.CURRENT).toBe('/meal-plans/current');
+    expect(ROUTES.MEAL_PLANS.WEEK('2026-02-23')).toBe('/meal-plans/week/2026-02-23');
+    expect(ROUTES.MEAL_PLANS.UPDATE_ENTRY('abc')).toBe('/meal-plans/entries/abc');
+    expect(ROUTES.MEAL_PLANS.SWAP_ENTRY('abc')).toBe('/meal-plans/entries/abc/swap');
+    expect(ROUTES.MEAL_PLANS.DELETE('abc')).toBe('/meal-plans/abc');
+  });
 });

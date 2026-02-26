@@ -154,3 +154,20 @@ export interface RecipeNutrition {
   carbs?: number;
   fat?: number;
 }
+
+export enum MealPlanStatus {
+  Draft = 'draft',
+  Active = 'active',
+  Completed = 'completed',
+  Error = 'error',
+}
+
+export enum DayOfWeek {
+  Mon = 0,
+  Tue = 1,
+  Wed = 2,
+  Thu = 3,
+  Fri = 4,
+  Sat = 5,
+  Sun = 6,
+}

@@ -11,6 +11,7 @@ import { FoodCacheModule } from './food-cache/food-cache.module';
 import { PantryModule } from './pantry/pantry.module';
 import { ReceiptScanModule } from './receipt-scan/receipt-scan.module';
 import { RecipesModule } from './recipes/recipes.module';
+import { MealPlansModule } from './meal-plans/meal-plans.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { RecipesModule } from './recipes/recipes.module';
     PantryModule,
     ReceiptScanModule,
     RecipesModule,
+    MealPlansModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -33,4 +33,12 @@ export const ROUTES = {
     UPDATE: (id: string) => `/pantry/${id}`,
     DELETE: (id: string) => `/pantry/${id}`,
   },
+  MEAL_PLANS: {
+    GENERATE: '/meal-plans/generate',
+    CURRENT: '/meal-plans/current',
+    WEEK: (date: string) => `/meal-plans/week/${date}`,
+    UPDATE_ENTRY: (id: string) => `/meal-plans/entries/${id}`,
+    SWAP_ENTRY: (id: string) => `/meal-plans/entries/${id}/swap`,
+    DELETE: (id: string) => `/meal-plans/${id}`,
+  },
 } as const;
