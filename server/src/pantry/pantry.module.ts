@@ -4,13 +4,13 @@ import { PantryItem } from './entities/pantry-item.entity';
 import { PantryService } from './pantry.service';
 import { PantryController } from './pantry.controller';
 import { FoodCacheModule } from '../food-cache/food-cache.module';
-import { UsageTrackingModule } from '../usage-tracking/usage-tracking.module';
+import { AnthropicModule } from '../anthropic/anthropic.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([PantryItem]),
     FoodCacheModule,
-    UsageTrackingModule,
+    AnthropicModule,
   ],
   controllers: [PantryController],
   providers: [PantryService],

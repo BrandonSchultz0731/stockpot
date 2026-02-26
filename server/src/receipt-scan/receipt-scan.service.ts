@@ -4,10 +4,9 @@ import {
   UnprocessableEntityException,
   Logger,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import Anthropic from '@anthropic-ai/sdk';
+import { AnthropicService } from '../anthropic/anthropic.service';
 import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
-import { ACTIVE_MODEL, estimateCostCents } from '../ai-models';
+import { ACTIVE_MODEL } from '../ai-models';
 import { UnitOfMeasure, StorageLocation, ShelfLife } from '@shared/enums';
 import { ScanReceiptDto } from './dto/scan-receipt.dto';
 
@@ -41,27 +40,22 @@ Return ONLY the JSON array, no markdown fences, no explanation.`;
 @Injectable()
 export class ReceiptScanService {
   private readonly logger = new Logger(ReceiptScanService.name);
-  private readonly anthropic: Anthropic;
 
   constructor(
-    private readonly configService: ConfigService,
+    private readonly anthropicService: AnthropicService,
     private readonly usageTrackingService: UsageTrackingService,
-  ) {
-    this.anthropic = new Anthropic({
-      apiKey: this.configService.get<string>('ANTHROPIC_API_KEY'),
-    });
-  }
+  ) {}
 
   async scanReceipt(
     userId: string,
     dto: ScanReceiptDto,
   ): Promise<{ items: ScannedItem[] }> {
-    let response: Anthropic.Message;
+    let response;
 
     try {
-      response = await this.anthropic.messages.create({
-        model: ACTIVE_MODEL.id,
-        max_tokens: 4096,
+      response = await this.anthropicService.sendMessage(userId, {
+        model: ACTIVE_MODEL,
+        maxTokens: 4096,
         messages: [
           {
             role: 'user',
@@ -92,18 +86,8 @@ export class ReceiptScanService {
       throw new BadGatewayException('Receipt scanning service unavailable');
     }
 
-    // Track usage
-    const inputTokens = response.usage?.input_tokens ?? 0;
-    const outputTokens = response.usage?.output_tokens ?? 0;
-
-    const costCents = estimateCostCents(inputTokens, outputTokens);
-
-    await Promise.all([
-      this.usageTrackingService.increment(userId, 'receiptScans'),
-      this.usageTrackingService.increment(userId, 'totalInputTokens', inputTokens),
-      this.usageTrackingService.increment(userId, 'totalOutputTokens', outputTokens),
-      this.usageTrackingService.increment(userId, 'estimatedCostCents', costCents),
-    ]);
+    // Track feature-specific counter (token/cost tracking handled by AnthropicService)
+    await this.usageTrackingService.increment(userId, 'receiptScans');
 
     const rawText =
       response.content[0]?.type === 'text' ? response.content[0].text : '';

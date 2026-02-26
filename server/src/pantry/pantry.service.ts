@@ -1,32 +1,24 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
-import Anthropic from '@anthropic-ai/sdk';
 import { PantryItem } from './entities/pantry-item.entity';
 import { FoodCacheService } from '../food-cache/food-cache.service';
-import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
+import { AnthropicService } from '../anthropic/anthropic.service';
 import { CreatePantryItemDto } from './dto/create-pantry-item.dto';
 import { UpdatePantryItemDto } from './dto/update-pantry-item.dto';
 import { StorageLocation, ShelfLife } from '@shared/enums';
-import { CLAUDE_MODELS, estimateCostCents } from '../ai-models';
+import { CLAUDE_MODELS } from '../ai-models';
 
 @Injectable()
 export class PantryService {
   private readonly logger = new Logger(PantryService.name);
-  private readonly anthropic: Anthropic;
 
   constructor(
     @InjectRepository(PantryItem)
     private readonly pantryItemRepo: Repository<PantryItem>,
     private readonly foodCacheService: FoodCacheService,
-    private readonly usageTrackingService: UsageTrackingService,
-    private readonly configService: ConfigService,
-  ) {
-    this.anthropic = new Anthropic({
-      apiKey: this.configService.get<string>('ANTHROPIC_API_KEY'),
-    });
-  }
+    private readonly anthropicService: AnthropicService,
+  ) {}
 
   async findAllForUser(userId: string): Promise<PantryItem[]> {
     return this.pantryItemRepo.find({
@@ -193,12 +185,11 @@ export class PantryService {
     displayName: string,
   ): Promise<ShelfLife | null> {
     try {
-      const model = CLAUDE_MODELS['haiku-4.5'];
       const storageKeys = Object.values(StorageLocation).join(', ');
 
-      const response = await this.anthropic.messages.create({
-        model: model.id,
-        max_tokens: 256,
+      const response = await this.anthropicService.sendMessage(userId, {
+        model: CLAUDE_MODELS['haiku-4.5'],
+        maxTokens: 256,
         messages: [
           {
             role: 'user',
@@ -206,28 +197,6 @@ export class PantryService {
           },
         ],
       });
-
-      const inputTokens = response.usage?.input_tokens ?? 0;
-      const outputTokens = response.usage?.output_tokens ?? 0;
-      const costCents = estimateCostCents(inputTokens, outputTokens, model);
-
-      await Promise.all([
-        this.usageTrackingService.increment(
-          userId,
-          'totalInputTokens',
-          inputTokens,
-        ),
-        this.usageTrackingService.increment(
-          userId,
-          'totalOutputTokens',
-          outputTokens,
-        ),
-        this.usageTrackingService.increment(
-          userId,
-          'estimatedCostCents',
-          costCents,
-        ),
-      ]);
 
       const rawText =
         response.content[0]?.type === 'text' ? response.content[0].text : '';
