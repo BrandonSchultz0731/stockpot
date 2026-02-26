@@ -128,6 +128,11 @@ export class PantryService {
       throw new NotFoundException('Pantry item not found');
     }
 
+    // Only allow expiryIsEstimated to change if the expiration date actually changed.
+    if (dto.expirationDate === item.expirationDate) {
+      delete dto.expiryIsEstimated;
+    }
+
     Object.assign(item, dto);
     return this.pantryItemRepo.save(item);
   }
