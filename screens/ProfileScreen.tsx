@@ -15,10 +15,12 @@ import {
   Leaf,
   Bell,
 } from 'lucide-react-native';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
 import { useUsageQuery } from '../hooks/useUsageQuery';
+import { useCurrentMealPlanQuery } from '../hooks/useCurrentMealPlanQuery';
+import { getTodayDayOfWeek } from '../utils/dayOfWeek';
 import { SubscriptionTier } from '../shared/enums';
 import type { DietaryProfile, NutritionalGoals } from '../shared/enums';
 import { api } from '../services/api';
@@ -198,10 +200,19 @@ function NutritionRow({
   );
 }
 
+interface NutritionTotals {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 function NutritionGoalsCard({
   nutritionalGoals,
+  todayTotals,
 }: {
   nutritionalGoals: NutritionalGoals | null;
+  todayTotals: NutritionTotals;
 }) {
   if (!nutritionalGoals) {
     return (
@@ -222,22 +233,30 @@ function NutritionGoalsCard({
   const rows = [
     {
       label: 'Calories',
-      value: `${nutritionalGoals.dailyCalories.toLocaleString()} cal`,
+      key: 'calories' as const,
+      goal: nutritionalGoals.dailyCalories,
+      unit: 'cal',
       color: colors.orange.DEFAULT,
     },
     {
       label: 'Protein',
-      value: `${nutritionalGoals.dailyProteinGrams}g`,
+      key: 'protein' as const,
+      goal: nutritionalGoals.dailyProteinGrams,
+      unit: 'g',
       color: colors.success.DEFAULT,
     },
     {
       label: 'Carbs',
-      value: `${nutritionalGoals.dailyCarbsGrams}g`,
+      key: 'carbs' as const,
+      goal: nutritionalGoals.dailyCarbsGrams,
+      unit: 'g',
       color: '#4A90D9',
     },
     {
       label: 'Fat',
-      value: `${nutritionalGoals.dailyFatGrams}g`,
+      key: 'fat' as const,
+      goal: nutritionalGoals.dailyFatGrams,
+      unit: 'g',
       color: '#D9534F',
     },
   ];
@@ -252,16 +271,25 @@ function NutritionGoalsCard({
           Edit
         </Text>
       </View>
-      {rows.map((row, i) => (
-        <NutritionRow
-          key={row.label}
-          label={row.label}
-          value={row.value}
-          color={row.color}
-          progress={Math.random()} // TODO: Get real data
-          isLast={i === rows.length - 1}
-        />
-      ))}
+      {rows.map((row, i) => {
+        const consumed = Math.round(todayTotals[row.key]);
+        const progress = row.goal > 0 ? Math.min(consumed / row.goal, 1) : 0;
+        const value =
+          row.key === 'calories'
+            ? `${consumed.toLocaleString()} / ${row.goal.toLocaleString()} ${row.unit}`
+            : `${consumed} / ${row.goal}${row.unit}`;
+
+        return (
+          <NutritionRow
+            key={row.label}
+            label={row.label}
+            value={value}
+            color={row.color}
+            progress={progress}
+            isLast={i === rows.length - 1}
+          />
+        );
+      })}
     </View>
   );
 }
@@ -347,6 +375,24 @@ export default function ProfileScreen() {
   const { clearTokens, refreshToken } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfileQuery();
   const { data: usage } = useUsageQuery();
+  const { data: mealPlan } = useCurrentMealPlanQuery();
+
+  const todayTotals = useMemo(() => {
+    const totals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    if (!mealPlan?.entries) return totals;
+    const today = getTodayDayOfWeek();
+    for (const entry of mealPlan.entries) {
+      if (entry.dayOfWeek !== today) continue;
+      const n = entry.recipe.nutrition;
+      if (n) {
+        totals.calories += n.calories ?? 0;
+        totals.protein += n.protein ?? 0;
+        totals.carbs += n.carbs ?? 0;
+        totals.fat += n.fat ?? 0;
+      }
+    }
+    return totals;
+  }, [mealPlan?.entries]);
 
   const handleSignOut = async () => {
     try {
@@ -406,6 +452,7 @@ export default function ProfileScreen() {
           nutritionalGoals={
             profile?.nutritionalGoals as NutritionalGoals | null
           }
+          todayTotals={todayTotals}
         />
 
         {/* Section 6: Settings */}
