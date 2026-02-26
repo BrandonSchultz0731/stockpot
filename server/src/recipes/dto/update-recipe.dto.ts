@@ -2,10 +2,12 @@ import {
   IsString,
   IsOptional,
   IsInt,
+  IsEnum,
   IsArray,
   IsObject,
   Min,
 } from 'class-validator';
+import { MealType } from '@shared/enums';
 import type {
   RecipeIngredient,
   RecipeStep,
@@ -50,8 +52,8 @@ export class UpdateRecipeDto {
   cuisine?: string;
 
   @IsOptional()
-  @IsString()
-  mealType?: string;
+  @IsEnum(MealType)
+  mealType?: MealType;
 
   @IsOptional()
   @IsString()

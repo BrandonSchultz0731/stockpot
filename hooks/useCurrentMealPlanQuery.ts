@@ -16,7 +16,7 @@ export interface MealPlanRecipe {
   servings: number;
   difficulty: string;
   cuisine: string;
-  mealType: string;
+  mealType: MealType;
   ingredients: RecipeIngredient[];
   nutrition: RecipeNutrition | null;
 }
