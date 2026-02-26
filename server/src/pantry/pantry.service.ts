@@ -9,6 +9,7 @@ import { UpdatePantryItemDto } from './dto/update-pantry-item.dto';
 import { StorageLocation, ShelfLife } from '@shared/enums';
 import { calculateExpirationDate, formatISODate } from '@shared/dates';
 import { CLAUDE_MODELS } from '../ai-models';
+import { buildShelfLifePrompt } from '../prompts';
 
 @Injectable()
 export class PantryService {
@@ -189,15 +190,13 @@ export class PantryService {
     displayName: string,
   ): Promise<ShelfLife | null> {
     try {
-      const storageKeys = Object.values(StorageLocation).join(', ');
-
       const response = await this.anthropicService.sendMessage(userId, {
         model: CLAUDE_MODELS['haiku-4.5'],
         maxTokens: 256,
         messages: [
           {
             role: 'user',
-            content: `How many days does "${displayName}" typically last when stored properly? Return ONLY a JSON object with numeric values for applicable storage methods: { "${StorageLocation.Fridge}": days, "${StorageLocation.Freezer}": days, "${StorageLocation.Pantry}": days }. Valid keys: ${storageKeys}. Omit a key if that storage method is not applicable. No explanation.`,
+            content: buildShelfLifePrompt(displayName),
           },
         ],
       });

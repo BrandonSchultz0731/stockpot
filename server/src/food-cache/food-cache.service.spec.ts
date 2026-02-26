@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { FoodCacheService } from './food-cache.service';
 import { FoodCache } from './entities/food-cache.entity';
+import { AnthropicService } from '../anthropic/anthropic.service';
 
 const mockRepo = {
   find: jest.fn(),
@@ -13,6 +14,10 @@ const mockRepo = {
 
 const mockConfigService = {
   get: jest.fn().mockReturnValue('TEST_API_KEY'),
+};
+
+const mockAnthropicService = {
+  sendMessage: jest.fn(),
 };
 
 const mockFetchResponse = (data: any, ok = true, status = 200) => ({
@@ -33,6 +38,7 @@ describe('FoodCacheService', () => {
         FoodCacheService,
         { provide: getRepositoryToken(FoodCache), useValue: mockRepo },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: AnthropicService, useValue: mockAnthropicService },
       ],
     }).compile();
 
@@ -566,6 +572,7 @@ describe('FoodCacheService', () => {
           FoodCacheService,
           { provide: getRepositoryToken(FoodCache), useValue: mockRepo },
           { provide: ConfigService, useValue: configWithNoKey },
+          { provide: AnthropicService, useValue: mockAnthropicService },
         ],
       }).compile();
 

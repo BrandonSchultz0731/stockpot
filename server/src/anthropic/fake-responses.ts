@@ -102,10 +102,13 @@ const FAKE_RECEIPT_SCAN = JSON.stringify([
   { name: 'Bananas', quantity: 1, unit: 'bunch', storageLocation: 'Pantry', estimatedShelfLife: { Pantry: 5, Fridge: 8 } },
 ]);
 
+const FAKE_INGREDIENT_RESOLUTION = JSON.stringify({});
+
 export const FAKE_RESPONSES: Record<MessageType, string> = {
   'meal-plan': FAKE_MEAL_PLAN,
   'meal-swap': FAKE_MEAL_SWAP,
   'recipe-generation': FAKE_RECIPE_GENERATION,
   'shelf-life': FAKE_SHELF_LIFE,
   'receipt-scan': FAKE_RECEIPT_SCAN,
+  'ingredient-resolution': FAKE_INGREDIENT_RESOLUTION,
 };

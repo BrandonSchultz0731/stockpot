@@ -139,6 +139,7 @@ export interface RecipeIngredient {
   quantity: number;
   unit: string;
   notes?: string;
+  foodCacheId?: string;
   inPantry?: boolean;
 }
 

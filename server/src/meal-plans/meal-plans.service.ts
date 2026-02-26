@@ -16,8 +16,10 @@ import { UsersService } from '../users/users.service';
 import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
-import { MealType } from '@shared/enums';
+import { MealType, RecipeIngredient } from '@shared/enums';
 import { ACTIVE_MODEL } from '../ai-models';
+import { FoodCacheService } from '../food-cache/food-cache.service';
+import { buildMealPlanPrompt, buildMealSwapPrompt } from '../prompts';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -36,14 +38,19 @@ export class MealPlansService {
     private readonly anthropicService: AnthropicService,
     private readonly usageTrackingService: UsageTrackingService,
     private readonly usersService: UsersService,
+    private readonly foodCacheService: FoodCacheService,
   ) {}
 
   async getCurrentPlan(userId: string): Promise<MealPlan | null> {
-    return this.mealPlanRepo.findOne({
+    const plan = await this.mealPlanRepo.findOne({
       where: { userId },
       relations: ['entries', 'entries.recipe'],
       order: { weekStartDate: 'DESC' },
     });
+    if (plan?.entries) {
+      await this.enrichPlanEntries(userId, plan.entries);
+    }
+    return plan;
   }
 
   async getPlanByWeek(userId: string, weekStartDate: string): Promise<MealPlan> {
@@ -54,6 +61,10 @@ export class MealPlansService {
 
     if (!plan) {
       throw new NotFoundException('Meal plan not found for this week');
+    }
+
+    if (plan.entries) {
+      await this.enrichPlanEntries(userId, plan.entries);
     }
 
     return plan;
@@ -118,32 +129,7 @@ export class MealPlansService {
         ? `\nConstraints:\n${constraints.join('\n')}\n`
         : '';
 
-      const prompt = `You are a meal planning chef. Create a 7-day meal plan (Monday through Sunday) using primarily the following pantry ingredients. It's okay to include a few common ingredients not in the pantry.
-
-Pantry ingredients:
-${ingredientList || 'No pantry items available — suggest common recipes.'}
-
-Meal types to plan: ${mealTypes.join(', ')}
-Servings per meal: ${servings}
-${constraintBlock}
-Return ONLY a JSON object with a "meals" array where each item has:
-- "dayOfWeek": number (0=Monday, 1=Tuesday, ..., 6=Sunday)
-- "mealType": "${mealTypes.join('" | "')}"
-- "title": string (recipe name)
-- "description": string (1-2 sentence description)
-- "prepTimeMinutes": number
-- "cookTimeMinutes": number
-- "totalTimeMinutes": number
-- "servings": number
-- "difficulty": "Easy" | "Medium" | "Hard"
-- "cuisine": string
-- "ingredients": array of { "name": string, "quantity": number, "unit": string, "notes": string (optional), "inPantry": boolean }
-- "steps": array of { "stepNumber": number, "instruction": string, "duration": number (optional, in minutes) }
-- "tags": array of strings
-- "dietaryFlags": array of strings
-- "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
-
-No markdown fences, no explanation — only the JSON object.`;
+      const prompt = buildMealPlanPrompt(ingredientList, mealTypes, servings, constraintBlock);
 
       const response = await this.anthropicService.sendMessage(userId, {
         model: ACTIVE_MODEL,
@@ -161,7 +147,31 @@ No markdown fences, no explanation — only the JSON object.`;
         throw new Error('No valid meals parsed from AI response');
       }
 
+      // Resolve ingredient names to food_cache IDs
+      const allIngredientNames = meals.flatMap(
+        (meal: any) => (meal.ingredients ?? []).map((ing: any) => ing.name as string),
+      );
+      const pantryFoodItems = pantryItems.map((item) => ({
+        foodCacheId: item.foodCacheId,
+        displayName: item.displayName,
+      }));
+      const resolvedMap = await this.foodCacheService.resolveIngredientNames(
+        allIngredientNames,
+        pantryFoodItems,
+        userId,
+      );
+
       for (const meal of meals) {
+        const resolvedIngredients: RecipeIngredient[] = (meal.ingredients ?? []).map(
+          (ing: any) => ({
+            name: ing.name,
+            quantity: ing.quantity,
+            unit: ing.unit,
+            ...(ing.notes ? { notes: ing.notes } : {}),
+            foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
+          }),
+        );
+
         const recipe = this.recipeRepo.create({
           userId,
           title: meal.title,
@@ -174,7 +184,7 @@ No markdown fences, no explanation — only the JSON object.`;
           cuisine: meal.cuisine,
           mealType: meal.mealType,
           source: 'ai',
-          ingredients: meal.ingredients ?? [],
+          ingredients: resolvedIngredients,
           steps: meal.steps ?? [],
           tags: meal.tags,
           dietaryFlags: meal.dietaryFlags,
@@ -250,29 +260,7 @@ No markdown fences, no explanation — only the JSON object.`;
 
     const dayName = DAY_NAMES[entry.dayOfWeek] ?? `Day ${entry.dayOfWeek}`;
 
-    const prompt = `You are a meal planning chef. Suggest a single replacement recipe for ${dayName} ${entry.mealType} using primarily the following pantry ingredients. It's okay to include a few common ingredients not in the pantry.
-
-The current meal is: "${entry.recipe.title}" — please suggest something different.
-
-Pantry ingredients:
-${ingredientList || 'No pantry items available — suggest a common recipe.'}
-${constraintBlock}
-Return ONLY a JSON object with:
-- "title": string (recipe name)
-- "description": string (1-2 sentence description)
-- "prepTimeMinutes": number
-- "cookTimeMinutes": number
-- "totalTimeMinutes": number
-- "servings": number
-- "difficulty": "Easy" | "Medium" | "Hard"
-- "cuisine": string
-- "ingredients": array of { "name": string, "quantity": number, "unit": string, "notes": string (optional), "inPantry": boolean }
-- "steps": array of { "stepNumber": number, "instruction": string, "duration": number (optional, in minutes) }
-- "tags": array of strings
-- "dietaryFlags": array of strings
-- "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
-
-No markdown fences, no explanation — only the JSON object.`;
+    const prompt = buildMealSwapPrompt(ingredientList, dayName, entry.mealType, entry.recipe.title, constraintBlock);
 
     let response;
     try {
@@ -294,6 +282,28 @@ No markdown fences, no explanation — only the JSON object.`;
       throw new BadGatewayException('Failed to parse replacement recipe');
     }
 
+    // Resolve ingredient names to food_cache IDs
+    const swapIngredientNames = (parsed.ingredients ?? []).map((ing: any) => ing.name as string);
+    const pantryFoodItems = pantryItems.map((item) => ({
+      foodCacheId: item.foodCacheId,
+      displayName: item.displayName,
+    }));
+    const resolvedMap = await this.foodCacheService.resolveIngredientNames(
+      swapIngredientNames,
+      pantryFoodItems,
+      userId,
+    );
+
+    const resolvedIngredients: RecipeIngredient[] = (parsed.ingredients ?? []).map(
+      (ing: any) => ({
+        name: ing.name,
+        quantity: ing.quantity,
+        unit: ing.unit,
+        ...(ing.notes ? { notes: ing.notes } : {}),
+        foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
+      }),
+    );
+
     const recipe = this.recipeRepo.create({
       userId,
       title: parsed.title,
@@ -306,7 +316,7 @@ No markdown fences, no explanation — only the JSON object.`;
       cuisine: parsed.cuisine,
       mealType: entry.mealType,
       source: 'ai',
-      ingredients: parsed.ingredients ?? [],
+      ingredients: resolvedIngredients,
       steps: parsed.steps ?? [],
       tags: parsed.tags,
       dietaryFlags: parsed.dietaryFlags,
@@ -317,10 +327,21 @@ No markdown fences, no explanation — only the JSON object.`;
     entry.recipeId = savedRecipe.id;
     const savedEntry = await this.entryRepo.save(entry);
 
-    return this.entryRepo.findOne({
+    const returnedEntry = await this.entryRepo.findOne({
       where: { id: savedEntry.id },
       relations: ['mealPlan', 'recipe'],
     });
+
+    // Enrich with inPantry for the API response
+    if (returnedEntry?.recipe?.ingredients) {
+      const pantryFoodCacheIds = new Set(pantryItems.map((item) => item.foodCacheId));
+      returnedEntry.recipe.ingredients = this.enrichInPantry(
+        returnedEntry.recipe.ingredients,
+        pantryFoodCacheIds,
+      );
+    }
+
+    return returnedEntry;
   }
 
   async deletePlan(userId: string, planId: string): Promise<void> {
@@ -333,6 +354,30 @@ No markdown fences, no explanation — only the JSON object.`;
     }
 
     await this.mealPlanRepo.remove(plan);
+  }
+
+  private enrichInPantry(
+    ingredients: RecipeIngredient[],
+    pantryFoodCacheIds: Set<string>,
+  ): RecipeIngredient[] {
+    return ingredients.map((ing) => ({
+      ...ing,
+      inPantry: ing.foodCacheId ? pantryFoodCacheIds.has(ing.foodCacheId) : false,
+    }));
+  }
+
+  private async enrichPlanEntries(
+    userId: string,
+    entries: MealPlanEntry[],
+  ): Promise<void> {
+    if (!entries?.length) return;
+    const pantryItems = await this.pantryService.findAllForUser(userId);
+    const ids = new Set(pantryItems.map((item) => item.foodCacheId));
+    for (const entry of entries) {
+      if (entry.recipe?.ingredients) {
+        entry.recipe.ingredients = this.enrichInPantry(entry.recipe.ingredients, ids);
+      }
+    }
   }
 
   private parseMealPlanResponse(raw: string): any[] {

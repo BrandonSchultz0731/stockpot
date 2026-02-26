@@ -11,10 +11,13 @@ import { SavedRecipe } from './entities/saved-recipe.entity';
 import { PantryService } from '../pantry/pantry.service';
 import { AnthropicService } from '../anthropic/anthropic.service';
 import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
+import { FoodCacheService } from '../food-cache/food-cache.service';
 import { GenerateRecipeDto } from './dto/generate-recipe.dto';
 import { SaveRecipeDto } from './dto/save-recipe.dto';
 import { UpdateSavedRecipeDto } from './dto/update-saved-recipe.dto';
 import { ACTIVE_MODEL } from '../ai-models';
+import { RecipeIngredient } from '@shared/enums';
+import { buildRecipeGenerationPrompt } from '../prompts';
 
 @Injectable()
 export class RecipesService {
@@ -28,12 +31,18 @@ export class RecipesService {
     private readonly pantryService: PantryService,
     private readonly anthropicService: AnthropicService,
     private readonly usageTrackingService: UsageTrackingService,
+    private readonly foodCacheService: FoodCacheService,
   ) {}
 
-  async findById(recipeId: string): Promise<Recipe> {
+  async findById(recipeId: string, userId?: string): Promise<Recipe> {
     const recipe = await this.recipeRepo.findOne({ where: { id: recipeId } });
     if (!recipe) {
       throw new NotFoundException('Recipe not found');
+    }
+    if (userId && recipe.ingredients?.length) {
+      const pantryItems = await this.pantryService.findAllForUser(userId);
+      const pantryFoodCacheIds = new Set(pantryItems.map((item) => item.foodCacheId));
+      recipe.ingredients = this.enrichInPantry(recipe.ingredients, pantryFoodCacheIds);
     }
     return recipe;
   }
@@ -64,28 +73,7 @@ export class RecipesService {
         ? `\nPreferences:\n${filters.join('\n')}\n`
         : '';
 
-    const prompt = `You are a creative chef. Based on the following pantry ingredients, suggest ${numberOfRecipes} recipes that can be made primarily with these items. It's okay to include a few common ingredients not in the pantry.
-
-Pantry ingredients:
-${ingredientList}
-${filterBlock}
-Return ONLY a JSON array of ${numberOfRecipes} recipe objects with these fields:
-- "title": string (recipe name)
-- "description": string (1-2 sentence description)
-- "prepTimeMinutes": number
-- "cookTimeMinutes": number
-- "totalTimeMinutes": number
-- "servings": number
-- "difficulty": "Easy" | "Medium" | "Hard"
-- "cuisine": string
-- "mealType": "Breakfast" | "Lunch" | "Dinner" | "Snack"
-- "ingredients": array of { "name": string, "quantity": number, "unit": string, "notes": string (optional), "inPantry": boolean (true if the ingredient matches or is a variant of something in the pantry list above, false if it would need to be acquired separately — use fuzzy matching, e.g. "Baby Spinach" matches "Spinach") }
-- "steps": array of { "stepNumber": number, "instruction": string, "duration": number (optional, in minutes) }
-- "tags": array of strings
-- "dietaryFlags": array of strings
-- "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
-
-No markdown fences, no explanation — only the JSON array.`;
+    const prompt = buildRecipeGenerationPrompt(ingredientList, numberOfRecipes, filterBlock);
 
     let response;
     try {
@@ -106,8 +94,34 @@ No markdown fences, no explanation — only the JSON array.`;
 
     const parsed = this.parseRecipeResponse(rawText);
 
+    // Resolve ingredient names to food_cache IDs
+    const allIngredientNames = parsed.flatMap(
+      (item: any) => (item.ingredients ?? []).map((ing: any) => ing.name as string),
+    );
+    const pantryFoodItems = pantryItems.map((item) => ({
+      foodCacheId: item.foodCacheId,
+      displayName: item.displayName,
+    }));
+    const resolvedMap = await this.foodCacheService.resolveIngredientNames(
+      allIngredientNames,
+      pantryFoodItems,
+      userId,
+    );
+
+    const pantryFoodCacheIds = new Set(pantryItems.map((item) => item.foodCacheId));
+
     const recipes: Recipe[] = [];
     for (const item of parsed) {
+      const resolvedIngredients: RecipeIngredient[] = (item.ingredients ?? []).map(
+        (ing: any) => ({
+          name: ing.name,
+          quantity: ing.quantity,
+          unit: ing.unit,
+          ...(ing.notes ? { notes: ing.notes } : {}),
+          foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
+        }),
+      );
+
       const recipe = this.recipeRepo.create({
         userId,
         title: item.title,
@@ -120,13 +134,18 @@ No markdown fences, no explanation — only the JSON array.`;
         cuisine: item.cuisine,
         mealType: item.mealType,
         source: 'ai',
-        ingredients: item.ingredients ?? [],
+        ingredients: resolvedIngredients,
         steps: item.steps ?? [],
         tags: item.tags,
         dietaryFlags: item.dietaryFlags,
         nutrition: item.nutrition,
       });
       recipes.push(await this.recipeRepo.save(recipe));
+    }
+
+    // Enrich with inPantry for the API response
+    for (const recipe of recipes) {
+      recipe.ingredients = this.enrichInPantry(recipe.ingredients, pantryFoodCacheIds);
     }
 
     return recipes;
@@ -201,6 +220,16 @@ No markdown fences, no explanation — only the JSON array.`;
 
     Object.assign(savedRecipe, dto);
     return this.savedRecipeRepo.save(savedRecipe);
+  }
+
+  private enrichInPantry(
+    ingredients: RecipeIngredient[],
+    pantryFoodCacheIds: Set<string>,
+  ): RecipeIngredient[] {
+    return ingredients.map((ing) => ({
+      ...ing,
+      inPantry: ing.foodCacheId ? pantryFoodCacheIds.has(ing.foodCacheId) : false,
+    }));
   }
 
   private parseRecipeResponse(raw: string): any[] {

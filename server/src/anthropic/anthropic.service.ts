@@ -10,7 +10,8 @@ export type MessageType =
   | 'meal-swap'
   | 'recipe-generation'
   | 'shelf-life'
-  | 'receipt-scan';
+  | 'receipt-scan'
+  | 'ingredient-resolution';
 
 @Injectable()
 export class AnthropicService {
