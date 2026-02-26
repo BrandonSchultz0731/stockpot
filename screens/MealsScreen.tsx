@@ -99,20 +99,18 @@ function MealPlanHeader({
 }) {
   return (
     <View className="flex-row items-center justify-between px-5 pt-4">
-      <Text
-        className="text-navy"
-        style={{ fontSize: 26, fontWeight: '800', letterSpacing: -0.5 }}
-      >
+      <Text className="text-[26px] font-extrabold tracking-[-0.5px] text-navy">
         Meal Plan
       </Text>
       <Pressable
         onPress={onGenerate}
         disabled={disabled}
-        className="flex-row items-center rounded-[10px] bg-orange px-3.5 py-2"
-        style={disabled ? { opacity: 0.5 } : undefined}
+        className={`flex-row items-center rounded-[10px] bg-orange px-3.5 py-2 ${
+          disabled ? 'opacity-50' : ''
+        }`}
       >
         <Zap size={14} color="#fff" fill="#fff" />
-        <Text className="ml-1.5 text-xs text-white" style={{ fontWeight: '700' }}>
+        <Text className="ml-1.5 text-xs font-bold text-white">
           Generate
         </Text>
       </Pressable>
@@ -148,18 +146,16 @@ function DaySelector({
             }`}
           >
             <Text
-              className={`text-[10px] ${
+              className={`text-[10px] font-semibold ${
                 active ? 'text-white/70' : 'text-muted'
               }`}
-              style={{ fontWeight: '600' }}
             >
               {d.dayLabel}
             </Text>
             <Text
-              className={`mt-1 text-[16px] ${
+              className={`mt-1 text-[16px] font-bold ${
                 active ? 'text-white' : 'text-dark'
               }`}
-              style={{ fontWeight: '700' }}
             >
               {d.dateNumber}
             </Text>
@@ -188,10 +184,10 @@ function NutritionSummaryBar({
     <View className="mx-4 my-3 flex-row justify-around rounded-[14px] border border-border bg-white px-4 py-3">
       {items.map((n) => (
         <View key={n.label} className="items-center">
-          <Text className="text-[15px] text-dark" style={{ fontWeight: '700' }}>
+          <Text className="text-[15px] font-bold text-dark">
             {n.value}
             {n.target && (
-              <Text className="text-[10px] text-muted" style={{ fontWeight: '400' }}>
+              <Text className="text-[10px] font-normal text-muted">
                 {' '}{n.target}
               </Text>
             )}
@@ -219,16 +215,12 @@ function MealCard({
   return (
     <View className="mx-4 mb-2.5 flex-row items-center rounded-2xl border border-border bg-white p-3.5">
       <View className="flex-1">
-        <Text
-          className="text-[11px] text-orange"
-          style={{ fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 }}
-        >
+        <Text className="text-[11px] font-bold uppercase tracking-[0.5px] text-orange">
           {entry.mealType}
         </Text>
         <Text
-          className="mt-0.5 text-[15px] text-dark"
+          className="mt-0.5 text-[15px] font-semibold text-dark"
           numberOfLines={1}
-          style={{ fontWeight: '600' }}
         >
           {entry.recipe.title}
         </Text>
@@ -258,12 +250,9 @@ function MealCard({
 
 function AddSnackButton() {
   return (
-    <View
-      className="mx-4 mb-4 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-border py-3.5"
-      style={{ opacity: 0.5 }}
-    >
+    <View className="mx-4 mb-4 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-border py-3.5 opacity-50">
       <Plus size={16} color={colors.muted} />
-      <Text className="ml-2 text-[13px] text-muted" style={{ fontWeight: '600' }}>
+      <Text className="ml-2 text-[13px] font-semibold text-muted">
         Add Snack
       </Text>
     </View>
@@ -272,12 +261,9 @@ function AddSnackButton() {
 
 function SaveTemplateButton() {
   return (
-    <View
-      className="mx-4 mb-5 flex-row items-center justify-center rounded-[14px] border border-navy py-3"
-      style={{ opacity: 0.5 }}
-    >
+    <View className="mx-4 mb-5 flex-row items-center justify-center rounded-[14px] border border-navy py-3 opacity-50">
       <Bookmark size={16} color={colors.navy.DEFAULT} />
-      <Text className="ml-2 text-[13px] text-navy" style={{ fontWeight: '600' }}>
+      <Text className="ml-2 text-[13px] font-semibold text-navy">
         Save as Template
       </Text>
     </View>
@@ -425,17 +411,14 @@ export default function MealsScreen() {
   // ---------------------------------------------------------------------------
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView className="flex-1" contentContainerClassName="pb-8">
         <MealPlanHeader onGenerate={handleGenerate} disabled={isGenerating} />
 
         {/* ---- Empty state (no plan) ---- */}
         {hasNoPlan && !isGenerating && (
           <View className="flex-1 items-center justify-center px-8 pt-32">
             <CalendarDays size={48} color={colors.muted} />
-            <Text
-              className="mt-4 text-[18px] text-dark"
-              style={{ fontWeight: '700' }}
-            >
+            <Text className="mt-4 text-[18px] font-bold text-dark">
               No meal plan yet
             </Text>
             <Text className="mt-2 text-center text-[14px] text-muted">
@@ -466,7 +449,7 @@ export default function MealsScreen() {
                 Something went wrong generating your meal plan.
               </Text>
               <Pressable onPress={handleGenerate} className="mt-3">
-                <Text className="text-[14px] text-orange" style={{ fontWeight: '600' }}>
+                <Text className="text-[14px] font-semibold text-orange">
                   Try Again
                 </Text>
               </Pressable>
