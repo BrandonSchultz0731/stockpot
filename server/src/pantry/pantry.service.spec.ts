@@ -317,6 +317,99 @@ describe('PantryService', () => {
     });
   });
 
+  describe('deductItems', () => {
+    it('should subtract quantity and update item when remainder > 0', async () => {
+      const item = { id: 'pi-1', userId: 'u1', quantity: 4 };
+      mockPantryRepo.findOne.mockResolvedValue(item);
+      mockPantryRepo.save.mockImplementation((i) => Promise.resolve(i));
+
+      const result = await service.deductItems('u1', [
+        { pantryItemId: 'pi-1', deductQuantity: 1.5 },
+      ]);
+
+      expect(item.quantity).toBe(2.5);
+      expect(mockPantryRepo.save).toHaveBeenCalledWith(item);
+      expect(result.updatedPantryIds).toEqual(['pi-1']);
+      expect(result.removedPantryIds).toEqual([]);
+    });
+
+    it('should remove item when remainder is 0', async () => {
+      const item = { id: 'pi-1', userId: 'u1', quantity: 2 };
+      mockPantryRepo.findOne.mockResolvedValue(item);
+      mockPantryRepo.remove.mockResolvedValue(item);
+
+      const result = await service.deductItems('u1', [
+        { pantryItemId: 'pi-1', deductQuantity: 2 },
+      ]);
+
+      expect(mockPantryRepo.remove).toHaveBeenCalledWith(item);
+      expect(result.removedPantryIds).toEqual(['pi-1']);
+      expect(result.updatedPantryIds).toEqual([]);
+    });
+
+    it('should remove item when remainder is negative', async () => {
+      const item = { id: 'pi-1', userId: 'u1', quantity: 1 };
+      mockPantryRepo.findOne.mockResolvedValue(item);
+      mockPantryRepo.remove.mockResolvedValue(item);
+
+      const result = await service.deductItems('u1', [
+        { pantryItemId: 'pi-1', deductQuantity: 5 },
+      ]);
+
+      expect(mockPantryRepo.remove).toHaveBeenCalledWith(item);
+      expect(result.removedPantryIds).toEqual(['pi-1']);
+    });
+
+    it('should skip items not found for user', async () => {
+      mockPantryRepo.findOne.mockResolvedValue(null);
+
+      const result = await service.deductItems('u1', [
+        { pantryItemId: 'pi-nonexistent', deductQuantity: 1 },
+      ]);
+
+      expect(result.updatedPantryIds).toEqual([]);
+      expect(result.removedPantryIds).toEqual([]);
+      expect(mockPantryRepo.save).not.toHaveBeenCalled();
+      expect(mockPantryRepo.remove).not.toHaveBeenCalled();
+    });
+
+    it('should handle multiple deductions', async () => {
+      const item1 = { id: 'pi-1', userId: 'u1', quantity: 4 };
+      const item2 = { id: 'pi-2', userId: 'u1', quantity: 1 };
+      mockPantryRepo.findOne
+        .mockResolvedValueOnce(item1)
+        .mockResolvedValueOnce(item2);
+      mockPantryRepo.save.mockImplementation((i) => Promise.resolve(i));
+      mockPantryRepo.remove.mockImplementation((i) => Promise.resolve(i));
+
+      const result = await service.deductItems('u1', [
+        { pantryItemId: 'pi-1', deductQuantity: 1 },
+        { pantryItemId: 'pi-2', deductQuantity: 1 },
+      ]);
+
+      expect(result.updatedPantryIds).toEqual(['pi-1']);
+      expect(result.removedPantryIds).toEqual(['pi-2']);
+    });
+
+    it('should round remaining quantity to 2 decimal places', async () => {
+      const item = { id: 'pi-1', userId: 'u1', quantity: 1 };
+      mockPantryRepo.findOne.mockResolvedValue(item);
+      mockPantryRepo.save.mockImplementation((i) => Promise.resolve(i));
+
+      await service.deductItems('u1', [
+        { pantryItemId: 'pi-1', deductQuantity: 0.33 },
+      ]);
+
+      expect(item.quantity).toBe(0.67);
+    });
+
+    it('should return empty arrays for empty deductions', async () => {
+      const result = await service.deductItems('u1', []);
+
+      expect(result).toEqual({ updatedPantryIds: [], removedPantryIds: [] });
+    });
+  });
+
   describe('remove', () => {
     it('should remove pantry item owned by user', async () => {
       const item = { id: 'pi-1', userId: 'u1', displayName: 'Chicken' };

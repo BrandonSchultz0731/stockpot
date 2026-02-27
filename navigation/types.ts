@@ -15,7 +15,8 @@ export type OnboardingParamList = {
 
 export type HomeStackParamList = {
   HomeScreen: undefined;
-  RecipeDetail: { recipeId: string; title?: string };
+  RecipeDetail: { recipeId: string; title?: string; entryId?: string; isCooked?: boolean };
+  CookedReview: { entryId: string };
 };
 
 export type TabParamList = {
@@ -28,7 +29,8 @@ export type TabParamList = {
 
 export type MealsStackParamList = {
   MealsList: undefined;
-  RecipeDetail: { recipeId: string; title?: string };
+  RecipeDetail: { recipeId: string; title?: string; entryId?: string; isCooked?: boolean };
+  CookedReview: { entryId: string };
 };
 
 export type PantryStackParamList = {

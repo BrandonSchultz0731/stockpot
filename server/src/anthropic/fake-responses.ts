@@ -107,6 +107,51 @@ const FAKE_RECEIPT_SCAN = JSON.stringify([
 
 const FAKE_INGREDIENT_RESOLUTION = JSON.stringify({});
 
+const FAKE_COOK_DEDUCTION = JSON.stringify({
+  deductions: [
+    {
+      recipeIngredientName: 'Chicken breast',
+      pantryItemId: 'fake-pantry-1',
+      pantryItemName: 'Chicken Breast',
+      currentQuantity: 4,
+      currentUnit: 'count',
+      deductQuantity: 2,
+      deductUnit: 'count',
+      notes: 'Direct match',
+    },
+    {
+      recipeIngredientName: 'Olive oil',
+      pantryItemId: 'fake-pantry-2',
+      pantryItemName: 'Olive Oil',
+      currentQuantity: 1,
+      currentUnit: 'bottle',
+      deductQuantity: 0.25,
+      deductUnit: 'bottle',
+      notes: '2 tbsp ≈ ¼ bottle',
+    },
+    {
+      recipeIngredientName: 'Garlic',
+      pantryItemId: 'fake-pantry-3',
+      pantryItemName: 'Garlic',
+      currentQuantity: 1,
+      currentUnit: 'head',
+      deductQuantity: 0.25,
+      deductUnit: 'head',
+      notes: '3 cloves ≈ ¼ head',
+    },
+    {
+      recipeIngredientName: 'Fresh rosemary',
+      pantryItemId: null,
+      pantryItemName: 'Fresh Rosemary',
+      currentQuantity: 0,
+      currentUnit: 'tbsp',
+      deductQuantity: 2,
+      deductUnit: 'tbsp',
+      notes: 'Not found in pantry',
+    },
+  ],
+});
+
 export const FAKE_RESPONSES: Record<MessageType, string> = {
   'meal-plan': FAKE_MEAL_PLAN,
   'meal-swap': FAKE_MEAL_SWAP,
@@ -115,4 +160,5 @@ export const FAKE_RESPONSES: Record<MessageType, string> = {
   'receipt-scan': FAKE_RECEIPT_SCAN,
   'ingredient-resolution': FAKE_INGREDIENT_RESOLUTION,
   'food-category': FAKE_FOOD_CATEGORY,
+  'cook-deduction': FAKE_COOK_DEDUCTION,
 };

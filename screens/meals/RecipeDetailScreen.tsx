@@ -15,6 +15,7 @@ import {
   ChefHat,
   ChevronLeft,
   Clock,
+  CookingPot,
   Flame,
   Heart,
   X,
@@ -270,7 +271,7 @@ function InstructionsSection({ steps }: { steps: RecipeStep[] }) {
 export default function RecipeDetailScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MealsStackParamList>>();
   const route = useRoute<ScreenProps['route']>();
-  const { recipeId, title: routeTitle } = route.params;
+  const { recipeId, title: routeTitle, entryId, isCooked } = route.params;
   const { isAuthenticated } = useAuth();
 
   const { data: recipe, isLoading, isError } = useRecipeDetailQuery(recipeId);
@@ -358,6 +359,17 @@ export default function RecipeDetailScreen() {
           scale={scale}
         />
         <InstructionsSection steps={recipe.steps} />
+        {entryId && !isCooked && (
+          <Pressable
+            onPress={() => navigation.navigate('CookedReview', { entryId })}
+            className="mx-5 mt-6 flex-row items-center justify-center rounded-[14px] bg-success py-3.5"
+          >
+            <CookingPot size={18} color="#fff" />
+            <Text className="ml-2 text-[15px] font-bold text-white">
+              Mark as Cooked
+            </Text>
+          </Pressable>
+        )}
         <View className="h-5" />
       </ScrollView>
     </SafeAreaView>

@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Bookmark,
   CalendarDays,
+  Check,
   Heart,
   Plus,
   RefreshCw,
@@ -233,6 +234,12 @@ function MealCard({
           {entry.recipe.nutrition?.calories ?? 0} cal
         </Text>
       </View>
+      {entry.isCooked && (
+        <View className="ml-2 flex-row items-center rounded-md bg-success-pale px-2 py-1">
+          <Check size={12} color={colors.success.DEFAULT} />
+          <Text className="ml-1 text-[11px] font-semibold text-success">Cooked</Text>
+        </View>
+      )}
       <View className="ml-3 items-center gap-2">
         <Pressable onPress={onSwap} disabled={isSwapping} hitSlop={8}>
           {isSwapping ? (
@@ -493,7 +500,7 @@ export default function MealsScreen() {
                     isSwapping={swappingEntryId === entry.id}
                     onSwap={() => handleSwap(entry.id)}
                     onToggleSave={() => handleToggleSave(entry.recipe.id)}
-                    onPress={() => navigation.navigate('RecipeDetail', { recipeId: entry.recipe.id, title: entry.recipe.title })}
+                    onPress={() => navigation.navigate('RecipeDetail', { recipeId: entry.recipe.id, title: entry.recipe.title, entryId: entry.id, isCooked: entry.isCooked })}
                   />
                 ))}
               </View>
