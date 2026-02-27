@@ -209,41 +209,60 @@ function MealCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} className="mx-4 mb-2.5 flex-row items-center rounded-2xl border border-border bg-white p-3.5">
-      <View className="flex-1">
-        <Text className="text-[11px] font-bold uppercase tracking-[0.5px] text-orange">
-          {entry.mealType}
-        </Text>
-        <Text
-          className="mt-0.5 text-[15px] font-semibold text-dark"
-          numberOfLines={1}
-        >
-          {entry.recipe.title}
-        </Text>
-        <Text className="mt-0.5 text-[12px] text-muted">
-          {entry.recipe.nutrition?.calories ?? 0} cal
-        </Text>
-      </View>
-      {entry.isCooked && (
-        <View className="ml-2 flex-row items-center rounded-md bg-success-pale px-2 py-1">
-          <Check size={12} color={colors.success.DEFAULT} />
-          <Text className="ml-1 text-[11px] font-semibold text-success">Cooked</Text>
+    <Pressable onPress={onPress} className="mx-4 mb-2.5 overflow-hidden rounded-2xl border border-border bg-white">
+      {/* Top row: content + favorite */}
+      <View className="flex-row items-start p-3.5 pb-2.5">
+        <View className="flex-1">
+          <View className="flex-row items-center">
+            <Text className="text-[11px] font-bold uppercase tracking-[0.5px] text-orange">
+              {entry.mealType}
+            </Text>
+            {entry.isCooked && (
+              <View className="ml-2 flex-row items-center rounded-md bg-success-pale px-1.5 py-0.5">
+                <Check size={10} color={colors.success.DEFAULT} />
+                <Text className="ml-0.5 text-[10px] font-semibold text-success">Cooked</Text>
+              </View>
+            )}
+          </View>
+          <Text
+            className="mt-1 text-[15px] font-semibold text-dark"
+            numberOfLines={1}
+          >
+            {entry.recipe.title}
+          </Text>
+          <Text className="mt-0.5 text-[12px] text-muted">
+            {entry.recipe.nutrition?.calories ?? 0} cal
+          </Text>
         </View>
-      )}
-      <View className="ml-3 items-center gap-2">
-        <Pressable onPress={onSwap} disabled={isSwapping} hitSlop={8}>
-          {isSwapping ? (
-            <ActivityIndicator size="small" color={colors.muted} />
-          ) : (
-            <RefreshCw size={16} color={colors.muted} />
-          )}
-        </Pressable>
-        <Pressable onPress={onToggleSave} hitSlop={8}>
+        <Pressable
+          onPress={onToggleSave}
+          hitSlop={10}
+          className="ml-3 mt-0.5 h-8 w-8 items-center justify-center rounded-full bg-cream"
+        >
           <Heart
             size={16}
             color={isSaved ? colors.orange.DEFAULT : colors.muted}
             fill={isSaved ? colors.orange.DEFAULT : 'none'}
           />
+        </Pressable>
+      </View>
+
+      {/* Bottom action bar */}
+      <View className="flex-row items-center border-t border-border px-3.5 py-2">
+        <Pressable
+          onPress={onSwap}
+          disabled={isSwapping}
+          hitSlop={6}
+          className="flex-row items-center rounded-lg bg-cream px-2.5 py-1.5"
+        >
+          {isSwapping ? (
+            <ActivityIndicator size="small" color={colors.muted} />
+          ) : (
+            <>
+              <RefreshCw size={13} color={colors.muted} />
+              <Text className="ml-1.5 text-[12px] font-semibold text-muted">Swap</Text>
+            </>
+          )}
         </Pressable>
       </View>
     </Pressable>
