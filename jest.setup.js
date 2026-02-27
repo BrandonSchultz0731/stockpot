@@ -20,6 +20,13 @@ jest.mock('react-native-blob-util', () => ({
   },
 }));
 
+// Mock react-native-bootsplash (native module not available in Jest)
+jest.mock('react-native-bootsplash', () => ({
+  hide: jest.fn(() => Promise.resolve()),
+  isVisible: jest.fn(() => Promise.resolve(false)),
+  useHideAnimation: jest.fn(() => ({ container: {}, logo: {} })),
+}));
+
 // Mock react-native-image-picker (native module not available in Jest)
 jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn(),

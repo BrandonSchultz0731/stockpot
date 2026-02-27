@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -16,6 +17,12 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function RootNavigator() {
   const { isLoading, isAuthenticated } = useAuth();
   const { data: profile, isLoading: isProfileLoading } = useUserProfileQuery();
+
+  useEffect(() => {
+    if (!isLoading) {
+      BootSplash.hide({ fade: true });
+    }
+  }, [isLoading]);
 
   if (isLoading || (isAuthenticated && isProfileLoading)) {
     return (
