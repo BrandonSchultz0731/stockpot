@@ -9,7 +9,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useQuery } from '@tanstack/react-query';
 import {
   Bookmark,
   CalendarDays,
@@ -20,10 +19,6 @@ import {
   Zap,
 } from 'lucide-react-native';
 import colors from '../theme/colors';
-import { QUERY_KEYS } from '../services/queryKeys';
-import { ROUTES } from '../services/routes';
-import { api } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
 import { MealType, MealPlanStatus } from '../shared/enums';
 import type { MealsStackParamList } from '../navigation/types';
 import { getCurrentWeekStartDate, getTodayDayOfWeek } from '../utils/dayOfWeek';
@@ -32,11 +27,10 @@ import {
   type MealPlanEntry,
 } from '../hooks/useCurrentMealPlanQuery';
 import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
+import { useSavedRecipes } from '../hooks/useSavedRecipes';
 import {
   useGenerateMealPlanMutation,
   useSwapMealPlanEntryMutation,
-  useSaveRecipeMutation,
-  useUnsaveRecipeMutation,
 } from '../hooks/useMealPlanMutations';
 
 // ---------------------------------------------------------------------------
@@ -51,10 +45,6 @@ const MEAL_TYPE_ORDER: Record<string, number> = {
   [MealType.Dinner]: 2,
   [MealType.Snack]: 3,
 };
-
-interface SavedRecipeItem {
-  recipeId: string;
-}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -288,7 +278,6 @@ function SaveTemplateButton() {
 
 export default function MealsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MealsStackParamList>>();
-  const { isAuthenticated } = useAuth();
   const weekStart = getCurrentWeekStartDate();
 
   // Data hooks
@@ -299,18 +288,11 @@ export default function MealsScreen() {
   } = useCurrentMealPlanQuery();
 
   const { data: userProfile } = useUserProfileQuery();
-
-  const { data: savedRecipes } = useQuery({
-    queryKey: QUERY_KEYS.RECIPES.SAVED,
-    queryFn: () => api.get<SavedRecipeItem[]>(ROUTES.RECIPES.SAVED),
-    enabled: isAuthenticated,
-  });
+  const { isSaved, toggleSave } = useSavedRecipes();
 
   // Mutations
   const generateMutation = useGenerateMealPlanMutation();
   const swapMutation = useSwapMealPlanEntryMutation();
-  const saveMutation = useSaveRecipeMutation();
-  const unsaveMutation = useUnsaveRecipeMutation();
 
   // Local state
   const [selectedDay, setSelectedDay] = useState(getTodayDayOfWeek);
@@ -319,11 +301,6 @@ export default function MealsScreen() {
   // Derived data
   const weekDates = useMemo(() => getWeekDates(weekStart), [weekStart]);
   const weekDateRangeLabel = useMemo(() => formatWeekDateRange(weekStart), [weekStart]);
-
-  const savedRecipeIds = useMemo(() => {
-    if (!savedRecipes) return new Set<string>();
-    return new Set(savedRecipes.map((r) => r.recipeId));
-  }, [savedRecipes]);
 
   const selectedDayEntries = useMemo(() => {
     if (!mealPlan?.entries) return [];
@@ -391,14 +368,8 @@ export default function MealsScreen() {
   );
 
   const handleToggleSave = useCallback(
-    (recipeId: string) => {
-      if (savedRecipeIds.has(recipeId)) {
-        unsaveMutation.mutate(recipeId);
-      } else {
-        saveMutation.mutate(recipeId);
-      }
-    },
-    [savedRecipeIds, saveMutation, unsaveMutation],
+    (recipeId: string) => toggleSave(recipeId),
+    [toggleSave],
   );
 
   // Determine screen state
@@ -496,7 +467,7 @@ export default function MealsScreen() {
                   <MealCard
                     key={entry.id}
                     entry={entry}
-                    isSaved={savedRecipeIds.has(entry.recipe.id)}
+                    isSaved={isSaved(entry.recipe.id)}
                     isSwapping={swappingEntryId === entry.id}
                     onSwap={() => handleSwap(entry.id)}
                     onToggleSave={() => handleToggleSave(entry.recipe.id)}
