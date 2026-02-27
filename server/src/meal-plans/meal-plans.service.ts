@@ -330,6 +330,7 @@ export class MealPlansService {
     });
     const savedRecipe = await this.recipeRepo.save(recipe);
 
+    entry.recipe = savedRecipe;
     entry.recipeId = savedRecipe.id;
     const savedEntry = await this.entryRepo.save(entry);
 
