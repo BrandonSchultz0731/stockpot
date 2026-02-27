@@ -13,10 +13,14 @@ export type OnboardingParamList = {
   OBGoals: undefined;
 };
 
+// Shared screen params used across multiple stacks
+export type RecipeDetailParams = { recipeId: string; title?: string; entryId?: string; isCooked?: boolean };
+export type CookedReviewParams = { entryId: string };
+
 export type HomeStackParamList = {
   HomeScreen: undefined;
-  RecipeDetail: { recipeId: string; title?: string; entryId?: string; isCooked?: boolean };
-  CookedReview: { entryId: string };
+  RecipeDetail: RecipeDetailParams;
+  CookedReview: CookedReviewParams;
 };
 
 export type TabParamList = {
@@ -29,8 +33,8 @@ export type TabParamList = {
 
 export type MealsStackParamList = {
   MealsList: undefined;
-  RecipeDetail: { recipeId: string; title?: string; entryId?: string; isCooked?: boolean };
-  CookedReview: { entryId: string };
+  RecipeDetail: RecipeDetailParams;
+  CookedReview: CookedReviewParams;
 };
 
 export type PantryStackParamList = {

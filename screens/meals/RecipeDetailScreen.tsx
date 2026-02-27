@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -9,7 +8,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useQuery } from '@tanstack/react-query';
 import {
   Check,
   ChefHat,
@@ -21,23 +19,12 @@ import {
   X,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
-import { QUERY_KEYS } from '../../services/queryKeys';
-import { ROUTES } from '../../services/routes';
-import { api } from '../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
 import { useRecipeDetailQuery } from '../../hooks/useRecipeDetailQuery';
-import {
-  useSaveRecipeMutation,
-  useUnsaveRecipeMutation,
-} from '../../hooks/useMealPlanMutations';
+import { useSavedRecipes } from '../../hooks/useSavedRecipes';
 import type { MealsStackParamList } from '../../navigation/types';
 import type { RecipeIngredient, RecipeStep } from '../../shared/enums';
 
 type ScreenProps = NativeStackScreenProps<MealsStackParamList, 'RecipeDetail'>;
-
-interface SavedRecipeItem {
-  recipeId: string;
-}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -272,33 +259,12 @@ export default function RecipeDetailScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MealsStackParamList>>();
   const route = useRoute<ScreenProps['route']>();
   const { recipeId, title: routeTitle, entryId, isCooked } = route.params;
-  const { isAuthenticated } = useAuth();
 
   const { data: recipe, isLoading, isError } = useRecipeDetailQuery(recipeId);
+  const { isSaved, toggleSave } = useSavedRecipes();
 
-  const { data: savedRecipes } = useQuery({
-    queryKey: QUERY_KEYS.RECIPES.SAVED,
-    queryFn: () => api.get<SavedRecipeItem[]>(ROUTES.RECIPES.SAVED),
-    enabled: isAuthenticated,
-  });
-
-  const saveMutation = useSaveRecipeMutation();
-  const unsaveMutation = useUnsaveRecipeMutation();
-
-  const isSaved = useMemo(() => {
-    if (!savedRecipes) return false;
-    return savedRecipes.some((r) => r.recipeId === recipeId);
-  }, [savedRecipes, recipeId]);
-
+  const saved = isSaved(recipeId);
   const scale = 1;
-
-  const handleToggleSave = () => {
-    if (isSaved) {
-      unsaveMutation.mutate(recipeId);
-    } else {
-      saveMutation.mutate(recipeId);
-    }
-  };
 
   // Loading state
   if (isLoading || !recipe) {
@@ -339,8 +305,8 @@ export default function RecipeDetailScreen() {
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
       <Header
-        isSaved={isSaved}
-        onToggleSave={handleToggleSave}
+        isSaved={saved}
+        onToggleSave={() => toggleSave(recipeId)}
         showHeart
       />
       <ScrollView className="flex-1" contentContainerClassName="pb-8">
