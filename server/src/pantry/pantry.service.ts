@@ -6,10 +6,10 @@ import { FoodCacheService } from '../food-cache/food-cache.service';
 import { AnthropicService } from '../anthropic/anthropic.service';
 import { CreatePantryItemDto } from './dto/create-pantry-item.dto';
 import { UpdatePantryItemDto } from './dto/update-pantry-item.dto';
-import { StorageLocation, ShelfLife } from '@shared/enums';
+import { StorageLocation, ShelfLife, FOOD_CATEGORIES } from '@shared/enums';
 import { calculateExpirationDate, formatISODate } from '@shared/dates';
 import { CLAUDE_MODELS } from '../ai-models';
-import { buildShelfLifePrompt } from '../prompts';
+import { buildShelfLifePrompt, buildCategoryPrompt } from '../prompts';
 
 @Injectable()
 export class PantryService {
@@ -90,6 +90,15 @@ export class PantryService {
       }
     }
 
+    // Fire-and-forget: ensure the food cache entry has a category
+    this.ensureFoodCategory(userId, foodCacheId, dto.displayName).catch(
+      (err) =>
+        this.logger.warn(
+          `Failed to ensure category for "${dto.displayName}"`,
+          err,
+        ),
+    );
+
     const item = this.pantryItemRepo.create({
       userId,
       foodCacheId,
@@ -162,10 +171,17 @@ export class PantryService {
       let shelfLife = await this.foodCacheService.getShelfLife(foodCacheId);
 
       if (!shelfLife) {
-        // Fall back to AI estimation
-        shelfLife = await this.estimateShelfLifeViaAI(userId, displayName);
-        if (shelfLife) {
+        // Fall back to AI estimation (also returns category)
+        const aiResult = await this.estimateShelfLifeViaAI(userId, displayName);
+        if (aiResult) {
+          shelfLife = aiResult.shelfLife;
           await this.foodCacheService.updateShelfLife(foodCacheId, shelfLife);
+          if (aiResult.category) {
+            await this.foodCacheService.updateCategory(
+              foodCacheId,
+              aiResult.category,
+            );
+          }
         }
       }
 
@@ -188,7 +204,7 @@ export class PantryService {
   private async estimateShelfLifeViaAI(
     userId: string,
     displayName: string,
-  ): Promise<ShelfLife | null> {
+  ): Promise<{ shelfLife: ShelfLife; category: string | null } | null> {
     try {
       const response = await this.anthropicService.sendMessage(userId, {
         model: CLAUDE_MODELS['haiku-4.5'],
@@ -199,6 +215,7 @@ export class PantryService {
             content: buildShelfLifePrompt(displayName),
           },
         ],
+        messageType: 'shelf-life',
       });
 
       const rawText =
@@ -221,23 +238,67 @@ export class PantryService {
 
       if (!parsed || typeof parsed !== 'object') return null;
 
-      const result: ShelfLife = {};
       const obj = parsed as Record<string, unknown>;
 
+      const shelfLife: ShelfLife = {};
       for (const loc of Object.values(StorageLocation)) {
         const val = Number(obj[loc]);
         if (Number.isFinite(val) && val > 0) {
-          result[loc] = Math.round(val);
+          shelfLife[loc] = Math.round(val);
         }
       }
 
-      return Object.keys(result).length > 0 ? result : null;
+      if (Object.keys(shelfLife).length === 0) return null;
+
+      // Extract category if present and valid
+      const rawCategory =
+        typeof obj.category === 'string' ? obj.category.trim() : null;
+      const category =
+        rawCategory && FOOD_CATEGORIES.includes(rawCategory)
+          ? rawCategory
+          : null;
+
+      return { shelfLife, category };
     } catch (error) {
       this.logger.warn(
         `AI shelf life estimation failed for "${displayName}"`,
         error,
       );
       return null;
+    }
+  }
+
+  private async ensureFoodCategory(
+    userId: string,
+    foodCacheId: string,
+    displayName: string,
+  ): Promise<void> {
+    const existing = await this.foodCacheService.getCategory(foodCacheId);
+    if (existing) return;
+
+    const response = await this.anthropicService.sendMessage(userId, {
+      model: CLAUDE_MODELS['haiku-4.5'],
+      maxTokens: 64,
+      messages: [
+        {
+          role: 'user',
+          content: buildCategoryPrompt(displayName),
+        },
+      ],
+      messageType: 'food-category',
+    });
+
+    const rawText =
+      response.content[0]?.type === 'text'
+        ? response.content[0].text.trim()
+        : '';
+
+    if (rawText && FOOD_CATEGORIES.includes(rawText)) {
+      await this.foodCacheService.updateCategory(foodCacheId, rawText);
+    } else {
+      this.logger.warn(
+        `AI returned unrecognized category "${rawText}" for "${displayName}"`,
+      );
     }
   }
 

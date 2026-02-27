@@ -190,3 +190,20 @@ export enum DayOfWeek {
   Sat = 5,
   Sun = 6,
 }
+
+export const FOOD_CATEGORIES: string[] = [
+  'Fruits',
+  'Vegetables',
+  'Meat & Poultry',
+  'Seafood',
+  'Dairy & Eggs',
+  'Grains & Bread',
+  'Canned Goods',
+  'Condiments & Sauces',
+  'Snacks',
+  'Beverages',
+  'Frozen',
+  'Spices & Herbs',
+  'Baking',
+  'Other',
+];

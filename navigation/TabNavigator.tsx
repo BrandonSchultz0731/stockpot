@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { House, LayoutGrid, CookingPot, Zap, User } from 'lucide-react-native';
-import HomeScreen from '../screens/HomeScreen';
+import HomeStackNavigator from './HomeStackNavigator';
 import PantryStackNavigator from './PantryStackNavigator';
 import MealsStackNavigator from './MealsStackNavigator';
 import AIChefScreen from '../screens/AIChefScreen';
@@ -32,7 +32,7 @@ export default function TabNavigator() {
     >
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={HomeStackNavigator}
         options={{
           tabBarIcon: ({ color }) => <House size={22} color={color} />,
         }}

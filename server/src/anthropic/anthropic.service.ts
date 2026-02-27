@@ -11,7 +11,8 @@ export type MessageType =
   | 'recipe-generation'
   | 'shelf-life'
   | 'receipt-scan'
-  | 'ingredient-resolution';
+  | 'ingredient-resolution'
+  | 'food-category';
 
 @Injectable()
 export class AnthropicService {

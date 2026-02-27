@@ -18,7 +18,8 @@
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d src/data-source.ts",
     "migration:generate": "pnpm typeorm migration:generate",
     "migration:run": "pnpm typeorm migration:run",
-    "migration:revert": "pnpm typeorm migration:revert"
+    "migration:revert": "pnpm typeorm migration:revert",
+    "backfill:categories": "ts-node -r tsconfig-paths/register src/scripts/backfill-categories.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
