@@ -11,5 +11,6 @@ export const QUERY_KEYS = {
   MEAL_PLANS: {
     CURRENT: ['meal-plans', 'current'],
     WEEK: (date: string) => ['meal-plans', 'week', date],
+    COOK_PREVIEW: (entryId: string) => ['meal-plans', 'cook-preview', entryId],
   },
 } as const;

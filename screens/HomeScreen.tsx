@@ -12,6 +12,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
+  Check,
   ChevronRight,
   Clock,
   Flame,
@@ -122,25 +123,32 @@ function MealCard({ entry, pantryMatchFraction, onPress }: { entry: MealPlanEntr
           )}
         </View>
       </View>
-      <View
-        className="rounded-full px-2.5 py-1"
-        style={{
-          backgroundColor: isHighMatch
-            ? colors.success.pale
-            : colors.orange.pale,
-        }}
-      >
-        <Text
-          className="text-[11px] font-bold"
+      {entry.isCooked ? (
+        <View className="flex-row items-center rounded-md bg-success-pale px-2 py-1">
+          <Check size={12} color={colors.success.DEFAULT} />
+          <Text className="ml-1 text-[11px] font-semibold text-success">Cooked</Text>
+        </View>
+      ) : (
+        <View
+          className="rounded-full px-2.5 py-1"
           style={{
-            color: isHighMatch
-              ? colors.success.DEFAULT
-              : colors.orange.DEFAULT,
+            backgroundColor: isHighMatch
+              ? colors.success.pale
+              : colors.orange.pale,
           }}
         >
-          {pantryMatchFraction}
-        </Text>
-      </View>
+          <Text
+            className="text-[11px] font-bold"
+            style={{
+              color: isHighMatch
+                ? colors.success.DEFAULT
+                : colors.orange.DEFAULT,
+            }}
+          >
+            {pantryMatchFraction}
+          </Text>
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -205,6 +213,8 @@ function TodaysMeals() {
           onPress={() => navigation.navigate('RecipeDetail', {
             recipeId: entry.recipe.id,
             title: entry.recipe.title,
+            entryId: entry.id,
+            isCooked: entry.isCooked,
           })}
         />
       );

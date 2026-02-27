@@ -148,6 +148,33 @@ export class PantryService {
     return this.pantryItemRepo.save(item);
   }
 
+  async deductItems(
+    userId: string,
+    deductions: { pantryItemId: string; deductQuantity: number }[],
+  ): Promise<{ updatedPantryIds: string[]; removedPantryIds: string[] }> {
+    const updatedPantryIds: string[] = [];
+    const removedPantryIds: string[] = [];
+
+    for (const d of deductions) {
+      const item = await this.pantryItemRepo.findOne({
+        where: { id: d.pantryItemId, userId },
+      });
+      if (!item) continue;
+
+      const remaining = item.quantity - d.deductQuantity;
+      if (remaining <= 0) {
+        await this.pantryItemRepo.remove(item);
+        removedPantryIds.push(d.pantryItemId);
+      } else {
+        item.quantity = Math.round(remaining * 100) / 100;
+        await this.pantryItemRepo.save(item);
+        updatedPantryIds.push(d.pantryItemId);
+      }
+    }
+
+    return { updatedPantryIds, removedPantryIds };
+  }
+
   async remove(userId: string, itemId: string): Promise<void> {
     const item = await this.pantryItemRepo.findOne({
       where: { id: itemId, userId },

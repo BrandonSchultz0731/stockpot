@@ -12,7 +12,8 @@ export type MessageType =
   | 'shelf-life'
   | 'receipt-scan'
   | 'ingredient-resolution'
-  | 'food-category';
+  | 'food-category'
+  | 'cook-deduction';
 
 @Injectable()
 export class AnthropicService {

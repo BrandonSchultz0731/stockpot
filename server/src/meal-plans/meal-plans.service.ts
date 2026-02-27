@@ -17,9 +17,10 @@ import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
 import { MealType, RecipeIngredient } from '@shared/enums';
-import { ACTIVE_MODEL } from '../ai-models';
+import { ACTIVE_MODEL, CLAUDE_MODELS } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
-import { buildMealPlanPrompt, buildMealSwapPrompt } from '../prompts';
+import { buildMealPlanPrompt, buildMealSwapPrompt, buildCookDeductionPrompt } from '../prompts';
+import { ConfirmCookDto } from './dto/confirm-cook.dto';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -342,6 +343,119 @@ export class MealPlansService {
     }
 
     return returnedEntry;
+  }
+
+  async cookPreview(userId: string, entryId: string) {
+    const entry = await this.entryRepo.findOne({
+      where: { id: entryId },
+      relations: ['mealPlan', 'recipe'],
+    });
+
+    if (!entry || entry.mealPlan.userId !== userId) {
+      throw new NotFoundException('Meal plan entry not found');
+    }
+
+    const pantryItems = await this.pantryService.findAllForUser(userId);
+
+    const recipeIngredients = (entry.recipe.ingredients ?? []).map((ing: any) => ({
+      name: ing.name,
+      quantity: ing.quantity,
+      unit: ing.unit,
+      foodCacheId: ing.foodCacheId,
+    }));
+
+    const pantryData = pantryItems.map((item) => ({
+      id: item.id,
+      displayName: item.displayName,
+      quantity: item.quantity,
+      unit: item.unit,
+      foodCacheId: item.foodCacheId,
+    }));
+
+    const prompt = buildCookDeductionPrompt(recipeIngredients, pantryData);
+
+    let response;
+    try {
+      response = await this.anthropicService.sendMessage(userId, {
+        model: CLAUDE_MODELS['haiku-4.5'],
+        maxTokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+        messageType: 'cook-deduction',
+      });
+    } catch (error) {
+      this.logger.error('Claude API call failed for cook deduction preview', error);
+      throw new BadGatewayException('Cook deduction preview service unavailable');
+    }
+
+    const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
+    const deductions = this.parseCookDeductionResponse(rawText);
+
+    return {
+      entryId: entry.id,
+      recipeTitle: entry.recipe.title,
+      deductions,
+    };
+  }
+
+  async confirmCook(userId: string, entryId: string, dto: ConfirmCookDto) {
+    const entry = await this.entryRepo.findOne({
+      where: { id: entryId },
+      relations: ['mealPlan'],
+    });
+
+    if (!entry || entry.mealPlan.userId !== userId) {
+      throw new NotFoundException('Meal plan entry not found');
+    }
+
+    const result = await this.pantryService.deductItems(userId, dto.deductions);
+
+    entry.isCooked = true;
+    await this.entryRepo.save(entry);
+
+    return {
+      entryId: entry.id,
+      isCooked: true,
+      pantryUpdated: result.updatedPantryIds.length,
+      pantryRemoved: result.removedPantryIds.length,
+    };
+  }
+
+  private parseCookDeductionResponse(raw: string): any[] {
+    let parsed: unknown;
+
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (codeBlockMatch) {
+        try {
+          parsed = JSON.parse(codeBlockMatch[1].trim());
+        } catch {
+          // fall through
+        }
+      }
+
+      if (!parsed) {
+        const objectMatch = raw.match(/\{[\s\S]*\}/);
+        if (objectMatch) {
+          try {
+            parsed = JSON.parse(objectMatch[0]);
+          } catch {
+            // fall through
+          }
+        }
+      }
+    }
+
+    if (parsed && typeof parsed === 'object' && 'deductions' in (parsed as any)) {
+      const deductions = (parsed as any).deductions;
+      if (Array.isArray(deductions)) {
+        return deductions;
+      }
+    }
+
+    this.logger.warn('Failed to parse cook deduction response');
+    return [];
   }
 
   async deletePlan(userId: string, planId: string): Promise<void> {

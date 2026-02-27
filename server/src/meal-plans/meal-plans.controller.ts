@@ -15,6 +15,7 @@ import { MealPlansService } from './meal-plans.service';
 import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
+import { ConfirmCookDto } from './dto/confirm-cook.dto';
 
 @Controller('meal-plans')
 @UseGuards(JwtAuthGuard)
@@ -50,6 +51,23 @@ export class MealPlansController {
     @Body() dto: UpdateMealPlanEntryDto,
   ) {
     return this.mealPlansService.updateEntry(userId, entryId, dto);
+  }
+
+  @Post('entries/:id/cook/preview')
+  cookPreview(
+    @GetUser('id') userId: string,
+    @Param('id') entryId: string,
+  ) {
+    return this.mealPlansService.cookPreview(userId, entryId);
+  }
+
+  @Post('entries/:id/cook/confirm')
+  confirmCook(
+    @GetUser('id') userId: string,
+    @Param('id') entryId: string,
+    @Body() dto: ConfirmCookDto,
+  ) {
+    return this.mealPlansService.confirmCook(userId, entryId, dto);
   }
 
   @Post('entries/:id/swap')
