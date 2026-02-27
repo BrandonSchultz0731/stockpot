@@ -13,6 +13,11 @@ export type OnboardingParamList = {
   OBGoals: undefined;
 };
 
+export type HomeStackParamList = {
+  HomeScreen: undefined;
+  RecipeDetail: { recipeId: string; title?: string };
+};
+
 export type TabParamList = {
   Home: undefined;
   PantryStack: undefined;

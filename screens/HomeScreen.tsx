@@ -8,6 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
@@ -29,7 +30,7 @@ import { getTodayDayOfWeek } from '../utils/dayOfWeek';
 import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
-import type { TabParamList } from '../navigation/types';
+import type { TabParamList, HomeStackParamList } from '../navigation/types';
 import colors from '../theme/colors';
 
 type TabNav = BottomTabNavigationProp<TabParamList, 'Home'>;
@@ -86,7 +87,7 @@ function ExpiringBanner({
   );
 }
 
-function MealCard({ entry, pantryMatchFraction }: { entry: MealPlanEntry; pantryMatchFraction: string }) {
+function MealCard({ entry, pantryMatchFraction, onPress }: { entry: MealPlanEntry; pantryMatchFraction: string; onPress: () => void }) {
   const { recipe } = entry;
   const total = recipe.ingredients.length;
   const matched = recipe.ingredients.filter(i => i.inPantry).length;
@@ -94,7 +95,7 @@ function MealCard({ entry, pantryMatchFraction }: { entry: MealPlanEntry; pantry
   const isHighMatch = matchPct >= 0.75;
 
   return (
-    <View className="mx-4 mb-2.5 flex-row items-center rounded-2xl border border-border bg-white p-3.5">
+    <Pressable onPress={onPress} className="mx-4 mb-2.5 flex-row items-center rounded-2xl border border-border bg-white p-3.5">
       <View className="flex-1">
         <Text className="text-[11px] font-bold uppercase tracking-[0.5px] text-orange">
           {entry.mealType}
@@ -140,12 +141,13 @@ function MealCard({ entry, pantryMatchFraction }: { entry: MealPlanEntry; pantry
           {pantryMatchFraction}
         </Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 function TodaysMeals() {
-  const navigation = useNavigation<TabNav>();
+  const tabNav = useNavigation<TabNav>();
+  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const { data: mealPlan, isLoading } = useCurrentMealPlanQuery();
 
   const todayEntries = (() => {
@@ -183,7 +185,7 @@ function TodaysMeals() {
       return (
         <View className="mx-4 items-center rounded-2xl border border-border bg-white py-6">
           <Text className="text-sm text-muted">No meal plan yet</Text>
-          <Pressable onPress={() => navigation.navigate('MealsStack')}>
+          <Pressable onPress={() => tabNav.navigate('MealsStack')}>
             <Text className="mt-2 text-sm font-semibold text-orange">
               Generate Plan
             </Text>
@@ -200,6 +202,10 @@ function TodaysMeals() {
           key={entry.id}
           entry={entry}
           pantryMatchFraction={`${matched}/${total}`}
+          onPress={() => navigation.navigate('RecipeDetail', {
+            recipeId: entry.recipe.id,
+            title: entry.recipe.title,
+          })}
         />
       );
     });
@@ -211,7 +217,7 @@ function TodaysMeals() {
         <Text className="text-[17px] font-bold text-navy">
           Today's Meals
         </Text>
-        <Pressable onPress={() => navigation.navigate('MealsStack')}>
+        <Pressable onPress={() => tabNav.navigate('MealsStack')}>
           <Text className="text-xs font-semibold text-orange">
             View Week →
           </Text>
