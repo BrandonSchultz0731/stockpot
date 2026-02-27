@@ -247,24 +247,26 @@ function MealCard({
         </Pressable>
       </View>
 
-      {/* Bottom action bar */}
-      <View className="flex-row items-center border-t border-border px-3.5 py-2">
-        <Pressable
-          onPress={onSwap}
-          disabled={isSwapping}
-          hitSlop={6}
-          className="flex-row items-center rounded-lg bg-cream px-2.5 py-1.5"
-        >
-          {isSwapping ? (
-            <ActivityIndicator size="small" color={colors.muted} />
-          ) : (
-            <>
-              <RefreshCw size={13} color={colors.muted} />
-              <Text className="ml-1.5 text-[12px] font-semibold text-muted">Swap</Text>
-            </>
-          )}
-        </Pressable>
-      </View>
+      {/* Bottom action bar — hidden for cooked entries */}
+      {!entry.isCooked && (
+        <View className="flex-row items-center border-t border-border px-3.5 py-2">
+          <Pressable
+            onPress={onSwap}
+            disabled={isSwapping}
+            hitSlop={6}
+            className="flex-row items-center rounded-lg bg-cream px-2.5 py-1.5"
+          >
+            {isSwapping ? (
+              <ActivityIndicator size="small" color={colors.muted} />
+            ) : (
+              <>
+                <RefreshCw size={13} color={colors.muted} />
+                <Text className="ml-1.5 text-[12px] font-semibold text-muted">Swap</Text>
+              </>
+            )}
+          </Pressable>
+        </View>
+      )}
     </Pressable>
   );
 }

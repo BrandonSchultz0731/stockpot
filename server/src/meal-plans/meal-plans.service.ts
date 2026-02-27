@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
@@ -241,6 +242,10 @@ export class MealPlansService {
 
     if (!entry || entry.mealPlan.userId !== userId) {
       throw new NotFoundException('Meal plan entry not found');
+    }
+
+    if (entry.isCooked) {
+      throw new BadRequestException('Cannot swap a meal that has already been cooked');
     }
 
     const pantryItems = await this.pantryService.findAllForUser(userId);
