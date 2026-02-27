@@ -94,7 +94,10 @@ const FAKE_SHELF_LIFE = JSON.stringify({
   Fridge: 7,
   Freezer: 180,
   Pantry: 3,
+  category: 'Dairy & Eggs',
 });
+
+const FAKE_FOOD_CATEGORY = 'Dairy & Eggs';
 
 const FAKE_RECEIPT_SCAN = JSON.stringify([
   { name: 'Organic Whole Milk', quantity: 1, unit: 'gallon', storageLocation: 'Fridge', estimatedShelfLife: { Fridge: 10 } },
@@ -111,4 +114,5 @@ export const FAKE_RESPONSES: Record<MessageType, string> = {
   'shelf-life': FAKE_SHELF_LIFE,
   'receipt-scan': FAKE_RECEIPT_SCAN,
   'ingredient-resolution': FAKE_INGREDIENT_RESOLUTION,
+  'food-category': FAKE_FOOD_CATEGORY,
 };

@@ -344,6 +344,24 @@ export class FoodCacheService {
       .execute();
   }
 
+  async getCategory(foodCacheId: string): Promise<string | null> {
+    const entry = await this.foodCacheRepo.findOne({
+      where: { id: foodCacheId },
+      select: ['id', 'category'],
+    });
+    return entry?.category ?? null;
+  }
+
+  async updateCategory(foodCacheId: string, category: string): Promise<void> {
+    // Only write if currently null to avoid overwriting user-corrected data
+    await this.foodCacheRepo
+      .createQueryBuilder()
+      .update(FoodCache)
+      .set({ category })
+      .where('id = :id AND category IS NULL', { id: foodCacheId })
+      .execute();
+  }
+
   async findById(id: string): Promise<FoodCache | null> {
     return this.foodCacheRepo.findOne({ where: { id } });
   }

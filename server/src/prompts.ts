@@ -1,4 +1,4 @@
-import { UnitOfMeasure, StorageLocation } from '@shared/enums';
+import { UnitOfMeasure, StorageLocation, FOOD_CATEGORIES } from '@shared/enums';
 
 export function buildRecipeGenerationPrompt(
   ingredientList: string,
@@ -99,7 +99,13 @@ No markdown fences, no explanation — only the JSON object.`;
 
 export function buildShelfLifePrompt(displayName: string): string {
   const storageKeys = Object.values(StorageLocation).join(', ');
-  return `How many days does "${displayName}" typically last when stored properly? Return ONLY a JSON object with numeric values for applicable storage methods: { "${StorageLocation.Fridge}": days, "${StorageLocation.Freezer}": days, "${StorageLocation.Pantry}": days }. Valid keys: ${storageKeys}. Omit a key if that storage method is not applicable. No explanation.`;
+  const categories = FOOD_CATEGORIES.join(', ');
+  return `How many days does "${displayName}" typically last when stored properly? Return ONLY a JSON object with numeric values for applicable storage methods and a category: { "${StorageLocation.Fridge}": days, "${StorageLocation.Freezer}": days, "${StorageLocation.Pantry}": days, "category": "<category>" }. Valid storage keys: ${storageKeys}. Omit a storage key if that method is not applicable. "category" must be one of: ${categories}. No explanation.`;
+}
+
+export function buildCategoryPrompt(displayName: string): string {
+  const categories = FOOD_CATEGORIES.join(', ');
+  return `What food category does "${displayName}" belong to? Reply with ONLY one of these categories: ${categories}. No explanation, no punctuation — just the category name.`;
 }
 
 export function buildIngredientResolutionPrompt(
