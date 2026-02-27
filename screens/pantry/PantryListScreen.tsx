@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
+  SectionList,
   Text,
   View,
 } from 'react-native';
@@ -12,18 +13,25 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Plus, Search, Package } from 'lucide-react-native';
 import TextInputRow from '../../components/TextInputRow';
+import CategoryFilterPills from '../../components/pantry/CategoryFilterPills';
+import CategorySectionHeader from '../../components/pantry/CategorySectionHeader';
 import { usePantryQuery, type PantryItem } from '../../hooks/usePantryQuery';
 import { getExpiryStatus, getExpiryLabel } from '../../utils/expiry';
+import { FOOD_CATEGORIES } from '../../shared/enums';
 import colors from '../../theme/colors';
 import type { PantryStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<PantryStackParamList, 'PantryList'>;
 
-const EXPIRY_DOT_COLOR: Record<string, string> = {
-  expired: colors.danger.DEFAULT,
-  soon: colors.warning.DEFAULT,
-  good: colors.success.DEFAULT,
+const EXPIRY_PILL: Record<string, { bg: string; fg: string }> = {
+  expired: { bg: colors.danger.pale, fg: colors.danger.DEFAULT },
+  soon: { bg: colors.warning.pale, fg: colors.warning.text },
+  good: { bg: colors.success.pale, fg: colors.success.DEFAULT },
 };
+
+function getItemCategory(item: PantryItem): string {
+  return item.foodCache?.category ?? 'Other';
+}
 
 function PantryCard({
   item,
@@ -34,42 +42,34 @@ function PantryCard({
 }) {
   const status = getExpiryStatus(item.expirationDate);
   const label = getExpiryLabel(item.expirationDate);
+  const pill = EXPIRY_PILL[status];
 
   return (
     <Pressable
       onPress={onPress}
-      className="bg-white rounded-card border border-border p-3.5 mb-2">
-      <View className="flex-row items-center justify-between">
-        <View className="flex-1 mr-3">
+      className="bg-white rounded-card border border-border p-3.5 mb-2 flex-row items-center">
+      <View className="flex-1 mr-3">
+        <Text
+          className="text-[15px] text-dark font-semibold"
+          numberOfLines={1}>
+          {item.displayName}
+        </Text>
+        <Text className="text-[13px] text-muted mt-0.5">
+          {item.quantity} {item.unit}
+          {item.storageLocation ? `  ·  ${item.storageLocation}` : ''}
+        </Text>
+      </View>
+      {pill && label && (
+        <View
+          className="rounded-full px-2.5 py-1"
+          style={{ backgroundColor: pill.bg }}>
           <Text
-            className="text-[15px] text-dark mb-0.5 font-semibold"
-            numberOfLines={1}>
-            {item.displayName}
-          </Text>
-          <Text className="text-[13px] text-muted">
-            {item.quantity} {item.unit}
-            {item.storageLocation ? `  ·  ${item.storageLocation}` : ''}
+            className="text-[11px] font-semibold"
+            style={{ color: pill.fg }}>
+            {label}
           </Text>
         </View>
-        {status !== 'none' && (
-          <View className="flex-row items-center gap-1.5">
-            <View
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: EXPIRY_DOT_COLOR[status] }}
-            />
-            <Text
-              className="text-[12px]"
-              style={{
-                color:
-                  status === 'expired'
-                    ? colors.danger.DEFAULT
-                    : colors.muted,
-              }}>
-              {label}
-            </Text>
-          </View>
-        )}
-      </View>
+      )}
     </Pressable>
   );
 }
@@ -78,14 +78,89 @@ export default function PantryListScreen() {
   const navigation = useNavigation<Nav>();
   const { data: items, isLoading, refetch, isRefetching } = usePantryQuery();
   const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const filtered = items?.filter(item =>
-    item.displayName.toLowerCase().includes(search.toLowerCase()),
-  );
+  // Items filtered by search only (drives pills + category counts)
+  const searchFiltered = useMemo(() => {
+    if (!items) return [];
+    if (!search) return items;
+    const q = search.toLowerCase();
+    return items.filter(item =>
+      item.displayName.toLowerCase().includes(q),
+    );
+  }, [items, search]);
+
+  // Categories that have items in the search-filtered set, in FOOD_CATEGORIES order
+  const availableCategories = useMemo(() => {
+    const catSet = new Set(searchFiltered.map(getItemCategory));
+    return FOOD_CATEGORIES.filter(c => catSet.has(c));
+  }, [searchFiltered]);
+
+  // Per-category counts from search-filtered items
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of searchFiltered) {
+      const cat = getItemCategory(item);
+      counts.set(cat, (counts.get(cat) ?? 0) + 1);
+    }
+    return counts;
+  }, [searchFiltered]);
+
+  // Items matching both search and selected category
+  const filtered = useMemo(() => {
+    if (!selectedCategory) return searchFiltered;
+    return searchFiltered.filter(
+      item => getItemCategory(item) === selectedCategory,
+    );
+  }, [searchFiltered, selectedCategory]);
+
+  // Sections for SectionList (only used when "All" is selected)
+  const sections = useMemo(() => {
+    if (selectedCategory) return [];
+    const grouped = new Map<string, PantryItem[]>();
+    for (const item of searchFiltered) {
+      const cat = getItemCategory(item);
+      const list = grouped.get(cat);
+      if (list) {
+        list.push(item);
+      } else {
+        grouped.set(cat, [item]);
+      }
+    }
+    return FOOD_CATEGORIES.filter(c => grouped.has(c)).map(c => ({
+      title: c,
+      data: grouped.get(c)!,
+    }));
+  }, [searchFiltered, selectedCategory]);
+
+  // Auto-reset category when it disappears from available categories
+  useEffect(() => {
+    if (
+      selectedCategory !== null &&
+      !availableCategories.includes(selectedCategory)
+    ) {
+      setSelectedCategory(null);
+    }
+  }, [availableCategories, selectedCategory]);
 
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: PantryItem }) => (
+      <PantryCard
+        item={item}
+        onPress={() => navigation.navigate('EditItem', { item })}
+      />
+    ),
+    [navigation],
+  );
+
+  const clearFilters = useCallback(() => {
+    setSearch('');
+    setSelectedCategory(null);
+  }, []);
 
   if (isLoading) {
     return (
@@ -96,6 +171,41 @@ export default function PantryListScreen() {
       </SafeAreaView>
     );
   }
+
+  const hasItems = (items?.length ?? 0) > 0;
+  const showNoMatchEmpty = hasItems && filtered.length === 0;
+
+  const refreshControl = (
+    <RefreshControl
+      refreshing={isRefetching}
+      onRefresh={handleRefresh}
+      tintColor={colors.navy.DEFAULT}
+    />
+  );
+
+  const emptyComponent = showNoMatchEmpty ? (
+    <View className="items-center justify-center pt-20">
+      <Search size={48} color={colors.muted} />
+      <Text className="text-[17px] text-navy mt-4 mb-2 font-bold">
+        No matching items
+      </Text>
+      <Pressable onPress={clearFilters}>
+        <Text className="text-[14px] text-orange font-semibold">
+          Clear filters
+        </Text>
+      </Pressable>
+    </View>
+  ) : (
+    <View className="items-center justify-center pt-20">
+      <Package size={48} color={colors.muted} />
+      <Text className="text-[17px] text-navy mt-4 mb-2 font-bold">
+        Your pantry is empty
+      </Text>
+      <Text className="text-[14px] text-muted text-center px-8">
+        Tap the + button to start adding items to your pantry.
+      </Text>
+    </View>
+  );
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
@@ -114,36 +224,44 @@ export default function PantryListScreen() {
         />
       </View>
 
-      <FlatList
-        data={filtered}
-        keyExtractor={item => item.id}
-        contentContainerClassName="px-5 pt-3 pb-[100px]"
-        renderItem={({ item }) => (
-          <PantryCard
-            item={item}
-            onPress={() => navigation.navigate('EditItem', { item })}
+      {hasItems && (
+        <View className="pb-2">
+          <CategoryFilterPills
+            categories={availableCategories}
+            selected={selectedCategory}
+            onSelect={setSelectedCategory}
+            counts={categoryCounts}
+            totalCount={searchFiltered.length}
           />
-        )}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={handleRefresh}
-            tintColor={colors.navy.DEFAULT}
-          />
-        }
-        ListEmptyComponent={
-          <View className="items-center justify-center pt-20">
-            <Package size={48} color={colors.muted} />
-            <Text
-              className="text-[17px] text-navy mt-4 mb-2 font-bold">
-              Your pantry is empty
-            </Text>
-            <Text className="text-[14px] text-muted text-center px-8">
-              Tap the + button to start adding items to your pantry.
-            </Text>
-          </View>
-        }
-      />
+        </View>
+      )}
+
+      {selectedCategory ? (
+        <FlatList
+          data={filtered}
+          keyExtractor={item => item.id}
+          contentContainerClassName="px-5 pt-3 pb-[100px]"
+          renderItem={renderItem}
+          refreshControl={refreshControl}
+          ListEmptyComponent={emptyComponent}
+        />
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={item => item.id}
+          contentContainerClassName="px-5 pt-1 pb-[100px]"
+          renderItem={renderItem}
+          renderSectionHeader={({ section }) => (
+            <CategorySectionHeader
+              title={section.title}
+              count={section.data.length}
+            />
+          )}
+          stickySectionHeadersEnabled={false}
+          refreshControl={refreshControl}
+          ListEmptyComponent={emptyComponent}
+        />
+      )}
 
       <Pressable
         onPress={() => navigation.navigate('AddItemPicker')}
