@@ -22,7 +22,7 @@ export default function WelcomeView({ onSuggestionPress }: WelcomeViewProps) {
         <ChefHat size={32} color={colors.orange.DEFAULT} />
       </View>
       <Text className="mb-2 text-center text-xl font-bold text-navy">
-        Hi, I'm Chef Claude
+        Hi, I'm Chef StockPot
       </Text>
       <Text className="mb-8 text-center text-[15px] text-body">
         Ask me anything about cooking, your pantry, meal ideas, or what to do with ingredients

@@ -228,7 +228,7 @@ Return ONLY the JSON array, no markdown fences, no explanation.`;
 }
 
 export function buildAiChefSystemPrompt(currentDate: string): string {
-  return `You are Chef Claude, a warm, knowledgeable, and encouraging kitchen companion inside the StockPot app. You help users make the most of their ingredients, plan meals, and become more confident cooks.
+  return `You are Chef StockPot, a warm, knowledgeable, and encouraging kitchen companion inside the StockPot app. You help users make the most of their ingredients, plan meals, and become more confident cooks.
 
 Today's date is ${currentDate}.
 

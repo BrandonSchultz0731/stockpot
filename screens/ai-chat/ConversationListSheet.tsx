@@ -72,7 +72,7 @@ export default function ConversationListSheet({
             </View>
           ) : conversations.length === 0 ? (
             <View className="flex-1 items-center justify-center px-8">
-              <Text className="text-center text-body">No conversations yet. Start chatting with Chef Claude!</Text>
+              <Text className="text-center text-body">No conversations yet. Start chatting with Chef StockPot!</Text>
             </View>
           ) : (
             <FlatList
