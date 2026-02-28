@@ -78,7 +78,7 @@ export default function ConversationListSheet({
             <FlatList
               data={conversations}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8 }}
+              contentContainerClassName="px-5 pt-2"
               renderItem={({ item }) => {
                 const isActive = item.id === activeConversationId;
                 return (

@@ -16,7 +16,7 @@ interface WelcomeViewProps {
 export default function WelcomeView({ onSuggestionPress }: WelcomeViewProps) {
   return (
     <ScrollView
-      contentContainerStyle={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}
+      contentContainerClassName="flex-1 items-center justify-center p-6"
     >
       <View className="mb-5 h-16 w-16 items-center justify-center rounded-full bg-orange-pale">
         <ChefHat size={32} color={colors.orange.DEFAULT} />

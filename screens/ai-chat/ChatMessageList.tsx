@@ -1,5 +1,5 @@
-import { useRef, useEffect } from 'react';
-import { FlatList, View } from 'react-native';
+import { useRef, useEffect, useMemo } from 'react';
+import { FlatList } from 'react-native';
 import ChatBubble from './ChatBubble';
 import type { ChatMessage } from '../../hooks/useAiChat';
 
@@ -15,6 +15,10 @@ export default function ChatMessageList({
   onAction,
 }: ChatMessageListProps) {
   const flatListRef = useRef<FlatList>(null);
+  const lastMessageContent = useMemo(
+    () => messages[messages.length - 1]?.content,
+    [messages],
+  );
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -23,7 +27,7 @@ export default function ChatMessageList({
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
-  }, [messages.length, messages[messages.length - 1]?.content]);
+  }, [messages.length, lastMessageContent]);
 
   return (
     <FlatList
@@ -37,7 +41,7 @@ export default function ChatMessageList({
           onAction={onAction}
         />
       )}
-      contentContainerStyle={{ padding: 16, paddingBottom: 8 }}
+      contentContainerClassName="p-4 pb-2"
       showsVerticalScrollIndicator={false}
       keyboardDismissMode="interactive"
       keyboardShouldPersistTaps="handled"
