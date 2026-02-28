@@ -11,17 +11,24 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Plus, Search, Package } from 'lucide-react-native';
+import { ChevronRight, MapPin, Plus, Search, Package } from 'lucide-react-native';
 import TextInputRow from '../../components/TextInputRow';
 import CategoryFilterPills from '../../components/pantry/CategoryFilterPills';
 import CategorySectionHeader from '../../components/pantry/CategorySectionHeader';
 import { usePantryQuery, type PantryItem } from '../../hooks/usePantryQuery';
 import { getExpiryStatus, getExpiryLabel } from '../../utils/expiry';
-import { FOOD_CATEGORIES } from '../../shared/enums';
+import { DEFAULT_FOOD_CATEGORY, FOOD_CATEGORIES } from '../../shared/enums';
 import colors from '../../theme/colors';
 import type { PantryStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<PantryStackParamList, 'PantryList'>;
+
+const EXPIRY_ACCENT: Record<string, string> = {
+  expired: colors.danger.DEFAULT,
+  soon: colors.warning.icon,
+  good: colors.success.DEFAULT,
+  none: colors.border,
+};
 
 const EXPIRY_PILL: Record<string, { bg: string; fg: string }> = {
   expired: { bg: colors.danger.pale, fg: colors.danger.DEFAULT },
@@ -30,7 +37,7 @@ const EXPIRY_PILL: Record<string, { bg: string; fg: string }> = {
 };
 
 function getItemCategory(item: PantryItem): string {
-  return item.foodCache?.category ?? 'Other';
+  return item.foodCache?.category ?? DEFAULT_FOOD_CATEGORY;
 }
 
 function PantryCard({
@@ -43,33 +50,54 @@ function PantryCard({
   const status = getExpiryStatus(item.expirationDate);
   const label = getExpiryLabel(item.expirationDate);
   const pill = EXPIRY_PILL[status];
+  const accent = EXPIRY_ACCENT[status];
 
   return (
     <Pressable
       onPress={onPress}
-      className="bg-white rounded-card border border-border p-3.5 mb-2 flex-row items-center">
-      <View className="flex-1 mr-3">
-        <Text
-          className="text-[15px] text-dark font-semibold"
-          numberOfLines={1}>
-          {item.displayName}
-        </Text>
-        <Text className="text-[13px] text-muted mt-0.5">
-          {item.quantity} {item.unit}
-          {item.storageLocation ? `  ·  ${item.storageLocation}` : ''}
-        </Text>
-      </View>
-      {pill && label && (
-        <View
-          className="rounded-full px-2.5 py-1"
-          style={{ backgroundColor: pill.bg }}>
+      className="bg-white rounded-card border border-border mb-2 flex-row items-stretch overflow-hidden">
+      {/* Left accent bar */}
+      <View className="w-[3px]" style={{ backgroundColor: accent }} />
+
+      <View className="flex-1 flex-row items-center px-3.5 py-3">
+        {/* Left content */}
+        <View className="flex-1 mr-3">
           <Text
-            className="text-[11px] font-semibold"
-            style={{ color: pill.fg }}>
-            {label}
+            className="text-[15px] text-dark font-bold"
+            numberOfLines={1}>
+            {item.displayName}
           </Text>
+          <View className="flex-row items-center mt-1">
+            <Text className="text-[13px] text-body font-semibold">
+              {item.quantity} {item.unit}
+            </Text>
+            {item.storageLocation && (
+              <View className="flex-row items-center ml-2.5 rounded-full bg-navy-pale px-2 py-0.5">
+                <MapPin size={9} color={colors.muted} />
+                <Text className="text-[11px] text-muted ml-0.5">
+                  {item.storageLocation}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
-      )}
+
+        {/* Right side: expiry + chevron */}
+        <View className="flex-row items-center">
+          {pill && label && (
+            <View
+              className="rounded-full px-2.5 py-1 mr-1.5"
+              style={{ backgroundColor: pill.bg }}>
+              <Text
+                className="text-[11px] font-semibold"
+                style={{ color: pill.fg }}>
+                {label}
+              </Text>
+            </View>
+          )}
+          <ChevronRight size={16} color={colors.border} />
+        </View>
+      </View>
     </Pressable>
   );
 }

@@ -24,6 +24,7 @@ import {
   type CreatePantryItemRequest,
 } from '../../hooks/usePantryMutations';
 import { UnitOfMeasure, StorageLocation, type ShelfLife } from '../../shared/enums';
+import pluralize from 'pluralize';
 import colors from '../../theme/colors';
 import type { PantryStackParamList } from '../../navigation/types';
 import {
@@ -198,7 +199,7 @@ export default function ReceiptReviewScreen() {
           Review Items
         </Text>
         <Text className="text-[14px] text-muted mb-4">
-          {items.length} item{items.length !== 1 ? 's' : ''} found. Edit or
+          {items.length} {pluralize('item', items.length)} found. Edit or
           remove before adding.
         </Text>
       </View>
@@ -216,7 +217,7 @@ export default function ReceiptReviewScreen() {
                 {item.displayName || 'Unnamed item'}
               </Text>
               <Text className="text-[12px] text-muted mt-0.5">
-                {item.quantity ?? 1} {item.unit ?? 'count'}
+                {item.quantity ?? 1} {item.unit ?? UnitOfMeasure.Count}
                 {item.storageLocation ? `  ·  ${item.storageLocation}` : ''}
               </Text>
               {item.expirationDate && (

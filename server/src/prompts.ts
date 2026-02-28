@@ -20,11 +20,13 @@ Return ONLY a JSON array of ${numberOfRecipes} recipe objects with these fields:
 - "difficulty": "Easy" | "Medium" | "Hard"
 - "cuisine": string
 - "mealType": "Breakfast" | "Lunch" | "Dinner" | "Snack"
-- "ingredients": array of { "name": string, "quantity": number, "unit": string, "notes": string (optional) }
+- "ingredients": array of { "name": string, "quantity": number, "unit": string, "baseQuantity": number, "baseUnit": "g" | "ml" | "count", "notes": string (optional) }
 - "steps": array of { "stepNumber": number, "instruction": string, "duration": number (optional, in minutes) }
 - "tags": array of strings
 - "dietaryFlags": array of strings
 - "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
+
+For each ingredient, "baseQuantity" is the equivalent quantity normalized to a base unit and "baseUnit" is one of "g", "ml", or "count". For weight ingredients use grams, for liquids/volumes use milliliters, for countable items use count. Account for ingredient density when converting (e.g. 1 cup flour ≈ 125g, 1 cup butter ≈ 227g).
 
 No markdown fences, no explanation — only the JSON array.`;
 }
@@ -74,11 +76,13 @@ Return ONLY a JSON object with a "meals" array where each item has:
 - "servings": number
 - "difficulty": "Easy" | "Medium" | "Hard"
 - "cuisine": string
-- "ingredients": array of { "name": string, "quantity": number, "unit": string, "notes": string (optional) }
+- "ingredients": array of { "name": string, "quantity": number, "unit": string, "baseQuantity": number, "baseUnit": "g" | "ml" | "count", "notes": string (optional) }
 - "steps": array of { "stepNumber": number, "instruction": string, "duration": number (optional, in minutes) }
 - "tags": array of strings
 - "dietaryFlags": array of strings
 - "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
+
+For each ingredient, "baseQuantity" is the equivalent quantity normalized to a base unit and "baseUnit" is one of "g", "ml", or "count". For weight ingredients use grams, for liquids/volumes use milliliters, for countable items use count. Account for ingredient density when converting (e.g. 1 cup flour ≈ 125g, 1 cup butter ≈ 227g).
 
 No markdown fences, no explanation — only the JSON object.`;
 }
@@ -106,11 +110,13 @@ Return ONLY a JSON object with:
 - "servings": number
 - "difficulty": "Easy" | "Medium" | "Hard"
 - "cuisine": string
-- "ingredients": array of { "name": string, "quantity": number, "unit": string, "notes": string (optional) }
+- "ingredients": array of { "name": string, "quantity": number, "unit": string, "baseQuantity": number, "baseUnit": "g" | "ml" | "count", "notes": string (optional) }
 - "steps": array of { "stepNumber": number, "instruction": string, "duration": number (optional, in minutes) }
 - "tags": array of strings
 - "dietaryFlags": array of strings
 - "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
+
+For each ingredient, "baseQuantity" is the equivalent quantity normalized to a base unit and "baseUnit" is one of "g", "ml", or "count". For weight ingredients use grams, for liquids/volumes use milliliters, for countable items use count. Account for ingredient density when converting (e.g. 1 cup flour ≈ 125g, 1 cup butter ≈ 227g).
 
 No markdown fences, no explanation — only the JSON object.`;
 }

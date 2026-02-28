@@ -16,8 +16,9 @@ import { GenerateRecipeDto } from './dto/generate-recipe.dto';
 import { SaveRecipeDto } from './dto/save-recipe.dto';
 import { UpdateSavedRecipeDto } from './dto/update-saved-recipe.dto';
 import { ACTIVE_MODEL } from '../ai-models';
-import { RecipeIngredient } from '@shared/enums';
+import { UnitOfMeasure, RecipeIngredient } from '@shared/enums';
 import { buildRecipeGenerationPrompt } from '../prompts';
+import { enrichPantryStatus } from '../pantry/enrich-pantry';
 
 @Injectable()
 export class RecipesService {
@@ -41,8 +42,7 @@ export class RecipesService {
     }
     if (userId && recipe.ingredients?.length) {
       const pantryItems = await this.pantryService.findAllForUser(userId);
-      const pantryFoodCacheIds = new Set(pantryItems.map((item) => item.foodCacheId));
-      recipe.ingredients = this.enrichInPantry(recipe.ingredients, pantryFoodCacheIds);
+      recipe.ingredients = enrichPantryStatus(recipe.ingredients, pantryItems);
     }
     return recipe;
   }
@@ -108,8 +108,6 @@ export class RecipesService {
       userId,
     );
 
-    const pantryFoodCacheIds = new Set(pantryItems.map((item) => item.foodCacheId));
-
     const recipes: Recipe[] = [];
     for (const item of parsed) {
       const resolvedIngredients: RecipeIngredient[] = (item.ingredients ?? []).map(
@@ -117,6 +115,8 @@ export class RecipesService {
           name: ing.name,
           quantity: ing.quantity,
           unit: ing.unit,
+          baseQuantity: ing.baseQuantity ?? 0,
+          baseUnit: ing.baseUnit ?? UnitOfMeasure.Count,
           ...(ing.notes ? { notes: ing.notes } : {}),
           foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
         }),
@@ -143,9 +143,9 @@ export class RecipesService {
       recipes.push(await this.recipeRepo.save(recipe));
     }
 
-    // Enrich with inPantry for the API response
+    // Enrich with pantryStatus for the API response
     for (const recipe of recipes) {
-      recipe.ingredients = this.enrichInPantry(recipe.ingredients, pantryFoodCacheIds);
+      recipe.ingredients = enrichPantryStatus(recipe.ingredients, pantryItems);
     }
 
     return recipes;
@@ -220,16 +220,6 @@ export class RecipesService {
 
     Object.assign(savedRecipe, dto);
     return this.savedRecipeRepo.save(savedRecipe);
-  }
-
-  private enrichInPantry(
-    ingredients: RecipeIngredient[],
-    pantryFoodCacheIds: Set<string>,
-  ): RecipeIngredient[] {
-    return ingredients.map((ing) => ({
-      ...ing,
-      inPantry: ing.foodCacheId ? pantryFoodCacheIds.has(ing.foodCacheId) : false,
-    }));
   }
 
   private parseRecipeResponse(raw: string): any[] {

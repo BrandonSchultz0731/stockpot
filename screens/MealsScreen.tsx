@@ -185,7 +185,7 @@ export default function MealsScreen() {
           onGenerate={handleOpenSelector}
           disabled={isGenerating}
           onCartPress={isActive ? handleCartPress : undefined}
-          cartBadgeCount={shoppingList?.summary?.toBuy}
+          cartBadgeCount={shoppingList?.summary ? shoppingList.summary.toBuy + shoppingList.summary.low : undefined}
         />
 
         {/* ---- Empty state (no plan) ---- */}
@@ -273,6 +273,7 @@ export default function MealsScreen() {
             {shoppingList && (
               <ShoppingListBanner
                 toBuy={shoppingList.summary.toBuy}
+                low={shoppingList.summary.low}
                 alreadyHave={shoppingList.summary.alreadyHave}
                 onPress={handleCartPress}
               />

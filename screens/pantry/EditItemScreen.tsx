@@ -41,7 +41,7 @@ export default function EditItemScreen() {
           style: 'destructive',
           onPress: () =>
             deleteMutation.mutate(item.id, {
-              onSuccess: () => navigation.navigate('PantryList'),
+              onSuccess: () => navigation.goBack(),
               onError: () =>
                 Alert.alert('Error', 'Failed to delete item. Please try again.'),
             }),
@@ -85,7 +85,7 @@ export default function EditItemScreen() {
             updateMutation.mutate(
               { id: item.id, data: values },
               {
-                onSuccess: () => navigation.navigate('PantryList'),
+                onSuccess: () => navigation.goBack(),
                 onError: () =>
                   Alert.alert('Error', 'Failed to save changes. Please try again.'),
               },

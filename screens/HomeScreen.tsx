@@ -25,7 +25,7 @@ import {
   useCurrentMealPlanQuery,
   type MealPlanEntry,
 } from '../hooks/useCurrentMealPlanQuery';
-import { MealType } from '../shared/enums';
+import { MealType, PantryStatus } from '../shared/enums';
 import { getExpiryStatus } from '../utils/expiry';
 import { getTodayDayOfWeek } from '../utils/dayOfWeek';
 import { api } from '../services/api';
@@ -91,7 +91,7 @@ function ExpiringBanner({
 function MealCard({ entry, pantryMatchFraction, onPress }: { entry: MealPlanEntry; pantryMatchFraction: string; onPress: () => void }) {
   const { recipe } = entry;
   const total = recipe.ingredients.length;
-  const matched = recipe.ingredients.filter(i => i.inPantry).length;
+  const matched = recipe.ingredients.filter(i => i.pantryStatus && i.pantryStatus !== PantryStatus.None).length;
   const matchPct = total > 0 ? matched / total : 0;
   const isHighMatch = matchPct >= 0.75;
 
@@ -204,7 +204,7 @@ function TodaysMeals() {
 
     return todayEntries.map(entry => {
       const total = entry.recipe.ingredients.length;
-      const matched = entry.recipe.ingredients.filter(i => i.inPantry).length;
+      const matched = entry.recipe.ingredients.filter(i => i.pantryStatus && i.pantryStatus !== PantryStatus.None).length;
       return (
         <MealCard
           key={entry.id}

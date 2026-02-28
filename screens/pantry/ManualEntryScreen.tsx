@@ -53,7 +53,7 @@ export default function ManualEntryScreen() {
             createMutation.mutate(
               values,
               {
-                onSuccess: () => navigation.navigate('PantryList'),
+                onSuccess: () => navigation.popToTop(),
                 onError: () =>
                   Alert.alert('Error', 'Failed to add item. Please try again.'),
               },

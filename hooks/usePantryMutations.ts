@@ -30,15 +30,19 @@ export interface UpdatePantryItemRequest {
   notes?: string;
 }
 
+function invalidatePantryDependents(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PANTRY_ITEMS });
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SHOPPING_LISTS.ALL });
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
+}
+
 export function useCreatePantryItemMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: CreatePantryItemRequest) =>
       api.post<PantryItem>(ROUTES.PANTRY.CREATE, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PANTRY_ITEMS });
-    },
+    onSuccess: () => invalidatePantryDependents(queryClient),
   });
 }
 
@@ -48,9 +52,7 @@ export function useBulkCreatePantryItemsMutation() {
   return useMutation({
     mutationFn: (items: CreatePantryItemRequest[]) =>
       api.post<PantryItem[]>(ROUTES.PANTRY.BULK_CREATE, items),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PANTRY_ITEMS });
-    },
+    onSuccess: () => invalidatePantryDependents(queryClient),
   });
 }
 
@@ -60,9 +62,7 @@ export function useUpdatePantryItemMutation() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdatePantryItemRequest }) =>
       api.patch<PantryItem>(ROUTES.PANTRY.UPDATE(id), data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PANTRY_ITEMS });
-    },
+    onSuccess: () => invalidatePantryDependents(queryClient),
   });
 }
 
@@ -71,8 +71,6 @@ export function useDeletePantryItemMutation() {
 
   return useMutation({
     mutationFn: (id: string) => api.delete<void>(ROUTES.PANTRY.DELETE(id)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PANTRY_ITEMS });
-    },
+    onSuccess: () => invalidatePantryDependents(queryClient),
   });
 }

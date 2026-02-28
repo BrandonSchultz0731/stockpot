@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native';
 import {
+  AlertTriangle,
   Bookmark,
   Check,
   ChevronRight,
@@ -16,7 +17,9 @@ import {
   Zap,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
+import pluralize from 'pluralize';
 import { MealType, DAY_LABELS } from '../../shared/enums';
+import { countByPantryStatus } from '../../shared/pantryStatusCounts';
 import type { MealPlanEntry } from '../../hooks/useCurrentMealPlanQuery';
 
 export const MEAL_TYPE_ORDER: Record<string, number> = {
@@ -179,8 +182,8 @@ export function DaySelector({
                   <View
                     key={i}
                     className={`h-[4px] w-[4px] rounded-full ${active
-                        ? i < cookedMeals ? 'bg-white' : 'bg-white/30'
-                        : i < cookedMeals ? 'bg-success' : 'bg-border'
+                      ? i < cookedMeals ? 'bg-white' : 'bg-white/30'
+                      : i < cookedMeals ? 'bg-success' : 'bg-border'
                       }`}
                   />
                 ))}
@@ -245,9 +248,39 @@ export function MealCard({
   onToggleSave: () => void;
   onPress: () => void;
 }) {
-  const needCount = (entry.recipe.ingredients ?? []).filter(
-    (i) => !i.inPantry,
-  ).length;
+  const ingredients = entry.recipe.ingredients ?? [];
+  const { none: noneCount, low: lowCount } = countByPantryStatus(ingredients);
+
+  const renderPantryBadge = () => {
+    if (noneCount > 0) {
+      return (
+        <View className="ml-2 flex-row items-center">
+          <ShoppingCart size={10} color={colors.orange.DEFAULT} />
+          <Text className="ml-0.5 text-[11px] text-orange">
+            Need {noneCount} {pluralize('item', noneCount)}
+          </Text>
+        </View>
+      );
+    }
+    if (lowCount > 0) {
+      return (
+        <View className="ml-2 flex-row items-center">
+          <AlertTriangle size={10} color={colors.warning.icon} />
+          <Text className="ml-0.5 text-[11px]" style={{ color: colors.warning.icon }}>
+            {lowCount} {pluralize('item', lowCount)} low
+          </Text>
+        </View>
+      );
+    }
+    return (
+      <View className="ml-2 flex-row items-center">
+        <Check size={10} color={colors.success.DEFAULT} />
+        <Text className="ml-0.5 text-[11px] text-success">
+          All in pantry
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <Pressable onPress={onPress} className="mx-4 mb-2.5 overflow-hidden rounded-2xl border border-border bg-white">
@@ -275,21 +308,7 @@ export function MealCard({
             <Text className="text-[12px] text-muted">
               {entry.recipe.nutrition?.calories ?? 0} cal
             </Text>
-            {needCount > 0 ? (
-              <View className="ml-2 flex-row items-center">
-                <ShoppingCart size={10} color={colors.orange.DEFAULT} />
-                <Text className="ml-0.5 text-[11px] text-orange">
-                  Need {needCount} item{needCount !== 1 ? 's' : ''}
-                </Text>
-              </View>
-            ) : (
-              <View className="ml-2 flex-row items-center">
-                <Check size={10} color={colors.success.DEFAULT} />
-                <Text className="ml-0.5 text-[11px] text-success">
-                  All in pantry
-                </Text>
-              </View>
-            )}
+            {renderPantryBadge()}
           </View>
         </View>
         <Pressable
@@ -331,13 +350,20 @@ export function MealCard({
 
 export function ShoppingListBanner({
   toBuy,
+  low,
   alreadyHave,
   onPress,
 }: {
   toBuy: number;
+  low: number;
   alreadyHave: number;
   onPress: () => void;
 }) {
+  const parts: string[] = [];
+  const needCount = toBuy + low;
+  if (needCount > 0) parts.push(`${needCount} to buy`);
+  if (alreadyHave > 0) parts.push(`${alreadyHave} in pantry`);
+
   return (
     <Pressable
       onPress={onPress}
@@ -349,9 +375,7 @@ export function ShoppingListBanner({
           Shopping List Ready
         </Text>
         <Text className="mt-0.5 text-[12px] text-muted">
-          {toBuy} item{toBuy !== 1 ? 's' : ''} to buy
-          {' \u00B7 '}
-          {alreadyHave} already in pantry
+          {parts.join(' \u00B7 ')}
         </Text>
       </View>
       <ChevronRight size={16} color={colors.muted} />

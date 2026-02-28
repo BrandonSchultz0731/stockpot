@@ -3,6 +3,7 @@ import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
 import type { MealPlan, MealPlanEntry } from './useCurrentMealPlanQuery';
+import { countByPantryStatus } from '../shared/pantryStatusCounts';
 import type { Difficulty, MealType, MealScheduleSlot } from '../shared/enums';
 import type { ShoppingListResponse } from './useShoppingListQuery';
 
@@ -146,13 +147,9 @@ export function useToggleShoppingListItemMutation(mealPlanId: string) {
         const items = old.items.map((i) =>
           i.id === itemId ? { ...i, isChecked: !i.isChecked } : i,
         );
-        const toBuy = items.filter((i) => !i.inPantry).length;
-        const alreadyHave = items.filter((i) => i.inPantry).length;
-        return {
-          ...old,
-          items,
-          summary: { toBuy, alreadyHave, total: items.length },
-        };
+        const counts = countByPantryStatus(items);
+        const summary = { toBuy: counts.none, low: counts.low, alreadyHave: counts.enough, total: items.length };
+        return { ...old, items, summary };
       });
 
       return { previous };
