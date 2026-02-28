@@ -9,6 +9,7 @@ export const QUERY_KEYS = {
   FOOD_SEARCH: (query: string) => ['food', 'search', query],
   FOOD_BARCODE: (code: string) => ['food', 'barcode', code],
   MEAL_PLANS: {
+    ALL: ['meal-plans'],
     CURRENT: ['meal-plans', 'current'],
     WEEK: (date: string) => ['meal-plans', 'week', date],
     COOK_PREVIEW: (entryId: string) => ['meal-plans', 'cook-preview', entryId],

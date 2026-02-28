@@ -1,4 +1,4 @@
-import { UnitOfMeasure, StorageLocation, FOOD_CATEGORIES, MealScheduleSlot } from '@shared/enums';
+import { UnitOfMeasure, StorageLocation, FOOD_CATEGORIES, DAY_NAMES, MealScheduleSlot } from '@shared/enums';
 
 export function buildRecipeGenerationPrompt(
   ingredientList: string,
@@ -35,8 +35,6 @@ export function buildMealPlanPrompt(
   servings: number,
   constraintBlock: string,
 ): string {
-  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
   // Build day-by-day schedule block
   const scheduleByDay = new Map<number, string[]>();
   for (const slot of mealSchedule) {
@@ -47,7 +45,7 @@ export function buildMealPlanPrompt(
 
   const scheduleLines = Array.from(scheduleByDay.entries())
     .sort(([a], [b]) => a - b)
-    .map(([day, types]) => `- ${dayNames[day]}: ${types.join(', ')}`)
+    .map(([day, types]) => `- ${DAY_NAMES[day]}: ${types.join(', ')}`)
     .join('\n');
 
   const totalMeals = mealSchedule.length;
@@ -66,7 +64,7 @@ IMPORTANT: Generate exactly ${totalMeals} meals matching the schedule above. Do 
 Servings per meal: ${servings}
 ${constraintBlock}
 Return ONLY a JSON object with a "meals" array where each item has:
-- "dayOfWeek": number (0=Monday, 1=Tuesday, ..., 6=Sunday)
+- "dayOfWeek": number (0=Sunday, 1=Monday, ..., 6=Saturday)
 - "mealType": "${uniqueMealTypes.join('" | "')}"
 - "title": string (recipe name)
 - "description": string (1-2 sentence description)
