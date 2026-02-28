@@ -181,7 +181,7 @@ export default function ReceiptReviewScreen() {
     }));
 
     bulkCreate.mutate(payload, {
-      onSuccess: () => navigation.navigate('PantryList'),
+      onSuccess: () => navigation.popToTop(),
       onError: () =>
         Alert.alert('Error', 'Failed to add items. Please try again.'),
     });

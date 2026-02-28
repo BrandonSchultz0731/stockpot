@@ -10,6 +10,7 @@ import { AnthropicModule } from '../anthropic/anthropic.module';
 import { UsageTrackingModule } from '../usage-tracking/usage-tracking.module';
 import { UsersModule } from '../users/users.module';
 import { FoodCacheModule } from '../food-cache/food-cache.module';
+import { ShoppingListsModule } from '../shopping-lists/shopping-lists.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { FoodCacheModule } from '../food-cache/food-cache.module';
     UsageTrackingModule,
     UsersModule,
     FoodCacheModule,
+    ShoppingListsModule,
   ],
   controllers: [MealPlansController],
   providers: [MealPlansService],

@@ -20,6 +20,7 @@ import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
 import { MealType, RecipeIngredient } from '@shared/enums';
 import { ACTIVE_MODEL, CLAUDE_MODELS } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
+import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
 import { buildMealPlanPrompt, buildMealSwapPrompt, buildCookDeductionPrompt } from '../prompts';
 import { ConfirmCookDto } from './dto/confirm-cook.dto';
 
@@ -41,6 +42,7 @@ export class MealPlansService {
     private readonly usageTrackingService: UsageTrackingService,
     private readonly usersService: UsersService,
     private readonly foodCacheService: FoodCacheService,
+    private readonly shoppingListsService: ShoppingListsService,
   ) {}
 
   async getCurrentPlan(userId: string): Promise<MealPlan | null> {
@@ -206,6 +208,11 @@ export class MealPlansService {
 
       await this.mealPlanRepo.update(planId, { status: 'active' });
       this.logger.log(`Meal plan ${planId} generation completed with ${meals.length} meals`);
+
+      // Generate shopping list in background
+      this.shoppingListsService.generateForMealPlan(planId, userId).catch((err) => {
+        this.logger.error(`Shopping list generation failed for plan ${planId}`, err);
+      });
     } catch (error) {
       this.logger.error(`Meal plan ${planId} generation failed`, error);
       await this.mealPlanRepo.update(planId, { status: 'error' });
@@ -347,6 +354,11 @@ export class MealPlansService {
         pantryFoodCacheIds,
       );
     }
+
+    // Regenerate shopping list in background
+    this.shoppingListsService.generateForMealPlan(entry.mealPlanId, userId).catch((err) => {
+      this.logger.error(`Shopping list regeneration failed after swap for plan ${entry.mealPlanId}`, err);
+    });
 
     return returnedEntry;
   }

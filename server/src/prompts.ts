@@ -35,9 +35,7 @@ export function buildMealPlanPrompt(
   servings: number,
   constraintBlock: string,
 ): string {
-  return `You are a meal planning chef. Create a 7-day meal plan (Monday through Sunday) using primarily the following pantry ingredients. It's okay to include a few common ingredients not in the pantry.
-
-IMPORTANT: The quantities listed are the total available for the entire week. Ensure the combined usage of each ingredient across all meals does not exceed the available amount.
+  return `You are a meal planning chef. Create a 7-day meal plan (Monday through Sunday) with delicious, varied, well-balanced meals. The user has the following ingredients on hand — use them when it makes sense, but do not limit recipes to only pantry items. Suggest the best meals regardless of what is available.
 
 Pantry ingredients:
 ${ingredientList || 'No pantry items available — suggest common recipes.'}
@@ -72,7 +70,7 @@ export function buildMealSwapPrompt(
   currentTitle: string,
   constraintBlock: string,
 ): string {
-  return `You are a meal planning chef. Suggest a single replacement recipe for ${dayName} ${mealType} using primarily the following pantry ingredients. It's okay to include a few common ingredients not in the pantry.
+  return `You are a meal planning chef. Suggest a single replacement recipe for ${dayName} ${mealType}. The user has the following ingredients on hand — use them when possible, but prioritize a great meal over strict pantry usage.
 
 The current meal is: "${currentTitle}" — please suggest something different.
 
@@ -106,6 +104,21 @@ export function buildShelfLifePrompt(displayName: string): string {
 export function buildCategoryPrompt(displayName: string): string {
   const categories = FOOD_CATEGORIES.join(', ');
   return `What food category does "${displayName}" belong to? Reply with ONLY one of these categories: ${categories}. No explanation, no punctuation — just the category name.`;
+}
+
+export function buildBatchCategoryPrompt(
+  ingredientNames: string[],
+): string {
+  const categories = FOOD_CATEGORIES.join(', ');
+  const list = ingredientNames.map((n) => `- "${n}"`).join('\n');
+  return `Categorize each food item below into one of these categories: ${categories}.
+
+Food items:
+${list}
+
+Return ONLY a JSON object mapping each food item name to its category. Example: { "Cinnamon": "Spices & Herbs", "Chicken Breast": "Meat & Poultry" }
+
+No markdown fences, no explanation — only the JSON object.`;
 }
 
 export function buildIngredientResolutionPrompt(

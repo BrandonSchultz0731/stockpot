@@ -12,6 +12,7 @@ import { PantryModule } from './pantry/pantry.module';
 import { ReceiptScanModule } from './receipt-scan/receipt-scan.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { MealPlansModule } from './meal-plans/meal-plans.module';
+import { ShoppingListsModule } from './shopping-lists/shopping-lists.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { MealPlansModule } from './meal-plans/meal-plans.module';
     ReceiptScanModule,
     RecipesModule,
     MealPlansModule,
+    ShoppingListsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

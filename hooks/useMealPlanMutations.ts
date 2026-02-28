@@ -5,6 +5,7 @@ import { QUERY_KEYS } from '../services/queryKeys';
 import { getCurrentWeekStartDate } from '../utils/dayOfWeek';
 import type { MealPlan, MealPlanEntry } from './useCurrentMealPlanQuery';
 import type { Difficulty, MealType } from '../shared/enums';
+import type { ShoppingListResponse } from './useShoppingListQuery';
 
 export interface GenerateMealPlanRequest {
   weekStartDate: string;
@@ -128,6 +129,53 @@ export function useConfirmCookMutation() {
       });
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PANTRY_ITEMS,
+      });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Shopping list mutations
+// ---------------------------------------------------------------------------
+
+export function useToggleShoppingListItemMutation(mealPlanId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ listId, itemId }: { listId: string; itemId: string }) =>
+      api.patch(ROUTES.SHOPPING_LISTS.TOGGLE_ITEM(listId, itemId)),
+    onMutate: async ({ itemId }) => {
+      const queryKey = QUERY_KEYS.SHOPPING_LISTS.BY_MEAL_PLAN(mealPlanId);
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData(queryKey);
+
+      queryClient.setQueryData(queryKey, (old: ShoppingListResponse | null | undefined) => {
+        if (!old) return old;
+        const items = old.items.map((i) =>
+          i.id === itemId ? { ...i, isChecked: !i.isChecked } : i,
+        );
+        const toBuy = items.filter((i) => !i.inPantry).length;
+        const alreadyHave = items.filter((i) => i.inPantry).length;
+        return {
+          ...old,
+          items,
+          summary: { toBuy, alreadyHave, total: items.length },
+        };
+      });
+
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          QUERY_KEYS.SHOPPING_LISTS.BY_MEAL_PLAN(mealPlanId),
+          context.previous,
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.SHOPPING_LISTS.BY_MEAL_PLAN(mealPlanId),
       });
     },
   });

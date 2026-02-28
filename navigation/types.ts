@@ -1,3 +1,6 @@
+import type { ReceiptScanItem } from '../hooks/useReceiptScanMutation';
+import type { PantryItem } from '../hooks/usePantryQuery';
+
 export type RootStackParamList = {
   Login: undefined;
   SignUp: undefined;
@@ -31,24 +34,29 @@ export type TabParamList = {
   Profile: undefined;
 };
 
+export type ShoppingListParams = { mealPlanId: string; weekStartDate: string };
+
 export type MealsStackParamList = {
   MealsList: undefined;
   RecipeDetail: RecipeDetailParams;
   CookedReview: CookedReviewParams;
+  ShoppingList: ShoppingListParams;
+  ReceiptScan: undefined;
+  ReceiptReview: { items: ReceiptScanItem[] };
 };
 
 export type PantryStackParamList = {
   PantryList: undefined;
   AddItemPicker: undefined;
   ReceiptScan: undefined;
-  ReceiptReview: { items: import('../hooks/useReceiptScanMutation').ReceiptScanItem[] };
+  ReceiptReview: { items: ReceiptScanItem[] };
   BarcodeScan: undefined;
   ManualEntry: {
     displayName?: string;
     quantity?: string;
     unit?: string;
   } | undefined;
-  EditItem: { item: import('../hooks/usePantryQuery').PantryItem };
+  EditItem: { item: PantryItem };
 };
 
 declare global {
