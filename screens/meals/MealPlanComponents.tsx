@@ -145,7 +145,7 @@ export function DaySelector({
   selectedDay: number;
   onSelectDay: (day: number) => void;
   todayIndex: number;
-  entries?: { dayOfWeek: number; isCooked: boolean }[];
+  entries?: MealPlanEntry[];
 }) {
   return (
     <View className="mx-4 my-3 flex-row justify-between rounded-[16px] border border-border bg-white px-2 py-2.5">
@@ -160,21 +160,18 @@ export function DaySelector({
             key={d.dayOfWeek}
             onPress={() => onSelectDay(d.dayOfWeek)}
             style={active ? styles.activeDayShadow : undefined}
-            className={`h-[62px] w-[42px] items-center justify-center rounded-[14px] ${
-              active ? 'bg-orange' : 'bg-transparent'
-            }`}
+            className={`h-[62px] w-[42px] items-center justify-center rounded-[14px] ${active ? 'bg-orange' : 'bg-transparent'
+              }`}
           >
             <Text
-              className={`text-[10px] font-semibold ${
-                active ? 'text-white/70' : isToday ? 'text-orange' : 'text-muted'
-              }`}
+              className={`text-[10px] font-semibold ${active ? 'text-white/70' : isToday ? 'text-orange' : 'text-muted'
+                }`}
             >
               {d.dayLabel}
             </Text>
             <Text
-              className={`mt-0.5 text-[17px] font-bold ${
-                active ? 'text-white' : isToday ? 'text-orange' : 'text-dark'
-              }`}
+              className={`mt-0.5 text-[17px] font-bold ${active ? 'text-white' : isToday ? 'text-orange' : 'text-dark'
+                }`}
             >
               {d.dateNumber}
             </Text>
@@ -184,11 +181,10 @@ export function DaySelector({
                 {dayEntries.map((_, i) => (
                   <View
                     key={i}
-                    className={`h-[4px] w-[4px] rounded-full ${
-                      active
+                    className={`h-[4px] w-[4px] rounded-full ${active
                         ? i < cookedMeals ? 'bg-white' : 'bg-white/30'
                         : i < cookedMeals ? 'bg-success' : 'bg-border'
-                    }`}
+                      }`}
                   />
                 ))}
               </View>
