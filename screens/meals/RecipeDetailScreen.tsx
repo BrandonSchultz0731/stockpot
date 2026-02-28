@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
+  AlertTriangle,
   Check,
   ChefHat,
   ChevronLeft,
@@ -22,6 +23,7 @@ import colors from '../../theme/colors';
 import { useRecipeDetailQuery } from '../../hooks/useRecipeDetailQuery';
 import { useSavedRecipes } from '../../hooks/useSavedRecipes';
 import type { MealsStackParamList } from '../../navigation/types';
+import { PantryStatus } from '../../shared/enums';
 import type { RecipeIngredient, RecipeStep } from '../../shared/enums';
 
 type ScreenProps = NativeStackScreenProps<MealsStackParamList, 'RecipeDetail'>;
@@ -48,7 +50,7 @@ function formatQuantity(quantity: number): string {
   if (fracStr) {
     return whole > 0 ? `${whole}${fracStr}` : fracStr;
   }
-  return quantity % 1 === 0 ? String(quantity) : quantity.toFixed(1);
+  return quantity % 1 === 0 ? String(quantity) : quantity.toFixed(2);
 }
 
 // ---------------------------------------------------------------------------
@@ -185,11 +187,17 @@ function IngredientRow({
     >
       <Text className="flex-1 text-[13px] text-dark">{ingredient.name}</Text>
       <Text className="mr-2 text-[12px] text-muted">{qtyLabel}</Text>
-      {ingredient.inPantry ? (
+      {ingredient.pantryStatus === PantryStatus.Enough && (
         <View className="h-5 w-5 items-center justify-center rounded-full bg-success-pale">
           <Check size={12} color={colors.success.DEFAULT} />
         </View>
-      ) : (
+      )}
+      {ingredient.pantryStatus === PantryStatus.Low && (
+        <View className="h-5 w-5 items-center justify-center rounded-full bg-warning-pale">
+          <AlertTriangle size={12} color={colors.warning.icon} />
+        </View>
+      )}
+      {(!ingredient.pantryStatus || ingredient.pantryStatus === PantryStatus.None) && (
         <View className="h-5 w-5 items-center justify-center rounded-full bg-danger-pale">
           <X size={12} color={colors.danger.DEFAULT} />
         </View>
@@ -205,7 +213,15 @@ function IngredientsSection({
   ingredients: RecipeIngredient[];
   scale: number;
 }) {
-  const pantryCount = ingredients.filter((i) => i.inPantry).length;
+  const enoughCount = ingredients.filter((i) => i.pantryStatus === PantryStatus.Enough).length;
+  const lowCount = ingredients.filter((i) => i.pantryStatus === PantryStatus.Low).length;
+  const noneCount = ingredients.filter((i) => !i.pantryStatus || i.pantryStatus === PantryStatus.None).length;
+
+  const parts: string[] = [];
+  if (enoughCount > 0) parts.push(`${enoughCount} ready`);
+  if (lowCount > 0) parts.push(`${lowCount} low`);
+  if (noneCount > 0) parts.push(`${noneCount} missing`);
+  const summaryText = parts.join(' \u00B7 ');
 
   return (
     <View className="px-5 pt-5">
@@ -221,7 +237,7 @@ function IngredientsSection({
         ))}
       </View>
       <Text className="mt-2 text-center text-[12px] font-semibold text-orange">
-        {pantryCount}/{ingredients.length} ingredients in pantry
+        {summaryText}
       </Text>
     </View>
   );

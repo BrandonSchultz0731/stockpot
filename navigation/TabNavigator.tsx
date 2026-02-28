@@ -34,6 +34,7 @@ export default function TabNavigator() {
         name="Home"
         component={HomeStackNavigator}
         options={{
+          popToTopOnBlur: true,
           tabBarIcon: ({ color }) => <House size={22} color={color} />,
         }}
       />
@@ -41,6 +42,7 @@ export default function TabNavigator() {
         name="PantryStack"
         component={PantryStackNavigator}
         options={{
+          popToTopOnBlur: true,
           title: 'Pantry',
           tabBarIcon: ({ color }) => <LayoutGrid size={22} color={color} />,
         }}
@@ -49,6 +51,7 @@ export default function TabNavigator() {
         name="MealsStack"
         component={MealsStackNavigator}
         options={{
+          popToTopOnBlur: true,
           title: 'Meals',
           tabBarIcon: ({ color }) => <CookingPot size={22} color={color} />,
         }}

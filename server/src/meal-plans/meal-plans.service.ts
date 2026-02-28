@@ -22,6 +22,7 @@ import { ACTIVE_MODEL, CLAUDE_MODELS } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
 import { buildMealPlanPrompt, buildMealSwapPrompt, buildCookDeductionPrompt } from '../prompts';
+import { enrichPantryStatus } from '../pantry/enrich-pantry';
 import { ConfirmCookDto } from './dto/confirm-cook.dto';
 
 @Injectable()
@@ -185,6 +186,8 @@ export class MealPlansService {
             name: ing.name,
             quantity: ing.quantity,
             unit: ing.unit,
+            baseQuantity: ing.baseQuantity ?? 0,
+            baseUnit: ing.baseUnit ?? 'count',
             ...(ing.notes ? { notes: ing.notes } : {}),
             foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
           }),
@@ -326,6 +329,8 @@ export class MealPlansService {
         name: ing.name,
         quantity: ing.quantity,
         unit: ing.unit,
+        baseQuantity: ing.baseQuantity ?? 0,
+        baseUnit: ing.baseUnit ?? 'count',
         ...(ing.notes ? { notes: ing.notes } : {}),
         foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
       }),
@@ -360,12 +365,11 @@ export class MealPlansService {
       relations: ['mealPlan', 'recipe'],
     });
 
-    // Enrich with inPantry for the API response
+    // Enrich with pantryStatus for the API response
     if (returnedEntry?.recipe?.ingredients) {
-      const pantryFoodCacheIds = new Set(pantryItems.map((item) => item.foodCacheId));
-      returnedEntry.recipe.ingredients = this.enrichInPantry(
+      returnedEntry.recipe.ingredients = enrichPantryStatus(
         returnedEntry.recipe.ingredients,
-        pantryFoodCacheIds,
+        pantryItems,
       );
     }
 
@@ -502,26 +506,15 @@ export class MealPlansService {
     await this.mealPlanRepo.remove(plan);
   }
 
-  private enrichInPantry(
-    ingredients: RecipeIngredient[],
-    pantryFoodCacheIds: Set<string>,
-  ): RecipeIngredient[] {
-    return ingredients.map((ing) => ({
-      ...ing,
-      inPantry: ing.foodCacheId ? pantryFoodCacheIds.has(ing.foodCacheId) : false,
-    }));
-  }
-
   private async enrichPlanEntries(
     userId: string,
     entries: MealPlanEntry[],
   ): Promise<void> {
     if (!entries?.length) return;
     const pantryItems = await this.pantryService.findAllForUser(userId);
-    const ids = new Set(pantryItems.map((item) => item.foodCacheId));
     for (const entry of entries) {
       if (entry.recipe?.ingredients) {
-        entry.recipe.ingredients = this.enrichInPantry(entry.recipe.ingredients, ids);
+        entry.recipe.ingredients = enrichPantryStatus(entry.recipe.ingredients, pantryItems);
       }
     }
   }

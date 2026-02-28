@@ -13,6 +13,7 @@ import type {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import {
+  AlertTriangle,
   Camera,
   ChevronLeft,
   Share2,
@@ -21,7 +22,7 @@ import {
   Plus,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
-import { FOOD_CATEGORIES } from '../../shared/enums';
+import { PantryStatus, FOOD_CATEGORIES } from '../../shared/enums';
 import type { ShoppingListItem } from '../../shared/enums';
 import type { MealsStackParamList } from '../../navigation/types';
 import {
@@ -72,7 +73,7 @@ export default function ShoppingListScreen() {
       )
       .map(([title, data]) => ({
         title,
-        toBuyCount: data.filter((i) => !i.inPantry).length,
+        toBuyCount: data.filter((i) => i.pantryStatus !== PantryStatus.Enough).length,
         data,
       }));
   }, [shoppingList?.items]);
@@ -173,6 +174,14 @@ export default function ShoppingListScreen() {
             </Text>
             <Text className="mt-0.5 text-[10px] text-muted">To Buy</Text>
           </View>
+          {summary.low > 0 && (
+            <View className="items-center">
+              <Text className="text-[20px] font-bold" style={{ color: colors.warning.icon }}>
+                {summary.low}
+              </Text>
+              <Text className="mt-0.5 text-[10px] text-muted">Low</Text>
+            </View>
+          )}
           <View className="items-center">
             <Text className="text-[20px] font-bold text-success">
               {summary.alreadyHave}
@@ -212,7 +221,7 @@ export default function ShoppingListScreen() {
         renderItem={({ item }) => (
           <Pressable
             onPress={() => handleToggle(item.id)}
-            className={`mb-1.5 flex-row items-center rounded-[14px] border border-border bg-white px-3.5 py-3 ${item.inPantry ? 'opacity-60' : ''
+            className={`mb-1.5 flex-row items-center rounded-[14px] border border-border bg-white px-3.5 py-3 ${item.pantryStatus === PantryStatus.Enough ? 'opacity-60' : ''
               }`}
           >
             {item.isChecked ? (
@@ -226,7 +235,7 @@ export default function ShoppingListScreen() {
             )}
             <View className="ml-3 flex-1">
               <Text
-                className={`text-[14px] font-semibold ${item.inPantry
+                className={`text-[14px] font-semibold ${item.pantryStatus === PantryStatus.Enough
                     ? 'text-muted line-through'
                     : 'text-dark'
                   }`}
@@ -235,10 +244,25 @@ export default function ShoppingListScreen() {
                 {item.displayName}
               </Text>
             </View>
-            <Text className="ml-2 text-[12px] text-muted">
-              {item.quantity} {item.unit}
-            </Text>
-            {item.inPantry && (
+            <View className="ml-2 items-end">
+              <Text className="text-[12px] text-muted">
+                {item.neededQuantity} {item.unit}
+              </Text>
+              {item.pantryStatus === PantryStatus.Low && (
+                <Text className="text-[10px] text-muted">
+                  have {Math.round((item.quantity - item.neededQuantity) * 100) / 100} {item.unit}
+                </Text>
+              )}
+            </View>
+            {item.pantryStatus === PantryStatus.Low && (
+              <View className="ml-2 flex-row items-center rounded bg-warning-pale px-1.5 py-0.5">
+                <AlertTriangle size={8} color={colors.warning.icon} />
+                <Text className="ml-0.5 text-[9px] font-bold uppercase" style={{ color: colors.warning.icon }}>
+                  Low
+                </Text>
+              </View>
+            )}
+            {item.pantryStatus === PantryStatus.Enough && (
               <View className="ml-2 rounded bg-success-pale px-1.5 py-0.5">
                 <Text className="text-[9px] font-bold uppercase text-success">
                   Have

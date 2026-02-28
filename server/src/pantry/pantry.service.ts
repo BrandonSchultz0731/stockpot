@@ -52,12 +52,23 @@ export class PantryService {
     }
 
     if (!foodCacheId) {
-      // Fully manual entry — create a simple food cache entry
-      const cached = await this.foodCacheService.cacheUsdaFood({
-        name: dto.displayName,
-        source: 'cache',
-      });
-      foodCacheId = cached.id;
+      // Fully manual entry — try to match an existing food cache entry by name
+      const localResults = await this.foodCacheService.searchLocal(
+        dto.displayName,
+        5,
+      );
+      const exactMatch = localResults.find(
+        (r) => r.name.toLowerCase() === dto.displayName.toLowerCase(),
+      );
+      if (exactMatch?.id) {
+        foodCacheId = exactMatch.id;
+      } else {
+        const cached = await this.foodCacheService.cacheUsdaFood({
+          name: dto.displayName,
+          source: 'cache',
+        });
+        foodCacheId = cached.id;
+      }
     }
 
     let expirationDate = dto.expirationDate;

@@ -12,6 +12,7 @@ export interface ShoppingListResponse {
   items: ShoppingListItem[];
   summary: {
     toBuy: number;
+    low: number;
     alreadyHave: number;
     total: number;
   };

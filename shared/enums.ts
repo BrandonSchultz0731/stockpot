@@ -133,6 +133,12 @@ export enum Difficulty {
   Hard = 'Hard',
 }
 
+export enum PantryStatus {
+  None = 'none',
+  Low = 'low',
+  Enough = 'enough',
+}
+
 export enum RecipeSource {
   AI = 'ai',
   Manual = 'manual',
@@ -143,9 +149,11 @@ export interface RecipeIngredient {
   name: string;
   quantity: number;
   unit: string;
+  baseQuantity: number;
+  baseUnit: string;
   notes?: string;
   foodCacheId?: string;
-  inPantry?: boolean;
+  pantryStatus?: PantryStatus;
 }
 
 export interface RecipeStep {
@@ -207,9 +215,12 @@ export interface ShoppingListItem {
   displayName: string;
   quantity: number;
   unit: string;
+  baseQuantity: number;
+  baseUnit: string;
   foodCacheId: string | null;
   category: string;
-  inPantry: boolean;
+  pantryStatus: PantryStatus;
+  neededQuantity: number;
   isChecked: boolean;
   isCustom: boolean;
   recipeCount: number;

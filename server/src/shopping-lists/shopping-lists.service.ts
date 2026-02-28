@@ -6,12 +6,15 @@ import { ShoppingList } from './entities/shopping-list.entity';
 import { MealPlanEntry } from '../meal-plans/entities/meal-plan-entry.entity';
 import { PantryService } from '../pantry/pantry.service';
 import { FoodCacheService } from '../food-cache/food-cache.service';
-import { ShoppingListItem, FOOD_CATEGORIES } from '@shared/enums';
+import { PantryStatus, ShoppingListItem, FOOD_CATEGORIES } from '@shared/enums';
+import { convertToBase, convertFromBase } from '../pantry/unit-conversion';
 
 interface AggregatedIngredient {
   displayName: string;
   quantity: number;
   unit: string;
+  baseQuantity: number;
+  baseUnit: string;
   foodCacheId: string | null;
   recipeCount: number;
 }
@@ -37,14 +40,9 @@ export class ShoppingListsService {
         relations: ['recipe'],
       });
 
-      // 2. Load pantry items and build lookup
+      // 2. Load pantry items and build lookup by foodCacheId
       const pantryItems = await this.pantryService.findAllForUser(userId);
-      const pantryLookup = new Set<string>();
-      for (const item of pantryItems) {
-        if (item.foodCacheId) {
-          pantryLookup.add(item.foodCacheId);
-        }
-      }
+      const pantryMap = this.buildPantryMap(pantryItems);
 
       // 3. Aggregate all recipe ingredients, dedup by foodCacheId or lowercase name
       const byKey = new Map<string, AggregatedIngredient>();
@@ -56,12 +54,17 @@ export class ShoppingListsService {
           const existing = byKey.get(key);
           if (existing) {
             existing.quantity += ing.quantity;
+            if (existing.baseUnit === (ing.baseUnit ?? 'count')) {
+              existing.baseQuantity += ing.baseQuantity ?? 0;
+            }
             existing.recipeCount += 1;
           } else {
             byKey.set(key, {
               displayName: ing.name,
               quantity: ing.quantity,
               unit: ing.unit,
+              baseQuantity: ing.baseQuantity ?? 0,
+              baseUnit: ing.baseUnit ?? 'count',
               foodCacheId: ing.foodCacheId || null,
               recipeCount: 1,
             });
@@ -90,20 +93,26 @@ export class ShoppingListsService {
       }
 
       // 5. Build ShoppingListItem[]
-      const items: ShoppingListItem[] = Array.from(byKey.values()).map((agg) => ({
-        id: randomUUID(),
-        displayName: agg.displayName,
-        quantity: Math.round(agg.quantity * 100) / 100,
-        unit: agg.unit,
-        foodCacheId: agg.foodCacheId,
-        category: agg.foodCacheId
-          ? (categoryMap.get(agg.foodCacheId) ?? 'Other')
-          : 'Other',
-        inPantry: agg.foodCacheId ? pantryLookup.has(agg.foodCacheId) : false,
-        isChecked: false,
-        isCustom: false,
-        recipeCount: agg.recipeCount,
-      }));
+      const items: ShoppingListItem[] = Array.from(byKey.values()).map((agg) => {
+        const { pantryStatus, neededQuantity } = this.computePantryResult(agg, pantryMap);
+        return {
+          id: randomUUID(),
+          displayName: agg.displayName,
+          quantity: Math.round(agg.quantity * 100) / 100,
+          unit: agg.unit,
+          baseQuantity: agg.baseQuantity,
+          baseUnit: agg.baseUnit,
+          foodCacheId: agg.foodCacheId,
+          category: agg.foodCacheId
+            ? (categoryMap.get(agg.foodCacheId) ?? 'Other')
+            : 'Other',
+          pantryStatus,
+          neededQuantity,
+          isChecked: false,
+          isCustom: false,
+          recipeCount: agg.recipeCount,
+        };
+      });
 
       // 6. Find existing shopping list or create new
       let list = await this.shoppingListRepo.findOne({
@@ -141,32 +150,16 @@ export class ShoppingListsService {
       throw new NotFoundException('Shopping list not found for this meal plan');
     }
 
-    // Sort items by category order then displayName
-    const categoryOrder = new Map(
-      FOOD_CATEGORIES.map((cat, idx) => [cat, idx]),
-    );
+    // Re-enrich pantryStatus and neededQuantity from current pantry data
+    const pantryItems = await this.pantryService.findAllForUser(userId);
+    const pantryMap = this.buildPantryMap(pantryItems);
+    for (const item of list.items) {
+      const result = this.computePantryResult(item, pantryMap);
+      item.pantryStatus = result.pantryStatus;
+      item.neededQuantity = result.neededQuantity;
+    }
 
-    const sortedItems = [...list.items].sort((a, b) => {
-      const catA = categoryOrder.get(a.category) ?? 999;
-      const catB = categoryOrder.get(b.category) ?? 999;
-      if (catA !== catB) return catA - catB;
-      return a.displayName.localeCompare(b.displayName);
-    });
-
-    // Compute summary
-    const toBuy = sortedItems.filter((i) => !i.inPantry).length;
-    const alreadyHave = sortedItems.filter((i) => i.inPantry).length;
-
-    return {
-      id: list.id,
-      mealPlanId: list.mealPlanId,
-      items: sortedItems,
-      summary: {
-        toBuy,
-        alreadyHave,
-        total: sortedItems.length,
-      },
-    };
+    return this.formatListResponse(list);
   }
 
   async toggleItem(userId: string, listId: string, itemId: string) {
@@ -186,6 +179,15 @@ export class ShoppingListsService {
     item.isChecked = !item.isChecked;
     await this.shoppingListRepo.save(list);
 
+    // Re-enrich pantryStatus and neededQuantity from current pantry data
+    const pantryItems = await this.pantryService.findAllForUser(userId);
+    const pantryMap = this.buildPantryMap(pantryItems);
+    for (const i of list.items) {
+      const result = this.computePantryResult(i, pantryMap);
+      i.pantryStatus = result.pantryStatus;
+      i.neededQuantity = result.neededQuantity;
+    }
+
     return this.formatListResponse(list);
   }
 
@@ -201,8 +203,9 @@ export class ShoppingListsService {
       return a.displayName.localeCompare(b.displayName);
     });
 
-    const toBuy = sortedItems.filter((i) => !i.inPantry).length;
-    const alreadyHave = sortedItems.filter((i) => i.inPantry).length;
+    const toBuy = sortedItems.filter((i) => i.pantryStatus === PantryStatus.None).length;
+    const low = sortedItems.filter((i) => i.pantryStatus === PantryStatus.Low).length;
+    const alreadyHave = sortedItems.filter((i) => i.pantryStatus === PantryStatus.Enough).length;
 
     return {
       id: list.id,
@@ -210,9 +213,87 @@ export class ShoppingListsService {
       items: sortedItems,
       summary: {
         toBuy,
+        low,
         alreadyHave,
         total: sortedItems.length,
       },
     };
+  }
+
+  private buildPantryMap(
+    pantryItems: { foodCacheId: string; quantity: number; unit: string }[],
+  ): Map<string, { quantity: number; unit: string }[]> {
+    const map = new Map<string, { quantity: number; unit: string }[]>();
+    for (const item of pantryItems) {
+      if (item.foodCacheId) {
+        const existing = map.get(item.foodCacheId) ?? [];
+        existing.push({ quantity: Number(item.quantity), unit: item.unit });
+        map.set(item.foodCacheId, existing);
+      }
+    }
+    return map;
+  }
+
+  private computePantryResult(
+    item: {
+      foodCacheId: string | null;
+      quantity: number;
+      unit: string;
+      baseQuantity?: number;
+      baseUnit?: string;
+    },
+    pantryMap: Map<string, { quantity: number; unit: string }[]>,
+  ): { pantryStatus: PantryStatus; neededQuantity: number } {
+    if (!item.foodCacheId || !pantryMap.has(item.foodCacheId)) {
+      return { pantryStatus: PantryStatus.None, neededQuantity: item.quantity };
+    }
+
+    // Resolve the needed base quantity — prefer AI-normalized values,
+    // fall back to static conversion of the item's own quantity/unit
+    let neededQty = item.baseQuantity;
+    let neededUnit = item.baseUnit;
+    if (!neededQty || !neededUnit) {
+      const fallback = convertToBase(item.quantity, item.unit);
+      if (fallback) {
+        neededQty = fallback.quantity;
+        neededUnit = fallback.baseUnit;
+      }
+    }
+
+    // If we still can't determine a base, default to Enough (item exists in pantry)
+    if (!neededQty || !neededUnit) {
+      return { pantryStatus: PantryStatus.Enough, neededQuantity: 0 };
+    }
+
+    const pantryEntries = pantryMap.get(item.foodCacheId)!;
+    let available = 0;
+    let anyConverted = false;
+
+    for (const entry of pantryEntries) {
+      const converted = convertToBase(entry.quantity, entry.unit);
+      if (converted && converted.baseUnit === neededUnit) {
+        available += converted.quantity;
+        anyConverted = true;
+      }
+    }
+
+    // If no pantry entries could be converted to the recipe's base unit,
+    // default to Enough (conservative — item exists but units are incomparable)
+    if (!anyConverted) {
+      return { pantryStatus: PantryStatus.Enough, neededQuantity: 0 };
+    }
+
+    if (available >= neededQty) {
+      return { pantryStatus: PantryStatus.Enough, neededQuantity: 0 };
+    }
+
+    // Compute deficit in display unit
+    const deficitBase = neededQty - available;
+    const deficitDisplay = convertFromBase(deficitBase, neededUnit, item.unit);
+    const neededQuantity = deficitDisplay != null
+      ? Math.round(deficitDisplay * 100) / 100
+      : item.quantity;
+
+    return { pantryStatus: PantryStatus.Low, neededQuantity };
   }
 }
