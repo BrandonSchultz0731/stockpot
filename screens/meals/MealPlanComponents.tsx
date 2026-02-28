@@ -18,7 +18,7 @@ import {
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
 import pluralize from 'pluralize';
-import { MealType, PantryStatus, DAY_LABELS } from '../../shared/enums';
+import { MealType, DAY_LABELS } from '../../shared/enums';
 import { countByPantryStatus } from '../../shared/pantryStatusCounts';
 import type { MealPlanEntry } from '../../hooks/useCurrentMealPlanQuery';
 
@@ -182,8 +182,8 @@ export function DaySelector({
                   <View
                     key={i}
                     className={`h-[4px] w-[4px] rounded-full ${active
-                        ? i < cookedMeals ? 'bg-white' : 'bg-white/30'
-                        : i < cookedMeals ? 'bg-success' : 'bg-border'
+                      ? i < cookedMeals ? 'bg-white' : 'bg-white/30'
+                      : i < cookedMeals ? 'bg-success' : 'bg-border'
                       }`}
                   />
                 ))}
