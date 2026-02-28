@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Pressable,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -30,6 +31,16 @@ export const MEAL_TYPE_ORDER: Record<string, number> = {
   [MealType.Dinner]: 2,
   [MealType.Snack]: 3,
 };
+
+const styles = StyleSheet.create({
+  activeDayShadow: {
+    shadowColor: colors.orange.DEFAULT,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -144,19 +155,11 @@ export function DaySelector({
         const dayEntries = entries?.filter((e) => e.dayOfWeek === d.dayOfWeek) ?? [];
         const totalMeals = dayEntries.length;
         const cookedMeals = dayEntries.filter((e) => e.isCooked).length;
-        const allCooked = totalMeals > 0 && cookedMeals === totalMeals;
-
         return (
           <Pressable
             key={d.dayOfWeek}
             onPress={() => onSelectDay(d.dayOfWeek)}
-            style={active ? {
-              shadowColor: colors.orange.DEFAULT,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 6,
-            } : undefined}
+            style={active ? styles.activeDayShadow : undefined}
             className={`h-[62px] w-[42px] items-center justify-center rounded-[14px] ${
               active ? 'bg-orange' : 'bg-transparent'
             }`}
