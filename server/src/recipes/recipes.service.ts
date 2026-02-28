@@ -16,7 +16,7 @@ import { GenerateRecipeDto } from './dto/generate-recipe.dto';
 import { SaveRecipeDto } from './dto/save-recipe.dto';
 import { UpdateSavedRecipeDto } from './dto/update-saved-recipe.dto';
 import { ACTIVE_MODEL } from '../ai-models';
-import { RecipeIngredient } from '@shared/enums';
+import { UnitOfMeasure, RecipeIngredient } from '@shared/enums';
 import { buildRecipeGenerationPrompt } from '../prompts';
 import { enrichPantryStatus } from '../pantry/enrich-pantry';
 
@@ -116,7 +116,7 @@ export class RecipesService {
           quantity: ing.quantity,
           unit: ing.unit,
           baseQuantity: ing.baseQuantity ?? 0,
-          baseUnit: ing.baseUnit ?? 'count',
+          baseUnit: ing.baseUnit ?? UnitOfMeasure.Count,
           ...(ing.notes ? { notes: ing.notes } : {}),
           foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
         }),

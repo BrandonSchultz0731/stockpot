@@ -226,6 +226,8 @@ export interface ShoppingListItem {
   recipeCount: number;
 }
 
+export const DEFAULT_FOOD_CATEGORY = 'Other';
+
 export const FOOD_CATEGORIES: string[] = [
   'Fruits',
   'Vegetables',

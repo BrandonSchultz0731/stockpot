@@ -1,5 +1,5 @@
 import { PantryStatus, RecipeIngredient } from '@shared/enums';
-import { convertToBase } from './unit-conversion';
+import { convertToBase, resolveBaseQuantity } from './unit-conversion';
 
 interface PantryEntry {
   foodCacheId: string;
@@ -23,21 +23,11 @@ export function enrichPantryStatus(
       return { ...ing, pantryStatus: PantryStatus.None };
     }
 
-    // Resolve the needed base quantity — prefer AI-normalized values,
-    // fall back to static conversion of the ingredient's own quantity/unit
-    let neededQty = ing.baseQuantity;
-    let neededUnit = ing.baseUnit;
-    if (!neededQty || !neededUnit) {
-      const fallback = convertToBase(ing.quantity, ing.unit);
-      if (fallback) {
-        neededQty = fallback.quantity;
-        neededUnit = fallback.baseUnit;
-      }
-    }
-
-    if (!neededQty || !neededUnit) {
+    const resolved = resolveBaseQuantity(ing);
+    if (!resolved) {
       return { ...ing, pantryStatus: PantryStatus.Enough };
     }
+    const { quantity: neededQty, baseUnit: neededUnit } = resolved;
 
     const pantryEntries = pantryMap.get(ing.foodCacheId)!;
     let available = 0;

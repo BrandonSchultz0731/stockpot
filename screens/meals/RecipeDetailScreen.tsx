@@ -24,6 +24,7 @@ import { useRecipeDetailQuery } from '../../hooks/useRecipeDetailQuery';
 import { useSavedRecipes } from '../../hooks/useSavedRecipes';
 import type { MealsStackParamList } from '../../navigation/types';
 import { PantryStatus } from '../../shared/enums';
+import { countByPantryStatus } from '../../shared/pantryStatusCounts';
 import type { RecipeIngredient, RecipeStep } from '../../shared/enums';
 
 type ScreenProps = NativeStackScreenProps<MealsStackParamList, 'RecipeDetail'>;
@@ -213,9 +214,7 @@ function IngredientsSection({
   ingredients: RecipeIngredient[];
   scale: number;
 }) {
-  const enoughCount = ingredients.filter((i) => i.pantryStatus === PantryStatus.Enough).length;
-  const lowCount = ingredients.filter((i) => i.pantryStatus === PantryStatus.Low).length;
-  const noneCount = ingredients.filter((i) => !i.pantryStatus || i.pantryStatus === PantryStatus.None).length;
+  const { enough: enoughCount, low: lowCount, none: noneCount } = countByPantryStatus(ingredients);
 
   const parts: string[] = [];
   if (enoughCount > 0) parts.push(`${enoughCount} ready`);

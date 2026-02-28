@@ -22,7 +22,7 @@ import {
   Plus,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
-import { PantryStatus, FOOD_CATEGORIES } from '../../shared/enums';
+import { PantryStatus, DEFAULT_FOOD_CATEGORY, FOOD_CATEGORIES } from '../../shared/enums';
 import type { ShoppingListItem } from '../../shared/enums';
 import type { MealsStackParamList } from '../../navigation/types';
 import {
@@ -61,7 +61,7 @@ export default function ShoppingListScreen() {
 
     const grouped = new Map<string, ShoppingListItem[]>();
     for (const item of shoppingList.items) {
-      const cat = item.category || 'Other';
+      const cat = item.category || DEFAULT_FOOD_CATEGORY;
       if (!grouped.has(cat)) grouped.set(cat, []);
       grouped.get(cat)!.push(item);
     }

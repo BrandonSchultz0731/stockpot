@@ -17,7 +17,7 @@ import CategoryFilterPills from '../../components/pantry/CategoryFilterPills';
 import CategorySectionHeader from '../../components/pantry/CategorySectionHeader';
 import { usePantryQuery, type PantryItem } from '../../hooks/usePantryQuery';
 import { getExpiryStatus, getExpiryLabel } from '../../utils/expiry';
-import { FOOD_CATEGORIES } from '../../shared/enums';
+import { DEFAULT_FOOD_CATEGORY, FOOD_CATEGORIES } from '../../shared/enums';
 import colors from '../../theme/colors';
 import type { PantryStackParamList } from '../../navigation/types';
 
@@ -30,7 +30,7 @@ const EXPIRY_PILL: Record<string, { bg: string; fg: string }> = {
 };
 
 function getItemCategory(item: PantryItem): string {
-  return item.foodCache?.category ?? 'Other';
+  return item.foodCache?.category ?? DEFAULT_FOOD_CATEGORY;
 }
 
 function PantryCard({

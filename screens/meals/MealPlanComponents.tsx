@@ -17,7 +17,9 @@ import {
   Zap,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
+import pluralize from 'pluralize';
 import { MealType, PantryStatus, DAY_LABELS } from '../../shared/enums';
+import { countByPantryStatus } from '../../shared/pantryStatusCounts';
 import type { MealPlanEntry } from '../../hooks/useCurrentMealPlanQuery';
 
 export const MEAL_TYPE_ORDER: Record<string, number> = {
@@ -247,12 +249,7 @@ export function MealCard({
   onPress: () => void;
 }) {
   const ingredients = entry.recipe.ingredients ?? [];
-  const noneCount = ingredients.filter(
-    (i) => !i.pantryStatus || i.pantryStatus === PantryStatus.None,
-  ).length;
-  const lowCount = ingredients.filter(
-    (i) => i.pantryStatus === PantryStatus.Low,
-  ).length;
+  const { none: noneCount, low: lowCount } = countByPantryStatus(ingredients);
 
   const renderPantryBadge = () => {
     if (noneCount > 0) {
@@ -260,7 +257,7 @@ export function MealCard({
         <View className="ml-2 flex-row items-center">
           <ShoppingCart size={10} color={colors.orange.DEFAULT} />
           <Text className="ml-0.5 text-[11px] text-orange">
-            Need {noneCount} item{noneCount !== 1 ? 's' : ''}
+            Need {noneCount} {pluralize('item', noneCount)}
           </Text>
         </View>
       );
@@ -270,7 +267,7 @@ export function MealCard({
         <View className="ml-2 flex-row items-center">
           <AlertTriangle size={10} color={colors.warning.icon} />
           <Text className="ml-0.5 text-[11px]" style={{ color: colors.warning.icon }}>
-            {lowCount} item{lowCount !== 1 ? 's' : ''} low
+            {lowCount} {pluralize('item', lowCount)} low
           </Text>
         </View>
       );

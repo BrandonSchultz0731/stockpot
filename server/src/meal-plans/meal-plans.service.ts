@@ -17,7 +17,7 @@ import { UsersService } from '../users/users.service';
 import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
-import { MealType, RecipeIngredient, MealScheduleSlot, DAY_NAMES } from '@shared/enums';
+import { MealType, UnitOfMeasure, RecipeIngredient, MealScheduleSlot, DAY_NAMES } from '@shared/enums';
 import { ACTIVE_MODEL, CLAUDE_MODELS } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
@@ -187,7 +187,7 @@ export class MealPlansService {
             quantity: ing.quantity,
             unit: ing.unit,
             baseQuantity: ing.baseQuantity ?? 0,
-            baseUnit: ing.baseUnit ?? 'count',
+            baseUnit: ing.baseUnit ?? UnitOfMeasure.Count,
             ...(ing.notes ? { notes: ing.notes } : {}),
             foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
           }),
@@ -330,7 +330,7 @@ export class MealPlansService {
         quantity: ing.quantity,
         unit: ing.unit,
         baseQuantity: ing.baseQuantity ?? 0,
-        baseUnit: ing.baseUnit ?? 'count',
+        baseUnit: ing.baseUnit ?? UnitOfMeasure.Count,
         ...(ing.notes ? { notes: ing.notes } : {}),
         foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
       }),

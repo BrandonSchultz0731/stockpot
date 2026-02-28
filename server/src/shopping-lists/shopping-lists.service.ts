@@ -6,8 +6,9 @@ import { ShoppingList } from './entities/shopping-list.entity';
 import { MealPlanEntry } from '../meal-plans/entities/meal-plan-entry.entity';
 import { PantryService } from '../pantry/pantry.service';
 import { FoodCacheService } from '../food-cache/food-cache.service';
-import { PantryStatus, ShoppingListItem, FOOD_CATEGORIES } from '@shared/enums';
-import { convertToBase, convertFromBase } from '../pantry/unit-conversion';
+import { PantryStatus, UnitOfMeasure, ShoppingListItem, DEFAULT_FOOD_CATEGORY, FOOD_CATEGORIES } from '@shared/enums';
+import { countByPantryStatus } from '@shared/pantryStatusCounts';
+import { convertToBase, convertFromBase, resolveBaseQuantity } from '../pantry/unit-conversion';
 
 interface AggregatedIngredient {
   displayName: string;
@@ -54,7 +55,7 @@ export class ShoppingListsService {
           const existing = byKey.get(key);
           if (existing) {
             existing.quantity += ing.quantity;
-            if (existing.baseUnit === (ing.baseUnit ?? 'count')) {
+            if (existing.baseUnit === (ing.baseUnit ?? UnitOfMeasure.Count)) {
               existing.baseQuantity += ing.baseQuantity ?? 0;
             }
             existing.recipeCount += 1;
@@ -64,7 +65,7 @@ export class ShoppingListsService {
               quantity: ing.quantity,
               unit: ing.unit,
               baseQuantity: ing.baseQuantity ?? 0,
-              baseUnit: ing.baseUnit ?? 'count',
+              baseUnit: ing.baseUnit ?? UnitOfMeasure.Count,
               foodCacheId: ing.foodCacheId || null,
               recipeCount: 1,
             });
@@ -104,8 +105,8 @@ export class ShoppingListsService {
           baseUnit: agg.baseUnit,
           foodCacheId: agg.foodCacheId,
           category: agg.foodCacheId
-            ? (categoryMap.get(agg.foodCacheId) ?? 'Other')
-            : 'Other',
+            ? (categoryMap.get(agg.foodCacheId) ?? DEFAULT_FOOD_CATEGORY)
+            : DEFAULT_FOOD_CATEGORY,
           pantryStatus,
           neededQuantity,
           isChecked: false,
@@ -203,18 +204,16 @@ export class ShoppingListsService {
       return a.displayName.localeCompare(b.displayName);
     });
 
-    const toBuy = sortedItems.filter((i) => i.pantryStatus === PantryStatus.None).length;
-    const low = sortedItems.filter((i) => i.pantryStatus === PantryStatus.Low).length;
-    const alreadyHave = sortedItems.filter((i) => i.pantryStatus === PantryStatus.Enough).length;
+    const counts = countByPantryStatus(sortedItems);
 
     return {
       id: list.id,
       mealPlanId: list.mealPlanId,
       items: sortedItems,
       summary: {
-        toBuy,
-        low,
-        alreadyHave,
+        toBuy: counts.none,
+        low: counts.low,
+        alreadyHave: counts.enough,
         total: sortedItems.length,
       },
     };
@@ -248,22 +247,11 @@ export class ShoppingListsService {
       return { pantryStatus: PantryStatus.None, neededQuantity: item.quantity };
     }
 
-    // Resolve the needed base quantity — prefer AI-normalized values,
-    // fall back to static conversion of the item's own quantity/unit
-    let neededQty = item.baseQuantity;
-    let neededUnit = item.baseUnit;
-    if (!neededQty || !neededUnit) {
-      const fallback = convertToBase(item.quantity, item.unit);
-      if (fallback) {
-        neededQty = fallback.quantity;
-        neededUnit = fallback.baseUnit;
-      }
-    }
-
-    // If we still can't determine a base, default to Enough (item exists in pantry)
-    if (!neededQty || !neededUnit) {
+    const resolved = resolveBaseQuantity(item);
+    if (!resolved) {
       return { pantryStatus: PantryStatus.Enough, neededQuantity: 0 };
     }
+    const { quantity: neededQty, baseUnit: neededUnit } = resolved;
 
     const pantryEntries = pantryMap.get(item.foodCacheId)!;
     let available = 0;
