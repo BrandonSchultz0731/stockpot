@@ -17,7 +17,7 @@ import { UsersService } from '../users/users.service';
 import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
-import { MealType, RecipeIngredient } from '@shared/enums';
+import { MealType, RecipeIngredient, MealScheduleSlot } from '@shared/enums';
 import { ACTIVE_MODEL, CLAUDE_MODELS } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
@@ -113,7 +113,7 @@ export class MealPlansService {
         .map((item) => `${item.displayName} (${item.quantity} ${item.unit})`)
         .join('\n');
 
-      let mealSchedule: { dayOfWeek: number; mealType: MealType }[];
+      let mealSchedule: MealScheduleSlot[];
 
       if (dto.mealSchedule?.length) {
         mealSchedule = dto.mealSchedule;

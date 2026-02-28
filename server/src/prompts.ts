@@ -1,4 +1,4 @@
-import { UnitOfMeasure, StorageLocation, FOOD_CATEGORIES } from '@shared/enums';
+import { UnitOfMeasure, StorageLocation, FOOD_CATEGORIES, MealScheduleSlot } from '@shared/enums';
 
 export function buildRecipeGenerationPrompt(
   ingredientList: string,
@@ -31,7 +31,7 @@ No markdown fences, no explanation — only the JSON array.`;
 
 export function buildMealPlanPrompt(
   ingredientList: string,
-  mealSchedule: { dayOfWeek: number; mealType: string }[],
+  mealSchedule: MealScheduleSlot[],
   servings: number,
   constraintBlock: string,
 ): string {
