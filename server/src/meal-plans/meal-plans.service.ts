@@ -414,7 +414,7 @@ export class MealPlansService {
     try {
       response = await this.anthropicService.sendMessage(userId, {
         model: CLAUDE_MODELS['haiku-4.5'],
-        maxTokens: 1024,
+        maxTokens: 4096,
         messages: [{ role: 'user', content: prompt }],
         messageType: 'cook-deduction',
       });
