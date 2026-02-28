@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, IsNull } from 'typeorm';
+import { Repository, ILike, IsNull, In } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { FoodCache } from './entities/food-cache.entity';
-import { UnitOfMeasure, ShelfLife } from '@shared/enums';
+import { UnitOfMeasure, ShelfLife, FOOD_CATEGORIES } from '@shared/enums';
 import { AnthropicService } from '../anthropic/anthropic.service';
 import { CLAUDE_MODELS } from '../ai-models';
-import { buildIngredientResolutionPrompt } from '../prompts';
+import { buildIngredientResolutionPrompt, buildBatchCategoryPrompt } from '../prompts';
 
 interface UsdaFoodNutrient {
   nutrientNumber: string;
@@ -342,6 +342,82 @@ export class FoodCacheService {
       .set({ shelfLife })
       .where('id = :id AND shelf_life IS NULL', { id: foodCacheId })
       .execute();
+  }
+
+  async getCategoriesByIds(foodCacheIds: string[]): Promise<Map<string, string>> {
+    const result = new Map<string, string>();
+    if (foodCacheIds.length === 0) return result;
+
+    const entries = await this.foodCacheRepo.find({
+      where: { id: In(foodCacheIds) },
+      select: ['id', 'category'],
+    });
+
+    for (const entry of entries) {
+      if (entry.category) {
+        result.set(entry.id, entry.category);
+      }
+    }
+
+    return result;
+  }
+
+  async backfillCategories(
+    userId: string,
+    items: { foodCacheId: string | null; displayName: string }[],
+  ): Promise<Map<string, string>> {
+    const result = new Map<string, string>();
+
+    const withId = items.filter(
+      (i): i is { foodCacheId: string; displayName: string } =>
+        i.foodCacheId != null,
+    );
+    if (withId.length === 0) return result;
+
+    const nameToId = new Map<string, string>();
+    for (const item of withId) {
+      nameToId.set(item.displayName, item.foodCacheId);
+    }
+
+    try {
+      const prompt = buildBatchCategoryPrompt(withId.map((i) => i.displayName));
+      const response = await this.anthropicService.sendMessage(userId, {
+        model: CLAUDE_MODELS['haiku-4.5'],
+        maxTokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+        messageType: 'food-category',
+      });
+
+      const rawText =
+        response.content[0]?.type === 'text' ? response.content[0].text : '';
+
+      let parsed: Record<string, string> = {};
+      try {
+        parsed = JSON.parse(rawText);
+      } catch {
+        const objectMatch = rawText.match(/\{[\s\S]*\}/);
+        if (objectMatch) {
+          try {
+            parsed = JSON.parse(objectMatch[0]);
+          } catch {
+            // fall through
+          }
+        }
+      }
+
+      for (const [name, category] of Object.entries(parsed)) {
+        if (!category || !FOOD_CATEGORIES.includes(category)) continue;
+        const foodCacheId = nameToId.get(name);
+        if (foodCacheId) {
+          await this.updateCategory(foodCacheId, category);
+          result.set(foodCacheId, category);
+        }
+      }
+    } catch (error) {
+      this.logger.error('Batch category backfill failed', error);
+    }
+
+    return result;
   }
 
   async getCategory(foodCacheId: string): Promise<string | null> {

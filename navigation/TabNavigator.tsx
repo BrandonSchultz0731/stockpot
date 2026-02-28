@@ -1,5 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { House, LayoutGrid, CookingPot, Zap, User } from 'lucide-react-native';
+import { House, LayoutGrid, CookingPot, ChefHat, User } from 'lucide-react-native';
 import HomeStackNavigator from './HomeStackNavigator';
 import PantryStackNavigator from './PantryStackNavigator';
 import MealsStackNavigator from './MealsStackNavigator';
@@ -58,7 +58,7 @@ export default function TabNavigator() {
         component={AIChefScreen}
         options={{
           title: 'AI Chef',
-          tabBarIcon: ({ color }) => <Zap size={22} color={color} />,
+          tabBarIcon: ({ color }) => <ChefHat size={22} color={color} />,
         }}
       />
       <Tab.Screen

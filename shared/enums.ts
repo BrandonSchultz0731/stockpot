@@ -191,6 +191,19 @@ export enum DayOfWeek {
   Sun = 6,
 }
 
+export interface ShoppingListItem {
+  id: string;
+  displayName: string;
+  quantity: number;
+  unit: string;
+  foodCacheId: string | null;
+  category: string;
+  inPantry: boolean;
+  isChecked: boolean;
+  isCustom: boolean;
+  recipeCount: number;
+}
+
 export const FOOD_CATEGORIES: string[] = [
   'Fruits',
   'Vegetables',

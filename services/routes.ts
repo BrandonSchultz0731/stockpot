@@ -43,4 +43,9 @@ export const ROUTES = {
     COOK_CONFIRM: (id: string) => `/meal-plans/entries/${id}/cook/confirm`,
     DELETE: (id: string) => `/meal-plans/${id}`,
   },
+  SHOPPING_LISTS: {
+    BY_MEAL_PLAN: (planId: string) => `/shopping-lists/meal-plan/${planId}`,
+    TOGGLE_ITEM: (listId: string, itemId: string) =>
+      `/shopping-lists/${listId}/items/${itemId}`,
+  },
 } as const;

@@ -13,4 +13,8 @@ export const QUERY_KEYS = {
     WEEK: (date: string) => ['meal-plans', 'week', date],
     COOK_PREVIEW: (entryId: string) => ['meal-plans', 'cook-preview', entryId],
   },
+  SHOPPING_LISTS: {
+    ALL: ['shopping-lists'],
+    BY_MEAL_PLAN: (planId: string) => ['shopping-lists', 'meal-plan', planId],
+  },
 } as const;
