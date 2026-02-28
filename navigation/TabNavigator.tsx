@@ -3,7 +3,7 @@ import { House, LayoutGrid, CookingPot, ChefHat, User } from 'lucide-react-nativ
 import HomeStackNavigator from './HomeStackNavigator';
 import PantryStackNavigator from './PantryStackNavigator';
 import MealsStackNavigator from './MealsStackNavigator';
-import AIChefScreen from '../screens/AIChefScreen';
+import AIChefStackNavigator from './AIChefStackNavigator';
 import ProfileScreen from '../screens/ProfileScreen';
 import colors from '../theme/colors';
 import type { TabParamList } from './types';
@@ -14,6 +14,7 @@ export default function TabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{
+        lazy: false,
         headerShown: false,
         tabBarActiveTintColor: colors.orange.DEFAULT,
         tabBarInactiveTintColor: colors.muted,
@@ -57,9 +58,10 @@ export default function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="AIChef"
-        component={AIChefScreen}
+        name="AIChefStack"
+        component={AIChefStackNavigator}
         options={{
+          popToTopOnBlur: true,
           title: 'AI Chef',
           tabBarIcon: ({ color }) => <ChefHat size={22} color={color} />,
         }}

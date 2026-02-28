@@ -48,4 +48,10 @@ export const ROUTES = {
     TOGGLE_ITEM: (listId: string, itemId: string) =>
       `/shopping-lists/${listId}/items/${itemId}`,
   },
+  AI_CHAT: {
+    MESSAGES: '/ai-chat/messages',
+    CONVERSATIONS: '/ai-chat/conversations',
+    CONVERSATION_MESSAGES: (id: string) => `/ai-chat/conversations/${id}/messages`,
+    DELETE_CONVERSATION: (id: string) => `/ai-chat/conversations/${id}`,
+  },
 } as const;

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
+import { MessageStream } from '@anthropic-ai/sdk/lib/MessageStream';
 import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
 import { ModelConfig, ACTIVE_MODEL, estimateCostCents } from '../ai-models';
 import { FAKE_RESPONSES } from './fake-responses';
@@ -13,7 +14,8 @@ export type MessageType =
   | 'receipt-scan'
   | 'ingredient-resolution'
   | 'food-category'
-  | 'cook-deduction';
+  | 'cook-deduction'
+  | 'ai-chat';
 
 @Injectable()
 export class AnthropicService {
@@ -62,6 +64,33 @@ export class AnthropicService {
     await this.trackUsage(userId, response, model);
 
     return response;
+  }
+
+  streamMessage(params: {
+    model?: ModelConfig;
+    maxTokens: number;
+    system?: string;
+    messages: Anthropic.MessageParam[];
+    tools?: Anthropic.Tool[];
+    signal?: AbortSignal;
+  }): MessageStream {
+    const model = params.model ?? ACTIVE_MODEL;
+
+    return this.anthropic.messages.stream({
+      model: model.id,
+      max_tokens: params.maxTokens,
+      system: params.system,
+      messages: params.messages,
+      tools: params.tools?.length ? params.tools : undefined,
+    }, { signal: params.signal });
+  }
+
+  async trackStreamUsage(
+    userId: string,
+    message: Anthropic.Message,
+    model?: ModelConfig,
+  ): Promise<void> {
+    await this.trackUsage(userId, message, model ?? ACTIVE_MODEL);
   }
 
   private buildFakeResponse(messageType: MessageType): Anthropic.Message {
