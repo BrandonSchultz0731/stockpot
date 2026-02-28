@@ -15,6 +15,7 @@ import { MealPlanStatus } from '../shared/enums';
 import type { MealScheduleSlot } from '../shared/enums';
 import type { MealsStackParamList } from '../navigation/types';
 import { getCurrentWeekStartDate, getTodayDayOfWeek } from '../utils/dayOfWeek';
+
 import { useCurrentMealPlanQuery } from '../hooks/useCurrentMealPlanQuery';
 import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
 import { useSavedRecipes } from '../hooks/useSavedRecipes';
@@ -40,7 +41,6 @@ import MealScheduleSelector from './meals/MealScheduleSelector';
 
 export default function MealsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MealsStackParamList>>();
-  const weekStart = getCurrentWeekStartDate();
 
   // Data hooks
   const {
@@ -48,6 +48,8 @@ export default function MealsScreen() {
     isLoading: isPlanLoading,
     refetch,
   } = useCurrentMealPlanQuery();
+
+  const weekStart = mealPlan?.weekStartDate ?? getCurrentWeekStartDate();
 
   const { data: userProfile } = useUserProfileQuery();
   const { isSaved, toggleSave } = useSavedRecipes();
@@ -123,11 +125,11 @@ export default function MealsScreen() {
   }, []);
 
   const handleGenerate = useCallback(
-    (schedule: MealScheduleSlot[]) => {
+    (schedule: MealScheduleSlot[], weekStartDate: string) => {
       setShowScheduleSelector(false);
-      generateMutation.mutate({ weekStartDate: weekStart, mealSchedule: schedule });
+      generateMutation.mutate({ weekStartDate, mealSchedule: schedule });
     },
-    [generateMutation, weekStart],
+    [generateMutation],
   );
 
   const handleSwap = useCallback(
@@ -237,7 +239,6 @@ export default function MealsScreen() {
               weekDates={weekDates}
               selectedDay={selectedDay}
               onSelectDay={setSelectedDay}
-              todayIndex={getTodayDayOfWeek()}
               entries={mealPlan?.entries}
             />
             <NutritionSummaryBar

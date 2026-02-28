@@ -9,12 +9,14 @@ import {
 import { Check, X } from 'lucide-react-native';
 import clsx from 'clsx';
 import colors from '../../theme/colors';
-import { MealType } from '../../shared/enums';
+import { MealType, DAY_LABELS } from '../../shared/enums';
 import type { MealScheduleSlot } from '../../shared/enums';
+import { getWeekStartDateForDay, orderedDaysFrom } from '../../utils/dayOfWeek';
 import Button from '../../components/Button';
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 const MEAL_TYPES = [MealType.Breakfast, MealType.Lunch, MealType.Dinner] as const;
+
+const SHORT_DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
 function makeKey(day: number, type: MealType) {
   return `${day}-${type}`;
@@ -30,6 +32,8 @@ function allKeys(): Set<string> {
   return keys;
 }
 
+// Presets use absolute day-of-week values (calendar-based)
+// Weekdays = Mon(1)–Fri(5), Weekends = Sun(0)+Sat(6)
 interface Preset {
   label: string;
   keys: Set<string>;
@@ -45,7 +49,7 @@ const PRESETS: Preset[] = [
     label: 'Weekdays',
     keys: (() => {
       const k = new Set<string>();
-      for (let d = 0; d < 5; d++) {
+      for (let d = 1; d <= 5; d++) {
         for (const t of MEAL_TYPES) k.add(makeKey(d, t));
       }
       return k;
@@ -55,7 +59,7 @@ const PRESETS: Preset[] = [
     label: 'Weekends',
     keys: (() => {
       const k = new Set<string>();
-      for (let d = 5; d < 7; d++) {
+      for (const d of [0, 6]) {
         for (const t of MEAL_TYPES) k.add(makeKey(d, t));
       }
       return k;
@@ -74,7 +78,7 @@ function setsEqual(a: Set<string>, b: Set<string>): boolean {
 export interface MealScheduleSelectorProps {
   visible: boolean;
   onClose: () => void;
-  onGenerate: (schedule: MealScheduleSlot[]) => void;
+  onGenerate: (schedule: MealScheduleSlot[], weekStartDate: string) => void;
 }
 
 export default function MealScheduleSelector({
@@ -83,7 +87,9 @@ export default function MealScheduleSelector({
   onGenerate,
 }: MealScheduleSelectorProps) {
   const [selected, setSelected] = useState<Set<string>>(allKeys);
+  const [startDay, setStartDay] = useState(1); // default Monday
 
+  const orderedDays = orderedDaysFrom(startDay);
   const count = selected.size;
 
   const toggleCell = useCallback((key: string) => {
@@ -136,20 +142,22 @@ export default function MealScheduleSelector({
 
   const handleGenerate = useCallback(() => {
     const schedule: MealScheduleSlot[] = [];
-    for (let d = 0; d < 7; d++) {
+    for (const d of orderedDays) {
       for (const t of MEAL_TYPES) {
         if (selected.has(makeKey(d, t))) {
           schedule.push({ dayOfWeek: d, mealType: t });
         }
       }
     }
-    onGenerate(schedule);
-  }, [selected, onGenerate]);
+    const weekStartDate = getWeekStartDateForDay(startDay);
+    onGenerate(schedule, weekStartDate);
+  }, [selected, orderedDays, startDay, onGenerate]);
 
-  // Reset to all selected when modal opens (before render, not onShow)
+  // Reset when modal opens
   useEffect(() => {
     if (visible) {
       setSelected(allKeys());
+      setStartDay(1);
     }
   }, [visible]);
 
@@ -175,6 +183,37 @@ export default function MealScheduleSelector({
           >
             <X size={16} color={colors.muted} />
           </Pressable>
+        </View>
+
+        {/* Start day picker */}
+        <View className="mb-4">
+          <Text className="mb-2 text-[13px] font-semibold text-muted">
+            Starts on
+          </Text>
+          <View className="flex-row justify-between">
+            {Array.from({ length: 7 }, (_, i) => {
+              const active = startDay === i;
+              return (
+                <Pressable
+                  key={i}
+                  onPress={() => setStartDay(i)}
+                  className={clsx(
+                    'h-9 w-9 items-center justify-center rounded-full',
+                    active ? 'bg-navy' : 'border border-border bg-white',
+                  )}
+                >
+                  <Text
+                    className={clsx(
+                      'text-[13px] font-semibold',
+                      active ? 'text-white' : 'text-dark',
+                    )}
+                  >
+                    {DAY_LABELS[i]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* Preset pills */}
@@ -236,12 +275,12 @@ export default function MealScheduleSelector({
             })}
           </View>
 
-          {/* Rows */}
-          {DAYS.map((dayLabel, dayIndex) => {
+          {/* Rows — ordered by start day */}
+          {orderedDays.map((dayIndex) => {
             const rowKeys = MEAL_TYPES.map((t) => makeKey(dayIndex, t));
             const allRowSelected = rowKeys.every((k) => selected.has(k));
             return (
-              <View key={dayLabel} className="mb-2 flex-row items-center">
+              <View key={dayIndex} className="mb-2 flex-row items-center">
                 <Pressable onPress={() => toggleRow(dayIndex)} className="w-12">
                   <Text
                     className={clsx(
@@ -249,7 +288,7 @@ export default function MealScheduleSelector({
                       allRowSelected ? 'text-orange' : 'text-muted',
                     )}
                   >
-                    {dayLabel}
+                    {SHORT_DAY_NAMES[dayIndex]}
                   </Text>
                 </Pressable>
                 {MEAL_TYPES.map((type) => {

@@ -18,7 +18,6 @@ import colors from '../../theme/colors';
 import { api } from '../../services/api';
 import { ROUTES } from '../../services/routes';
 import { QUERY_KEYS } from '../../services/queryKeys';
-import { getCurrentWeekStartDate } from '../../utils/dayOfWeek';
 import {
   useCookPreviewQuery,
   useConfirmCookMutation,
@@ -110,9 +109,7 @@ export default function CookedReviewScreen() {
     await api.patch(ROUTES.MEAL_PLANS.UPDATE_ENTRY(entryId), {
       isCooked: true,
     });
-    queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.MEAL_PLANS.WEEK(getCurrentWeekStartDate()),
-    });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
     navigation.popToTop();
   }, [entryId, navigation, queryClient]);
 

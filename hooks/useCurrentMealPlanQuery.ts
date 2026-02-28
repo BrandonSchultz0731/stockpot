@@ -3,7 +3,6 @@ import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
 import { useAuth } from '../contexts/AuthContext';
-import { getCurrentWeekStartDate } from '../utils/dayOfWeek';
 import type { MealType, Recipe } from '../shared/enums';
 
 export type MealPlanRecipe = Omit<Recipe, 'steps' | 'tags' | 'dietaryFlags'>;
@@ -28,15 +27,14 @@ export interface MealPlan {
 
 export function useCurrentMealPlanQuery() {
   const { isAuthenticated } = useAuth();
-  const weekStart = getCurrentWeekStartDate();
 
   return useQuery({
-    queryKey: QUERY_KEYS.MEAL_PLANS.WEEK(weekStart),
+    queryKey: QUERY_KEYS.MEAL_PLANS.CURRENT,
     queryFn: async () => {
       try {
-        return await api.get<MealPlan>(ROUTES.MEAL_PLANS.WEEK(weekStart));
+        return await api.get<MealPlan>(ROUTES.MEAL_PLANS.CURRENT);
       } catch (err: any) {
-        // 404 means no plan for this week — return null instead of throwing
+        // 404 means no plan — return null instead of throwing
         if (err?.status === 404) return null;
         throw err;
       }

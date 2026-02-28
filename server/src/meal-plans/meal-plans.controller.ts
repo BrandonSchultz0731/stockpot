@@ -20,7 +20,7 @@ import { ConfirmCookDto } from './dto/confirm-cook.dto';
 @Controller('meal-plans')
 @UseGuards(JwtAuthGuard)
 export class MealPlansController {
-  constructor(private readonly mealPlansService: MealPlansService) {}
+  constructor(private readonly mealPlansService: MealPlansService) { }
 
   @Post('generate')
   @HttpCode(202)

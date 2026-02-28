@@ -17,14 +17,12 @@ import { UsersService } from '../users/users.service';
 import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
-import { MealType, RecipeIngredient, MealScheduleSlot } from '@shared/enums';
+import { MealType, RecipeIngredient, MealScheduleSlot, DAY_NAMES } from '@shared/enums';
 import { ACTIVE_MODEL, CLAUDE_MODELS } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
 import { buildMealPlanPrompt, buildMealSwapPrompt, buildCookDeductionPrompt } from '../prompts';
 import { ConfirmCookDto } from './dto/confirm-cook.dto';
-
-const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 @Injectable()
 export class MealPlansService {
@@ -43,15 +41,18 @@ export class MealPlansService {
     private readonly usersService: UsersService,
     private readonly foodCacheService: FoodCacheService,
     private readonly shoppingListsService: ShoppingListsService,
-  ) {}
+  ) { }
 
-  async getCurrentPlan(userId: string): Promise<MealPlan | null> {
+  async getCurrentPlan(userId: string): Promise<MealPlan> {
     const plan = await this.mealPlanRepo.findOne({
       where: { userId },
       relations: ['entries', 'entries.recipe'],
       order: { weekStartDate: 'DESC' },
     });
-    if (plan?.entries) {
+    if (!plan) {
+      throw new NotFoundException('No meal plan found');
+    }
+    if (plan.entries) {
       await this.enrichPlanEntries(userId, plan.entries);
     }
     return plan;

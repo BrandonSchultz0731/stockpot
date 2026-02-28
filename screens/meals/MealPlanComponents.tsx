@@ -16,14 +16,8 @@ import {
   Zap,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
-import { MealType } from '../../shared/enums';
+import { MealType, DAY_LABELS } from '../../shared/enums';
 import type { MealPlanEntry } from '../../hooks/useCurrentMealPlanQuery';
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-export const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;
 
 export const MEAL_TYPE_ORDER: Record<string, number> = {
   [MealType.Breakfast]: 0,
@@ -64,14 +58,19 @@ function formatCalories(n: number): string {
 }
 
 export function getWeekDates(weekStartDate: string) {
-  const monday = new Date(weekStartDate + 'T00:00:00');
+  const start = new Date(weekStartDate + 'T00:00:00');
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const dow = d.getDay(); // 0=Sun … 6=Sat
     return {
-      dayLabel: DAY_LABELS[i],
+      dayLabel: DAY_LABELS[dow],
       dateNumber: d.getDate(),
-      dayOfWeek: i,
+      dayOfWeek: dow,
+      isToday: `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}` === todayKey,
     };
   });
 }
@@ -138,20 +137,18 @@ export function DaySelector({
   weekDates,
   selectedDay,
   onSelectDay,
-  todayIndex,
   entries,
 }: {
   weekDates: ReturnType<typeof getWeekDates>;
   selectedDay: number;
   onSelectDay: (day: number) => void;
-  todayIndex: number;
   entries?: MealPlanEntry[];
 }) {
   return (
     <View className="mx-4 my-3 flex-row justify-between rounded-[16px] border border-border bg-white px-2 py-2.5">
       {weekDates.map((d) => {
         const active = d.dayOfWeek === selectedDay;
-        const isToday = d.dayOfWeek === todayIndex;
+        const isToday = d.isToday;
         const dayEntries = entries?.filter((e) => e.dayOfWeek === d.dayOfWeek) ?? [];
         const totalMeals = dayEntries.length;
         const cookedMeals = dayEntries.filter((e) => e.isCooked).length;

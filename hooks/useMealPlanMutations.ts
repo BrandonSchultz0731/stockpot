@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
-import { getCurrentWeekStartDate } from '../utils/dayOfWeek';
 import type { MealPlan, MealPlanEntry } from './useCurrentMealPlanQuery';
 import type { Difficulty, MealType, MealScheduleSlot } from '../shared/enums';
 import type { ShoppingListResponse } from './useShoppingListQuery';
@@ -23,10 +22,8 @@ export function useGenerateMealPlanMutation() {
   return useMutation({
     mutationFn: (data: GenerateMealPlanRequest) =>
       api.post<MealPlan>(ROUTES.MEAL_PLANS.GENERATE, data),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.MEAL_PLANS.WEEK(variables.weekStartDate),
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
     },
   });
 }
@@ -47,9 +44,7 @@ export function useSwapMealPlanEntryMutation() {
     mutationFn: ({ entryId, data }: SwapMealPlanEntryRequest) =>
       api.post<MealPlanEntry>(ROUTES.MEAL_PLANS.SWAP_ENTRY(entryId), data),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.MEAL_PLANS.WEEK(getCurrentWeekStartDate()),
-      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
     },
   });
 }
@@ -62,9 +57,7 @@ export function useSaveRecipeMutation() {
       api.post(ROUTES.RECIPES.SAVE(recipeId), { isFavorite: true }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECIPES.SAVED });
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.MEAL_PLANS.WEEK(getCurrentWeekStartDate()),
-      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
     },
   });
 }
@@ -125,9 +118,7 @@ export function useConfirmCookMutation() {
         { deductions },
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.MEAL_PLANS.WEEK(getCurrentWeekStartDate()),
-      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PANTRY_ITEMS,
       });
@@ -190,9 +181,7 @@ export function useUnsaveRecipeMutation() {
       api.delete(ROUTES.RECIPES.SAVE(recipeId)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECIPES.SAVED });
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.MEAL_PLANS.WEEK(getCurrentWeekStartDate()),
-      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
     },
   });
 }
