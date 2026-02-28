@@ -10,6 +10,7 @@ import { AnthropicService } from '../anthropic/anthropic.service';
 import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
 import { UsersService } from '../users/users.service';
 import { FoodCacheService } from '../food-cache/food-cache.service';
+import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
 
 const mockMealPlanRepo = {
   findOne: jest.fn(),
@@ -51,6 +52,10 @@ const mockFoodCacheService = {
   resolveIngredientNames: jest.fn(),
 };
 
+const mockShoppingListsService = {
+  generateForMealPlan: jest.fn(),
+};
+
 describe('MealPlansService', () => {
   let service: MealPlansService;
 
@@ -68,6 +73,7 @@ describe('MealPlansService', () => {
         { provide: UsageTrackingService, useValue: mockUsageTrackingService },
         { provide: UsersService, useValue: mockUsersService },
         { provide: FoodCacheService, useValue: mockFoodCacheService },
+        { provide: ShoppingListsService, useValue: mockShoppingListsService },
       ],
     }).compile();
 
