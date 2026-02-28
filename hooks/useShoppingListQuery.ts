@@ -31,5 +31,11 @@ export function useShoppingListQuery(mealPlanId: string | undefined) {
       }
     },
     enabled: !!mealPlanId,
+    refetchInterval: (query) => {
+      // Shopping list generates in the background after the plan becomes active.
+      // Poll until it appears.
+      if (query.state.data === null) return 3000;
+      return false;
+    },
   });
 }

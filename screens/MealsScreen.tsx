@@ -12,6 +12,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CalendarDays } from 'lucide-react-native';
 import colors from '../theme/colors';
 import { MealPlanStatus } from '../shared/enums';
+import type { MealScheduleSlot } from '../shared/enums';
 import type { MealsStackParamList } from '../navigation/types';
 import { getCurrentWeekStartDate, getTodayDayOfWeek } from '../utils/dayOfWeek';
 import { useCurrentMealPlanQuery } from '../hooks/useCurrentMealPlanQuery';
@@ -35,6 +36,7 @@ import {
   AddSnackButton,
   SaveTemplateButton,
 } from './meals/MealPlanComponents';
+import MealScheduleSelector from './meals/MealScheduleSelector';
 
 export default function MealsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MealsStackParamList>>();
@@ -60,6 +62,7 @@ export default function MealsScreen() {
   // Local state
   const [selectedDay, setSelectedDay] = useState(getTodayDayOfWeek);
   const [swappingEntryId, setSwappingEntryId] = useState<string | null>(null);
+  const [showScheduleSelector, setShowScheduleSelector] = useState(false);
 
   // Derived data
   const weekDates = useMemo(() => getWeekDates(weekStart), [weekStart]);
@@ -115,9 +118,17 @@ export default function MealsScreen() {
   }, [mealPlan?.status, refetch]);
 
   // Handlers
-  const handleGenerate = useCallback(() => {
-    generateMutation.mutate({ weekStartDate: weekStart });
-  }, [generateMutation, weekStart]);
+  const handleOpenSelector = useCallback(() => {
+    setShowScheduleSelector(true);
+  }, []);
+
+  const handleGenerate = useCallback(
+    (schedule: MealScheduleSlot[]) => {
+      setShowScheduleSelector(false);
+      generateMutation.mutate({ weekStartDate: weekStart, mealSchedule: schedule });
+    },
+    [generateMutation, weekStart],
+  );
 
   const handleSwap = useCallback(
     (entryId: string) => {
@@ -169,7 +180,7 @@ export default function MealsScreen() {
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
       <ScrollView className="flex-1" contentContainerClassName="pb-8">
         <MealPlanHeader
-          onGenerate={handleGenerate}
+          onGenerate={handleOpenSelector}
           disabled={isGenerating}
           onCartPress={isActive ? handleCartPress : undefined}
           cartBadgeCount={shoppingList?.summary?.toBuy}
@@ -209,7 +220,7 @@ export default function MealsScreen() {
               <Text className="text-center text-[14px] text-dark">
                 Something went wrong generating your meal plan.
               </Text>
-              <Pressable onPress={handleGenerate} className="mt-3">
+              <Pressable onPress={handleOpenSelector} className="mt-3">
                 <Text className="text-[14px] font-semibold text-orange">
                   Try Again
                 </Text>
@@ -226,6 +237,8 @@ export default function MealsScreen() {
               weekDates={weekDates}
               selectedDay={selectedDay}
               onSelectDay={setSelectedDay}
+              todayIndex={getTodayDayOfWeek()}
+              entries={mealPlan?.entries}
             />
             <NutritionSummaryBar
               totals={nutritionTotals}
@@ -268,6 +281,11 @@ export default function MealsScreen() {
           </>
         )}
       </ScrollView>
+      <MealScheduleSelector
+        visible={showScheduleSelector}
+        onClose={() => setShowScheduleSelector(false)}
+        onGenerate={handleGenerate}
+      />
     </SafeAreaView>
   );
 }

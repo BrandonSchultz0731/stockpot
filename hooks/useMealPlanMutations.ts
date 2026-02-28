@@ -4,12 +4,13 @@ import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
 import { getCurrentWeekStartDate } from '../utils/dayOfWeek';
 import type { MealPlan, MealPlanEntry } from './useCurrentMealPlanQuery';
-import type { Difficulty, MealType } from '../shared/enums';
+import type { Difficulty, MealType, MealScheduleSlot } from '../shared/enums';
 import type { ShoppingListResponse } from './useShoppingListQuery';
 
 export interface GenerateMealPlanRequest {
   weekStartDate: string;
   mealTypes?: MealType[];
+  mealSchedule?: MealScheduleSlot[];
   servingsPerMeal?: number;
   cuisine?: string;
   difficulty?: Difficulty;
