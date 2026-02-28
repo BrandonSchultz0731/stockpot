@@ -17,7 +17,7 @@ import { UsersService } from '../users/users.service';
 import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
-import { MealType, RecipeIngredient } from '@shared/enums';
+import { MealType, RecipeIngredient, MealScheduleSlot } from '@shared/enums';
 import { ACTIVE_MODEL, CLAUDE_MODELS } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
@@ -113,7 +113,20 @@ export class MealPlansService {
         .map((item) => `${item.displayName} (${item.quantity} ${item.unit})`)
         .join('\n');
 
-      const mealTypes = dto.mealTypes ?? [MealType.Breakfast, MealType.Lunch, MealType.Dinner];
+      let mealSchedule: MealScheduleSlot[];
+
+      if (dto.mealSchedule?.length) {
+        mealSchedule = dto.mealSchedule;
+      } else {
+        const mealTypes = dto.mealTypes ?? [MealType.Breakfast, MealType.Lunch, MealType.Dinner];
+        mealSchedule = [];
+        for (let day = 0; day <= 6; day++) {
+          for (const type of mealTypes) {
+            mealSchedule.push({ dayOfWeek: day, mealType: type });
+          }
+        }
+      }
+
       const servings = dto.servingsPerMeal ?? user?.dietaryProfile?.householdSize ?? 2;
 
       const constraints: string[] = [];
@@ -133,7 +146,7 @@ export class MealPlansService {
         ? `\nConstraints:\n${constraints.join('\n')}\n`
         : '';
 
-      const prompt = buildMealPlanPrompt(ingredientList, mealTypes, servings, constraintBlock);
+      const prompt = buildMealPlanPrompt(ingredientList, mealSchedule, servings, constraintBlock);
 
       const response = await this.anthropicService.sendMessage(userId, {
         model: ACTIVE_MODEL,

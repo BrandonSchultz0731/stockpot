@@ -122,6 +122,11 @@ export enum MealType {
   Snack = 'Snack',
 }
 
+export interface MealScheduleSlot {
+  dayOfWeek: number;
+  mealType: MealType;
+}
+
 export enum Difficulty {
   Easy = 'Easy',
   Medium = 'Medium',

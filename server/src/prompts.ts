@@ -1,4 +1,4 @@
-import { UnitOfMeasure, StorageLocation, FOOD_CATEGORIES } from '@shared/enums';
+import { UnitOfMeasure, StorageLocation, FOOD_CATEGORIES, MealScheduleSlot } from '@shared/enums';
 
 export function buildRecipeGenerationPrompt(
   ingredientList: string,
@@ -31,21 +31,43 @@ No markdown fences, no explanation — only the JSON array.`;
 
 export function buildMealPlanPrompt(
   ingredientList: string,
-  mealTypes: string[],
+  mealSchedule: MealScheduleSlot[],
   servings: number,
   constraintBlock: string,
 ): string {
-  return `You are a meal planning chef. Create a 7-day meal plan (Monday through Sunday) with delicious, varied, well-balanced meals. The user has the following ingredients on hand — use them when it makes sense, but do not limit recipes to only pantry items. Suggest the best meals regardless of what is available.
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  // Build day-by-day schedule block
+  const scheduleByDay = new Map<number, string[]>();
+  for (const slot of mealSchedule) {
+    const existing = scheduleByDay.get(slot.dayOfWeek) ?? [];
+    existing.push(slot.mealType);
+    scheduleByDay.set(slot.dayOfWeek, existing);
+  }
+
+  const scheduleLines = Array.from(scheduleByDay.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([day, types]) => `- ${dayNames[day]}: ${types.join(', ')}`)
+    .join('\n');
+
+  const totalMeals = mealSchedule.length;
+  const uniqueMealTypes = [...new Set(mealSchedule.map((s) => s.mealType))];
+
+  return `You are a meal planning chef. Create a meal plan with ${totalMeals} meals featuring delicious, varied, well-balanced meals. The user has the following ingredients on hand — use them when it makes sense, but do not limit recipes to only pantry items. Suggest the best meals regardless of what is available.
 
 Pantry ingredients:
 ${ingredientList || 'No pantry items available — suggest common recipes.'}
 
-Meal types to plan: ${mealTypes.join(', ')}
+Meal schedule (generate EXACTLY these meals, no more, no less):
+${scheduleLines}
+
+IMPORTANT: Generate exactly ${totalMeals} meals matching the schedule above. Do not add meals for days or types not listed.
+
 Servings per meal: ${servings}
 ${constraintBlock}
 Return ONLY a JSON object with a "meals" array where each item has:
 - "dayOfWeek": number (0=Monday, 1=Tuesday, ..., 6=Sunday)
-- "mealType": "${mealTypes.join('" | "')}"
+- "mealType": "${uniqueMealTypes.join('" | "')}"
 - "title": string (recipe name)
 - "description": string (1-2 sentence description)
 - "prepTimeMinutes": number
