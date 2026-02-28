@@ -162,4 +162,5 @@ export const FAKE_RESPONSES: Record<MessageType, string> = {
   'ingredient-resolution': FAKE_INGREDIENT_RESOLUTION,
   'food-category': FAKE_FOOD_CATEGORY,
   'cook-deduction': FAKE_COOK_DEDUCTION,
+  'ai-chat': 'Hello! I\'m Chef Claude, your kitchen companion. How can I help you today?',
 };

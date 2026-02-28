@@ -13,6 +13,7 @@ import { ReceiptScanModule } from './receipt-scan/receipt-scan.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { MealPlansModule } from './meal-plans/meal-plans.module';
 import { ShoppingListsModule } from './shopping-lists/shopping-lists.module';
+import { AiChatModule } from './ai-chat/ai-chat.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { ShoppingListsModule } from './shopping-lists/shopping-lists.module';
     RecipesModule,
     MealPlansModule,
     ShoppingListsModule,
+    AiChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -10,6 +10,10 @@ let refreshPromise: Promise<boolean> | null = null;
 let onTokensRefreshed: ((tokens: { accessToken: string; refreshToken: string }) => void) | null = null;
 let onUnauthorized: (() => void) | null = null;
 
+export function getAccessToken(): string | null {
+  return accessToken;
+}
+
 export function setAccessToken(token: string | null) {
   accessToken = token;
 }

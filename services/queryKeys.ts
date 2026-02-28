@@ -18,4 +18,8 @@ export const QUERY_KEYS = {
     ALL: ['shopping-lists'],
     BY_MEAL_PLAN: (planId: string) => ['shopping-lists', 'meal-plan', planId],
   },
+  AI_CHAT: {
+    CONVERSATIONS: ['ai-chat', 'conversations'],
+    MESSAGES: (conversationId: string) => ['ai-chat', 'messages', conversationId],
+  },
 } as const;

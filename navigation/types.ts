@@ -30,8 +30,13 @@ export type TabParamList = {
   Home: undefined;
   PantryStack: undefined;
   MealsStack: undefined;
-  AIChef: undefined;
+  AIChefStack: undefined;
   Profile: undefined;
+};
+
+export type AIChefStackParamList = {
+  AIChefChat: undefined;
+  RecipeDetail: RecipeDetailParams;
 };
 
 export type ShoppingListParams = { mealPlanId: string; weekStartDate: string };
