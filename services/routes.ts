@@ -4,6 +4,8 @@ export const ROUTES = {
     REGISTER: '/auth/register',
     REFRESH: '/auth/refresh',
     LOGOUT: '/auth/logout',
+    APPLE: '/auth/apple',
+    GOOGLE: '/auth/google',
   },
   USERS: {
     ME: '/users/me',

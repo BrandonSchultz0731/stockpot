@@ -16,6 +16,7 @@ import Button from '../components/Button';
 import TextInputRow from '../components/TextInputRow';
 import Divider from '../components/Divider';
 import { useLoginMutation } from '../hooks/useLoginMutation';
+import { useSocialAuth } from '../hooks/useSocialAuth';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -24,6 +25,16 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   const { mutateAsync, isPending, error } = useLoginMutation();
+  const {
+    signInWithApple,
+    signInWithGoogle,
+    isPending: isSocialPending,
+    error: socialError,
+    isAppleSupported,
+  } = useSocialAuth();
+
+  const anyPending = isPending || isSocialPending;
+  const displayError = error || socialError;
 
   const handleLogin = async () => {
     try {
@@ -58,10 +69,10 @@ export default function LoginScreen() {
 
           {/* Form */}
           <View className="px-6 flex-1">
-            {error && (
+            {displayError && (
               <View className="bg-danger-pale rounded-input px-4 py-3 mb-3">
                 <Text className="text-sm text-danger">
-                  {error.message}
+                  {displayError.message}
                 </Text>
               </View>
             )}
@@ -107,7 +118,7 @@ export default function LoginScreen() {
             <Button
               label={isPending ? 'Logging in...' : 'Log In'}
               onPress={handleLogin}
-              disabled={isPending || !email || !password}
+              disabled={anyPending || !email || !password}
               className="mb-5"
             />
 
@@ -116,14 +127,20 @@ export default function LoginScreen() {
             <Button
               variant="outline"
               label="Continue with Google"
+              onPress={() => signInWithGoogle().catch(() => {})}
+              disabled={anyPending}
               className="mb-2.5"
             />
 
-            <Button
-              variant="dark"
-              label="Continue with Apple"
-              className="mb-2.5"
-            />
+            {isAppleSupported && (
+              <Button
+                variant="dark"
+                label="Continue with Apple"
+                onPress={() => signInWithApple().catch(() => {})}
+                disabled={anyPending}
+                className="mb-2.5"
+              />
+            )}
           </View>
 
           {/* Footer */}
