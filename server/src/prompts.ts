@@ -1,5 +1,14 @@
 import { UnitOfMeasure, StorageLocation, FOOD_CATEGORIES, DAY_NAMES, MealScheduleSlot } from '@shared/enums';
 
+const INGREDIENT_NAMING_INSTRUCTION = `
+IMPORTANT: Use simple, consistent ingredient names. Use the base food name without unnecessary qualifiers:
+- "Onion" not "Fresh Onion" or "Yellow Onion" (unless the variety matters for the recipe)
+- "Garlic" not "Garlic Cloves" or "Fresh Garlic"
+- "Chicken Breast" not "Boneless Skinless Chicken Breast"
+- "Olive Oil" not "Extra Virgin Olive Oil" (unless it matters)
+When the same ingredient appears in multiple meals, use EXACTLY the same name each time.
+`;
+
 export function buildRecipeGenerationPrompt(
   ingredientList: string,
   numberOfRecipes: number,
@@ -27,7 +36,7 @@ Return ONLY a JSON array of ${numberOfRecipes} recipe objects with these fields:
 - "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
 
 Do NOT include basic pantry staples that every kitchen has (e.g. water, salt, black pepper). Only list ingredients that are specific to the recipe.
-
+${INGREDIENT_NAMING_INSTRUCTION}
 For each ingredient, "baseQuantity" is the equivalent quantity normalized to a base unit and "baseUnit" is one of "g", "ml", or "count". For weight ingredients use grams, for liquids/volumes use milliliters, for countable items use count. Account for ingredient density when converting (e.g. 1 cup flour ≈ 125g, 1 cup butter ≈ 227g).
 
 No markdown fences, no explanation — only the JSON array.`;
@@ -85,7 +94,7 @@ Return ONLY a JSON object with a "meals" array where each item has:
 - "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
 
 Do NOT include basic pantry staples that every kitchen has (e.g. water, salt, black pepper). Only list ingredients that are specific to the recipe.
-
+${INGREDIENT_NAMING_INSTRUCTION}
 For each ingredient, "baseQuantity" is the equivalent quantity normalized to a base unit and "baseUnit" is one of "g", "ml", or "count". For weight ingredients use grams, for liquids/volumes use milliliters, for countable items use count. Account for ingredient density when converting (e.g. 1 cup flour ≈ 125g, 1 cup butter ≈ 227g).
 
 No markdown fences, no explanation — only the JSON object.`;
@@ -121,7 +130,7 @@ Return ONLY a JSON object with:
 - "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
 
 Do NOT include basic pantry staples that every kitchen has (e.g. water, salt, black pepper). Only list ingredients that are specific to the recipe.
-
+${INGREDIENT_NAMING_INSTRUCTION}
 For each ingredient, "baseQuantity" is the equivalent quantity normalized to a base unit and "baseUnit" is one of "g", "ml", or "count". For weight ingredients use grams, for liquids/volumes use milliliters, for countable items use count. Account for ingredient density when converting (e.g. 1 cup flour ≈ 125g, 1 cup butter ≈ 227g).
 
 No markdown fences, no explanation — only the JSON object.`;
@@ -287,4 +296,42 @@ To show a pantry summary:
 - When suggesting recipes, mention 2-3 options and let them choose
 - If you don't have enough info, ask a clarifying question
 - Respect dietary restrictions absolutely — never suggest foods they've excluded`;
+}
+
+export function buildFoodMatchPrompt(
+  items: { name: string; candidates: { id: string; name: string }[] }[],
+): string {
+  const itemLines = items
+    .map((item) => {
+      const candidateList = item.candidates
+        .map((c) => `  - { "id": "${c.id}", "name": "${c.name}" }`)
+        .join('\n');
+      return `"${item.name}":\n${candidateList}`;
+    })
+    .join('\n\n');
+
+  return `For each food name below, determine if it refers to the SAME food as any of its candidates. Return the candidate id if it's the same food, or null if none match.
+
+Guidelines for "same food":
+- "Broccoli Florets" and "Broccoli" → SAME (different cuts of same vegetable)
+- "Sesame Oil Unrefined" and "Sesame Oil" → SAME (quality variant of same oil)
+- "Organic Milk" and "Milk" → SAME (organic is a label, not a different food)
+- "Diced Tomatoes" and "Tomatoes" → SAME (form/preparation variant)
+- "Red Onion" and "Onion" → DIFFERENT (distinct varieties with different flavor)
+- "Chicken Breast" and "Chicken Thighs" → DIFFERENT (different cuts)
+- "Sweet Potato" and "Potato" → DIFFERENT (different vegetables)
+- "Coconut Oil" and "Olive Oil" → DIFFERENT (different oils entirely)
+- "Brown Sugar" and "Sugar" → DIFFERENT (distinct ingredients, not interchangeable)
+- "Powdered Sugar" and "Sugar" → DIFFERENT (different form, different uses)
+- "Sour Cream" and "Cream" → DIFFERENT (different dairy products)
+- "Cream Cheese" and "Cheese" → DIFFERENT (different products entirely)
+
+When in doubt, prefer DIFFERENT. Only match if the items are truly the same base food and could reasonably share a pantry tracking entry.
+
+Food names and their candidates:
+${itemLines}
+
+Return ONLY a JSON object mapping each food name to the matched candidate id or null. Example: { "Broccoli Florets": "fc-abc", "Red Onion": null }
+
+No markdown fences, no explanation — only the JSON object.`;
 }

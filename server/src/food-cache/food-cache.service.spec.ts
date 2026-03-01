@@ -5,11 +5,29 @@ import { FoodCacheService } from './food-cache.service';
 import { FoodCache } from './entities/food-cache.entity';
 import { AnthropicService } from '../anthropic/anthropic.service';
 
+const createMockQueryBuilder = (results: any[] = []) => {
+  const qb: any = {
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    take: jest.fn().mockReturnThis(),
+    getMany: jest.fn().mockResolvedValue(results),
+    getOne: jest.fn().mockResolvedValue(results[0] ?? null),
+    update: jest.fn().mockReturnThis(),
+    set: jest.fn().mockReturnThis(),
+    execute: jest.fn().mockResolvedValue({ affected: 1 }),
+  };
+  return qb;
+};
+
+let mockQueryBuilder = createMockQueryBuilder();
+
 const mockRepo = {
   find: jest.fn(),
   findOne: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
+  createQueryBuilder: jest.fn().mockImplementation(() => mockQueryBuilder),
 };
 
 const mockConfigService = {
@@ -32,6 +50,8 @@ describe('FoodCacheService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockQueryBuilder = createMockQueryBuilder();
+    mockRepo.createQueryBuilder.mockImplementation(() => mockQueryBuilder);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -50,7 +70,7 @@ describe('FoodCacheService', () => {
   });
 
   describe('searchLocal', () => {
-    it('should query repo with ILIKE on name and usdaDescription', async () => {
+    it('should query repo with ILIKE via query builder and return mapped results', async () => {
       const cached = [
         {
           id: 'fc-1',
@@ -64,21 +84,17 @@ describe('FoodCacheService', () => {
           nutritionPer100g: { calories: 165 },
         },
       ];
-      mockRepo.find.mockResolvedValue(cached);
+      mockQueryBuilder = createMockQueryBuilder(cached);
+      mockRepo.createQueryBuilder.mockImplementation(() => mockQueryBuilder);
 
       const results = await service.searchLocal('chicken', 10);
 
-      expect(mockRepo.find).toHaveBeenCalledWith({
-        where: [
-          { name: expect.objectContaining({ _value: '%chicken%' }), usdaDataType: expect.objectContaining({ _value: 'Foundation' }) },
-          { name: expect.objectContaining({ _value: '%chicken%' }), usdaDataType: expect.objectContaining({ _value: 'SR Legacy' }) },
-          { usdaDescription: expect.objectContaining({ _value: '%chicken%' }), usdaDataType: expect.objectContaining({ _value: 'Foundation' }) },
-          { usdaDescription: expect.objectContaining({ _value: '%chicken%' }), usdaDataType: expect.objectContaining({ _value: 'SR Legacy' }) },
-          { name: expect.objectContaining({ _value: '%chicken%' }), usdaDataType: expect.objectContaining({ _type: 'isNull' }) },
-        ],
-        take: 10,
-        order: { name: 'ASC' },
-      });
+      expect(mockRepo.createQueryBuilder).toHaveBeenCalledWith('fc');
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        expect.stringContaining('fc.name ILIKE :q'),
+        { q: '%chicken%' },
+      );
+      expect(mockQueryBuilder.take).toHaveBeenCalledWith(10);
       expect(results).toHaveLength(1);
       expect(results[0]).toEqual(
         expect.objectContaining({
@@ -90,8 +106,21 @@ describe('FoodCacheService', () => {
       );
     });
 
+    it('should include alias search in query builder WHERE clause', async () => {
+      mockQueryBuilder = createMockQueryBuilder([]);
+      mockRepo.createQueryBuilder.mockImplementation(() => mockQueryBuilder);
+
+      await service.searchLocal('broccoli florets', 5);
+
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        expect.stringContaining('fc.aliases::text ILIKE :q'),
+        expect.any(Object),
+      );
+    });
+
     it('should return empty array when no local results', async () => {
-      mockRepo.find.mockResolvedValue([]);
+      mockQueryBuilder = createMockQueryBuilder([]);
+      mockRepo.createQueryBuilder.mockImplementation(() => mockQueryBuilder);
 
       const results = await service.searchLocal('nonexistent', 10);
 
@@ -276,7 +305,8 @@ describe('FoodCacheService', () => {
         barcode: null,
         nutritionPer100g: null,
       }));
-      mockRepo.find.mockResolvedValue(localItems);
+      mockQueryBuilder = createMockQueryBuilder(localItems);
+      mockRepo.createQueryBuilder.mockImplementation(() => mockQueryBuilder);
 
       const results = await service.search('food', 5);
 
@@ -285,7 +315,7 @@ describe('FoodCacheService', () => {
     });
 
     it('should supplement with USDA results when local results are insufficient', async () => {
-      mockRepo.find.mockResolvedValue([
+      mockQueryBuilder = createMockQueryBuilder([
         {
           id: 'fc-1',
           fdcId: 100,
@@ -298,6 +328,7 @@ describe('FoodCacheService', () => {
           nutritionPer100g: null,
         },
       ]);
+      mockRepo.createQueryBuilder.mockImplementation(() => mockQueryBuilder);
 
       const usdaResponse = {
         foods: [
@@ -320,7 +351,7 @@ describe('FoodCacheService', () => {
     });
 
     it('should deduplicate USDA results that already exist in cache by fdcId', async () => {
-      mockRepo.find.mockResolvedValue([
+      mockQueryBuilder = createMockQueryBuilder([
         {
           id: 'fc-1',
           fdcId: 100,
@@ -333,6 +364,7 @@ describe('FoodCacheService', () => {
           nutritionPer100g: null,
         },
       ]);
+      mockRepo.createQueryBuilder.mockImplementation(() => mockQueryBuilder);
 
       const usdaResponse = {
         foods: [
@@ -560,6 +592,305 @@ describe('FoodCacheService', () => {
       const result = await service.findByBarcode('894700010045');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('addAlias', () => {
+    it('should append alias to existing entry', async () => {
+      const entry = {
+        id: 'fc-1',
+        name: 'Broccoli',
+        aliases: null,
+      };
+      mockRepo.findOne.mockResolvedValue(entry);
+      mockRepo.save.mockResolvedValue({ ...entry, aliases: ['Broccoli Florets'] });
+
+      await service.addAlias('fc-1', 'Broccoli Florets');
+
+      expect(mockRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aliases: ['Broccoli Florets'],
+        }),
+      );
+    });
+
+    it('should not add alias if it matches the entry name', async () => {
+      const entry = {
+        id: 'fc-1',
+        name: 'Broccoli',
+        aliases: null,
+      };
+      mockRepo.findOne.mockResolvedValue(entry);
+
+      await service.addAlias('fc-1', 'broccoli');
+
+      expect(mockRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should not add duplicate alias', async () => {
+      const entry = {
+        id: 'fc-1',
+        name: 'Broccoli',
+        aliases: ['Broccoli Florets'],
+      };
+      mockRepo.findOne.mockResolvedValue(entry);
+
+      await service.addAlias('fc-1', 'broccoli florets');
+
+      expect(mockRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should do nothing if entry not found', async () => {
+      mockRepo.findOne.mockResolvedValue(null);
+
+      await service.addAlias('fc-missing', 'Something');
+
+      expect(mockRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should append to existing aliases array', async () => {
+      const entry = {
+        id: 'fc-1',
+        name: 'Sesame Oil',
+        aliases: ['Toasted Sesame Oil'],
+      };
+      mockRepo.findOne.mockResolvedValue(entry);
+      mockRepo.save.mockResolvedValue({
+        ...entry,
+        aliases: ['Toasted Sesame Oil', 'Sesame Oil Unrefined'],
+      });
+
+      await service.addAlias('fc-1', 'Sesame Oil Unrefined');
+
+      expect(mockRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aliases: ['Toasted Sesame Oil', 'Sesame Oil Unrefined'],
+        }),
+      );
+    });
+  });
+
+  describe('findByAlias', () => {
+    it('should find entry by alias using query builder', async () => {
+      const entry = { id: 'fc-1', name: 'Broccoli', aliases: ['Broccoli Florets'] };
+      mockQueryBuilder = createMockQueryBuilder([entry]);
+      mockRepo.createQueryBuilder.mockImplementation(() => mockQueryBuilder);
+
+      const result = await service.findByAlias('Broccoli Florets');
+
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        expect.stringContaining('jsonb_array_elements_text'),
+        { name: 'Broccoli Florets' },
+      );
+      expect(result).toEqual(entry);
+    });
+
+    it('should return null when no alias match found', async () => {
+      mockQueryBuilder = createMockQueryBuilder([]);
+      mockRepo.createQueryBuilder.mockImplementation(() => mockQueryBuilder);
+
+      const result = await service.findByAlias('Dragon Fruit');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findBestMatch', () => {
+    it('should return exact match immediately', async () => {
+      const food = { id: 'fc-1', name: 'Broccoli' } as FoodCache;
+      mockRepo.findOne.mockResolvedValue(food);
+
+      const result = await service.findBestMatch('Broccoli', 'user-1');
+
+      expect(result).toEqual(food);
+      expect(mockAnthropicService.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('should return alias match when no exact match', async () => {
+      // findOne returns null (no exact match)
+      mockRepo.findOne.mockResolvedValue(null);
+
+      // findByAlias returns a match
+      const aliasEntry = { id: 'fc-1', name: 'Broccoli', aliases: ['Broccoli Florets'] };
+      mockQueryBuilder = createMockQueryBuilder([aliasEntry]);
+      mockRepo.createQueryBuilder.mockImplementation(() => mockQueryBuilder);
+
+      const result = await service.findBestMatch('Broccoli Florets', 'user-1');
+
+      expect(result).toEqual(aliasEntry);
+      expect(mockAnthropicService.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('should call AI when no exact or alias match and return matched entry', async () => {
+      // No exact match
+      mockRepo.findOne
+        .mockResolvedValueOnce(null) // exact match check
+        .mockResolvedValueOnce({ id: 'fc-1', name: 'Broccoli' }); // findById after AI match
+
+      // No alias match, but searchLocal returns candidates
+      const noAliasQb = createMockQueryBuilder([]);
+      const searchQb = createMockQueryBuilder([
+        {
+          id: 'fc-1',
+          name: 'Broccoli',
+          fdcId: null,
+          usdaDescription: null,
+          usdaDataType: null,
+          category: null,
+          brand: null,
+          barcode: null,
+          nutritionPer100g: null,
+        },
+      ]);
+
+      let qbCallCount = 0;
+      mockRepo.createQueryBuilder.mockImplementation(() => {
+        qbCallCount++;
+        // First call: findByAlias, second call: searchLocal
+        return qbCallCount === 1 ? noAliasQb : searchQb;
+      });
+
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: '{ "Broccoli Florets": "fc-1" }' }],
+      });
+
+      const result = await service.findBestMatch('Broccoli Florets', 'user-1');
+
+      expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
+        'user-1',
+        expect.objectContaining({
+          messageType: 'food-match',
+        }),
+      );
+      expect(result).toEqual({ id: 'fc-1', name: 'Broccoli' });
+    });
+
+    it('should return null when AI finds no match', async () => {
+      mockRepo.findOne.mockResolvedValue(null);
+
+      const noAliasQb = createMockQueryBuilder([]);
+      const searchQb = createMockQueryBuilder([
+        {
+          id: 'fc-1',
+          name: 'Onion',
+          fdcId: null,
+          usdaDescription: null,
+          usdaDataType: null,
+          category: null,
+          brand: null,
+          barcode: null,
+          nutritionPer100g: null,
+        },
+      ]);
+
+      let qbCallCount = 0;
+      mockRepo.createQueryBuilder.mockImplementation(() => {
+        qbCallCount++;
+        return qbCallCount === 1 ? noAliasQb : searchQb;
+      });
+
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: '{ "Red Onion": null }' }],
+      });
+
+      const result = await service.findBestMatch('Red Onion', 'user-1');
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when no candidates exist', async () => {
+      mockRepo.findOne.mockResolvedValue(null);
+
+      // Both findByAlias and searchLocal return empty
+      mockQueryBuilder = createMockQueryBuilder([]);
+      mockRepo.createQueryBuilder.mockImplementation(() => mockQueryBuilder);
+
+      const result = await service.findBestMatch('Exotic Fruit', 'user-1');
+
+      expect(result).toBeNull();
+      expect(mockAnthropicService.sendMessage).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('findBestMatches', () => {
+    it('should return empty map for empty input', async () => {
+      const result = await service.findBestMatches([], 'user-1');
+
+      expect(result.size).toBe(0);
+    });
+
+    it('should resolve exact matches without AI call', async () => {
+      const food = { id: 'fc-1', name: 'Broccoli' } as FoodCache;
+      mockRepo.findOne.mockResolvedValue(food);
+
+      const result = await service.findBestMatches(['Broccoli'], 'user-1');
+
+      expect(result.get('Broccoli')).toEqual(food);
+      expect(mockAnthropicService.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('should batch unresolved names into a single AI call', async () => {
+      // No exact matches
+      mockRepo.findOne
+        .mockResolvedValueOnce(null) // exact for "Broccoli Florets"
+        .mockResolvedValueOnce(null) // exact for "Sesame Oil Unrefined"
+        .mockResolvedValueOnce({ id: 'fc-1', name: 'Broccoli' }) // findById for AI result
+        .mockResolvedValueOnce({ id: 'fc-2', name: 'Sesame Oil' }); // findById for AI result
+
+      // No alias matches, but searchLocal returns candidates
+      const noAliasQb = createMockQueryBuilder([]);
+      const broccoliQb = createMockQueryBuilder([
+        { id: 'fc-1', name: 'Broccoli', fdcId: null, usdaDescription: null, usdaDataType: null, category: null, brand: null, barcode: null, nutritionPer100g: null },
+      ]);
+      const sesameQb = createMockQueryBuilder([
+        { id: 'fc-2', name: 'Sesame Oil', fdcId: null, usdaDescription: null, usdaDataType: null, category: null, brand: null, barcode: null, nutritionPer100g: null },
+      ]);
+
+      let qbCallCount = 0;
+      mockRepo.createQueryBuilder.mockImplementation(() => {
+        qbCallCount++;
+        // Calls: 1=alias check broccoli, 2=searchLocal broccoli, 3=alias check sesame, 4=searchLocal sesame
+        if (qbCallCount === 1 || qbCallCount === 3) return noAliasQb;
+        if (qbCallCount === 2) return broccoliQb;
+        return sesameQb;
+      });
+
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: '{ "Broccoli Florets": "fc-1", "Sesame Oil Unrefined": "fc-2" }' }],
+      });
+
+      const result = await service.findBestMatches(
+        ['Broccoli Florets', 'Sesame Oil Unrefined'],
+        'user-1',
+      );
+
+      // Only one AI call for both items
+      expect(mockAnthropicService.sendMessage).toHaveBeenCalledTimes(1);
+      expect(result.get('Broccoli Florets')).toEqual({ id: 'fc-1', name: 'Broccoli' });
+      expect(result.get('Sesame Oil Unrefined')).toEqual({ id: 'fc-2', name: 'Sesame Oil' });
+    });
+
+    it('should return null for items AI cannot match', async () => {
+      mockRepo.findOne.mockResolvedValue(null);
+
+      const noAliasQb = createMockQueryBuilder([]);
+      const candidateQb = createMockQueryBuilder([
+        { id: 'fc-1', name: 'Onion', fdcId: null, usdaDescription: null, usdaDataType: null, category: null, brand: null, barcode: null, nutritionPer100g: null },
+      ]);
+
+      let qbCallCount = 0;
+      mockRepo.createQueryBuilder.mockImplementation(() => {
+        qbCallCount++;
+        return qbCallCount === 1 ? noAliasQb : candidateQb;
+      });
+
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: '{ "Red Onion": null }' }],
+      });
+
+      const result = await service.findBestMatches(['Red Onion'], 'user-1');
+
+      expect(result.get('Red Onion')).toBeNull();
     });
   });
 
