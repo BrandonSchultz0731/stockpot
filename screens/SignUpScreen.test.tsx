@@ -5,11 +5,24 @@ import SignUpScreen from './SignUpScreen';
 const mockMutateAsync = jest.fn();
 const mockGoBack = jest.fn();
 
+const mockSignInWithApple = jest.fn();
+const mockSignInWithGoogle = jest.fn();
+
 jest.mock('../hooks/useRegisterMutation', () => ({
   useRegisterMutation: () => ({
     mutateAsync: mockMutateAsync,
     isPending: false,
     error: null,
+  }),
+}));
+
+jest.mock('../hooks/useSocialAuth', () => ({
+  useSocialAuth: () => ({
+    signInWithApple: mockSignInWithApple,
+    signInWithGoogle: mockSignInWithGoogle,
+    isPending: false,
+    error: null,
+    isAppleSupported: true,
   }),
 }));
 
@@ -33,6 +46,8 @@ describe('SignUpScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockMutateAsync.mockResolvedValue({});
+    mockSignInWithApple.mockResolvedValue(undefined);
+    mockSignInWithGoogle.mockResolvedValue(undefined);
   });
 
   it('should render all form fields', () => {
@@ -118,5 +133,28 @@ describe('SignUpScreen', () => {
     fireEvent.press(getByText('Log In'));
 
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it('should render social sign-in buttons', () => {
+    const { getByText } = render(<SignUpScreen />);
+
+    expect(getByText('Google')).toBeTruthy();
+    expect(getByText('Apple')).toBeTruthy();
+  });
+
+  it('should call signInWithGoogle when Google button is pressed', () => {
+    const { getByText } = render(<SignUpScreen />);
+
+    fireEvent.press(getByText('Google'));
+
+    expect(mockSignInWithGoogle).toHaveBeenCalled();
+  });
+
+  it('should call signInWithApple when Apple button is pressed', () => {
+    const { getByText } = render(<SignUpScreen />);
+
+    fireEvent.press(getByText('Apple'));
+
+    expect(mockSignInWithApple).toHaveBeenCalled();
   });
 });
