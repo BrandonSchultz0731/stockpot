@@ -74,6 +74,7 @@ export default function BarcodeScanScreen() {
         displayName: data.name,
         quantity: data.packageQuantity?.toString(),
         unit: data.packageUnit,
+        ...(data.shelfLife ? { shelfLife: JSON.stringify(data.shelfLife) } : {}),
       });
     } else if (error) {
       Alert.alert(

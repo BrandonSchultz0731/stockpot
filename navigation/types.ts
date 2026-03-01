@@ -60,6 +60,7 @@ export type PantryStackParamList = {
     displayName?: string;
     quantity?: string;
     unit?: string;
+    shelfLife?: string;
   } | undefined;
   EditItem: { item: PantryItem };
 };

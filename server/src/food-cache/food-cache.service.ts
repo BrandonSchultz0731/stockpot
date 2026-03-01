@@ -3,10 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, IsNull, In } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { FoodCache } from './entities/food-cache.entity';
-import { UnitOfMeasure, ShelfLife, FOOD_CATEGORIES } from '@shared/enums';
+import { UnitOfMeasure, StorageLocation, ShelfLife, FOOD_CATEGORIES } from '@shared/enums';
 import { AnthropicService } from '../anthropic/anthropic.service';
 import { CLAUDE_MODELS } from '../ai-models';
-import { buildIngredientResolutionPrompt, buildBatchCategoryPrompt } from '../prompts';
+import { buildIngredientResolutionPrompt, buildBatchCategoryPrompt, buildShelfLifePrompt } from '../prompts';
 
 interface UsdaFoodNutrient {
   nutrientNumber: string;
@@ -53,6 +53,7 @@ export interface FoodSearchResult {
   nutritionPer100g?: Record<string, number>;
   packageQuantity?: number;
   packageUnit?: string;
+  shelfLife?: ShelfLife;
   source: 'cache' | 'usda' | 'openfoodfacts';
 }
 
@@ -346,6 +347,71 @@ export class FoodCacheService {
       .execute();
   }
 
+  async estimateShelfLife(
+    userId: string,
+    foodName: string,
+    foodCacheId?: string,
+  ): Promise<ShelfLife | null> {
+    // Check cached shelf life first
+    if (foodCacheId) {
+      const cached = await this.getShelfLife(foodCacheId);
+      if (cached) return cached;
+    }
+
+    // Fall back to AI estimation
+    try {
+      const response = await this.anthropicService.sendMessage(userId, {
+        model: CLAUDE_MODELS['haiku-4.5'],
+        maxTokens: 256,
+        messages: [{ role: 'user', content: buildShelfLifePrompt(foodName) }],
+        messageType: 'shelf-life',
+      });
+
+      const rawText =
+        response.content[0]?.type === 'text' ? response.content[0].text : '';
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(rawText);
+      } catch {
+        const match = rawText.match(/\{[\s\S]*\}/);
+        if (match) {
+          try {
+            parsed = JSON.parse(match[0]);
+          } catch {
+            return null;
+          }
+        }
+      }
+
+      if (!parsed || typeof parsed !== 'object') return null;
+
+      const obj = parsed as Record<string, unknown>;
+      const shelfLife: ShelfLife = {};
+      for (const loc of Object.values(StorageLocation)) {
+        const val = Number(obj[loc]);
+        if (Number.isFinite(val) && val > 0) {
+          shelfLife[loc] = Math.round(val);
+        }
+      }
+
+      if (Object.keys(shelfLife).length === 0) return null;
+
+      // Cache the result for future lookups
+      if (foodCacheId) {
+        await this.updateShelfLife(foodCacheId, shelfLife);
+      }
+
+      return shelfLife;
+    } catch (error) {
+      this.logger.warn(
+        `AI shelf life estimation failed for "${foodName}"`,
+        error,
+      );
+      return null;
+    }
+  }
+
   async getCategoriesByIds(foodCacheIds: string[]): Promise<Map<string, string>> {
     const result = new Map<string, string>();
     if (foodCacheIds.length === 0) return result;
@@ -448,10 +514,10 @@ export class FoodCacheService {
     return this.foodCacheRepo.findOne({ where: { fdcId } });
   }
 
-  async findByBarcode(barcode: string): Promise<FoodSearchResult | null> {
+  async findByBarcode(barcode: string, userId?: string): Promise<FoodSearchResult | null> {
     const cached = await this.foodCacheRepo.findOne({ where: { barcode } });
     if (cached) {
-      return {
+      const result: FoodSearchResult = {
         id: cached.id,
         fdcId: cached.fdcId,
         name: cached.name,
@@ -463,9 +529,27 @@ export class FoodCacheService {
         nutritionPer100g: cached.nutritionPer100g,
         source: 'cache',
       };
+
+      if (userId) {
+        result.shelfLife =
+          (await this.estimateShelfLife(userId, cached.name, cached.id)) ??
+          undefined;
+      }
+
+      return result;
     }
 
-    return this.searchOpenFoodFacts(barcode);
+    const offResult = await this.searchOpenFoodFacts(barcode);
+    if (offResult && userId) {
+      // Cache the OFF result, then estimate shelf life
+      const savedEntry = await this.cacheUsdaFood(offResult);
+      offResult.id = savedEntry.id;
+      offResult.shelfLife =
+        (await this.estimateShelfLife(userId, offResult.name, savedEntry.id)) ??
+        undefined;
+    }
+
+    return offResult;
   }
 
   private async searchOpenFoodFacts(

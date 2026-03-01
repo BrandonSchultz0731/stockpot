@@ -15,16 +15,26 @@ import PantryItemForm from '../../components/pantry/PantryItemForm';
 import { useCreatePantryItemMutation } from '../../hooks/usePantryMutations';
 import colors from '../../theme/colors';
 import type { PantryStackParamList } from '../../navigation/types';
-import type { UnitOfMeasure } from '../../shared/enums';
+import type { UnitOfMeasure, ShelfLife } from '../../shared/enums';
 
 type Nav = NativeStackNavigationProp<PantryStackParamList, 'ManualEntry'>;
+
+function parseShelfLife(raw?: string): ShelfLife | undefined {
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw) as ShelfLife;
+  } catch {
+    return undefined;
+  }
+}
 
 export default function ManualEntryScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<RouteProp<PantryStackParamList, 'ManualEntry'>>();
   const createMutation = useCreatePantryItemMutation();
 
-  const { displayName, quantity, unit } = route.params ?? {};
+  const { displayName, quantity, unit, shelfLife: shelfLifeRaw } = route.params ?? {};
+  const estimatedShelfLife = parseShelfLife(shelfLifeRaw);
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
@@ -46,6 +56,7 @@ export default function ManualEntryScreen() {
             ...(displayName ? { displayName } : {}),
             ...(quantity ? { quantity } : {}),
             ...(unit ? { unit: unit as UnitOfMeasure } : {}),
+            ...(estimatedShelfLife ? { estimatedShelfLife } : {}),
           }}
           submitLabel="Add to Pantry"
           isPending={createMutation.isPending}
