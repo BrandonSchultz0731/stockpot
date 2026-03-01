@@ -541,7 +541,6 @@ export class FoodCacheService {
 
     const offResult = await this.searchOpenFoodFacts(barcode);
     if (offResult && userId) {
-      // Cache the OFF result, then estimate shelf life
       const savedEntry = await this.cacheUsdaFood(offResult);
       offResult.id = savedEntry.id;
       offResult.shelfLife =
@@ -605,6 +604,13 @@ export class FoodCacheService {
   async cacheUsdaFood(usdaFood: FoodSearchResult): Promise<FoodCache> {
     if (usdaFood.fdcId) {
       const existing = await this.findByFdcId(usdaFood.fdcId);
+      if (existing) return existing;
+    }
+
+    if (usdaFood.barcode) {
+      const existing = await this.foodCacheRepo.findOne({
+        where: { barcode: usdaFood.barcode },
+      });
       if (existing) return existing;
     }
 
