@@ -1,4 +1,5 @@
 import React from 'react';
+import { Text } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import Button from './Button';
 
@@ -56,5 +57,16 @@ describe('Button', () => {
   it('should render dark variant', () => {
     const { getByText } = render(<Button label="Dark" variant="dark" />);
     expect(getByText('Dark')).toBeTruthy();
+  });
+
+  it('should render icon when provided', () => {
+    const { getByText } = render(
+      <Button
+        label="With Icon"
+        icon={<Text>icon</Text>}
+      />,
+    );
+    expect(getByText('With Icon')).toBeTruthy();
+    expect(getByText('icon')).toBeTruthy();
   });
 });

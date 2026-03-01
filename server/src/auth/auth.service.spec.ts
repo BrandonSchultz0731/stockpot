@@ -4,12 +4,14 @@ import { ConfigService } from '@nestjs/config';
 import {
   UnauthorizedException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 
 jest.mock('bcrypt');
+jest.mock('jsonwebtoken');
 
 const mockUsersService = {
   createUser: jest.fn(),
@@ -21,6 +23,8 @@ const mockUsersService = {
   updateSessionToken: jest.fn(),
   deleteSession: jest.fn(),
   deleteAllUserSessions: jest.fn(),
+  findByProviderUserId: jest.fn(),
+  createSocialUser: jest.fn(),
 };
 
 const mockJwtService = {
@@ -33,6 +37,8 @@ const mockConfigService = {
     const map: Record<string, string> = {
       JWT_ACCESS_EXPIRY: '15m',
       JWT_REFRESH_EXPIRY: '7d',
+      APPLE_CLIENT_ID: 'com.example.app',
+      GOOGLE_CLIENT_ID: 'google-client-id',
     };
     return map[key];
   }),
@@ -94,6 +100,7 @@ describe('AuthService', () => {
         id: 'user-1',
         email: 'test@example.com',
         passwordHash: 'hashed',
+        authProvider: 'email',
       });
       mockUsersService.validatePassword.mockResolvedValue(true);
 
@@ -116,11 +123,38 @@ describe('AuthService', () => {
         id: 'user-1',
         email: 'test@example.com',
         passwordHash: 'hashed',
+        authProvider: 'email',
       });
       mockUsersService.validatePassword.mockResolvedValue(false);
 
       await expect(service.login('test@example.com', 'wrong')).rejects.toThrow(
         'Invalid credentials',
+      );
+    });
+
+    it('should throw ConflictException when user registered with social provider', async () => {
+      mockUsersService.findByEmail.mockResolvedValue({
+        id: 'user-1',
+        email: 'test@example.com',
+        passwordHash: null,
+        authProvider: 'google',
+      });
+
+      await expect(service.login('test@example.com', 'password')).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('should include provider name in social conflict error message', async () => {
+      mockUsersService.findByEmail.mockResolvedValue({
+        id: 'user-1',
+        email: 'test@example.com',
+        passwordHash: null,
+        authProvider: 'apple',
+      });
+
+      await expect(service.login('test@example.com', 'password')).rejects.toThrow(
+        /Apple/,
       );
     });
 
@@ -135,6 +169,7 @@ describe('AuthService', () => {
           id: 'u1',
           email: 'a@b.com',
           passwordHash: 'h',
+          authProvider: 'email',
         });
         mockUsersService.validatePassword.mockResolvedValue(false);
         try {
@@ -304,6 +339,110 @@ describe('AuthService', () => {
         'session-1',
         'hashed-refresh',
         expect.any(Date),
+      );
+    });
+  });
+
+  describe('socialAuth (via appleAuth/googleAuth)', () => {
+    // We test the socialAuth flow by calling appleAuth/googleAuth with mocked
+    // token verification (the external libraries are mocked via moduleNameMapper).
+    // The three branches: returning user, email conflict, new user.
+
+    beforeEach(() => {
+      // Mock jsonwebtoken to simulate a valid Apple token
+      const jwt = require('jsonwebtoken');
+      jwt.decode.mockReturnValue({
+        header: { kid: 'test-kid' },
+        payload: {},
+      });
+      jwt.verify.mockReturnValue({
+        sub: 'apple-sub-123',
+        email: 'social@example.com',
+      });
+    });
+
+    it('should return tokens for existing social user', async () => {
+      mockUsersService.findByProviderUserId.mockResolvedValue({
+        id: 'user-1',
+        email: 'social@example.com',
+      });
+
+      const result = await service.appleAuth({
+        identityToken: 'valid-apple-token',
+      });
+
+      expect(mockUsersService.findByProviderUserId).toHaveBeenCalledWith(
+        'apple',
+        'apple-sub-123',
+      );
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
+      expect(mockUsersService.createSocialUser).not.toHaveBeenCalled();
+    });
+
+    it('should throw ConflictException when email exists with different provider', async () => {
+      mockUsersService.findByProviderUserId.mockResolvedValue(null);
+      mockUsersService.findByEmail.mockResolvedValue({
+        id: 'user-1',
+        email: 'social@example.com',
+        authProvider: 'email',
+      });
+
+      await expect(
+        service.appleAuth({ identityToken: 'valid-token' }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should include existing provider in conflict error message', async () => {
+      mockUsersService.findByProviderUserId.mockResolvedValue(null);
+      mockUsersService.findByEmail.mockResolvedValue({
+        id: 'user-1',
+        email: 'social@example.com',
+        authProvider: 'google',
+      });
+
+      await expect(
+        service.appleAuth({ identityToken: 'valid-token' }),
+      ).rejects.toThrow(/Google/);
+    });
+
+    it('should create new user when no match found', async () => {
+      mockUsersService.findByProviderUserId.mockResolvedValue(null);
+      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUsersService.createSocialUser.mockResolvedValue({
+        id: 'new-user',
+        email: 'social@example.com',
+      });
+
+      const result = await service.appleAuth({
+        identityToken: 'valid-token',
+        firstName: 'John',
+        lastName: 'Doe',
+      });
+
+      expect(mockUsersService.createSocialUser).toHaveBeenCalledWith({
+        email: 'social@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        avatarUrl: undefined,
+        authProvider: 'apple',
+        providerUserId: 'apple-sub-123',
+      });
+      expect(result).toHaveProperty('accessToken');
+    });
+
+    it('should fall back to email prefix when firstName not provided', async () => {
+      mockUsersService.findByProviderUserId.mockResolvedValue(null);
+      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUsersService.createSocialUser.mockResolvedValue({
+        id: 'new-user',
+        email: 'social@example.com',
+      });
+
+      await service.appleAuth({ identityToken: 'valid-token' });
+
+      expect(mockUsersService.createSocialUser).toHaveBeenCalledWith(
+        expect.objectContaining({ firstName: 'social' }),
       );
     });
   });

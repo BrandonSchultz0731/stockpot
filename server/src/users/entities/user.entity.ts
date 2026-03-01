@@ -18,8 +18,14 @@ export class User {
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 255, name: 'password_hash' })
-  passwordHash: string;
+  @Column({ type: 'varchar', length: 255, name: 'password_hash', nullable: true })
+  passwordHash: string | null;
+
+  @Column({ type: 'varchar', length: 20, name: 'auth_provider', default: 'email' })
+  authProvider: string;
+
+  @Column({ type: 'varchar', length: 255, name: 'provider_user_id', nullable: true })
+  providerUserId: string | null;
 
   @Column({ type: 'varchar', length: 100, name: 'first_name' })
   firstName: string;

@@ -17,6 +17,7 @@ import Button from '../components/Button';
 import TextInputRow from '../components/TextInputRow';
 import Divider from '../components/Divider';
 import { useRegisterMutation } from '../hooks/useRegisterMutation';
+import { useSocialAuth } from '../hooks/useSocialAuth';
 
 function getStrengthColors(password: string) {
   let score = 0;
@@ -41,9 +42,19 @@ export default function SignUpScreen() {
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const { mutateAsync, isPending, error } = useRegisterMutation();
+  const {
+    signInWithApple,
+    signInWithGoogle,
+    isPending: isSocialPending,
+    error: socialError,
+    isAppleSupported,
+  } = useSocialAuth();
+
+  const anyPending = isPending || isSocialPending;
   const strengthColors = getStrengthColors(password);
 
-  const displayError = validationError ?? error?.message ?? null;
+  const displayError =
+    validationError ?? error?.message ?? socialError?.message ?? null;
 
   const handleRegister = async () => {
     setValidationError(null);
@@ -209,7 +220,7 @@ export default function SignUpScreen() {
             <Button
               label={isPending ? 'Creating account...' : 'Create Account'}
               onPress={handleRegister}
-              disabled={isPending}
+              disabled={anyPending}
               className="mb-4"
             />
 
@@ -220,13 +231,19 @@ export default function SignUpScreen() {
               <Button
                 variant="outline"
                 label="Google"
+                onPress={() => signInWithGoogle().catch(() => {})}
+                disabled={anyPending}
                 className="flex-1"
               />
-              <Button
-                variant="dark"
-                label="Apple"
-                className="flex-1"
-              />
+              {isAppleSupported && (
+                <Button
+                  variant="dark"
+                  label="Apple"
+                  onPress={() => signInWithApple().catch(() => {})}
+                  disabled={anyPending}
+                  className="flex-1"
+                />
+              )}
             </View>
           </View>
 

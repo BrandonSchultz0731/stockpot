@@ -1,4 +1,5 @@
-import { Pressable, Text } from 'react-native';
+import React from 'react';
+import { Pressable, Text, View } from 'react-native';
 
 type ButtonVariant = 'primary' | 'outline' | 'dark';
 
@@ -8,6 +9,7 @@ interface ButtonProps {
   variant?: ButtonVariant;
   disabled?: boolean;
   className?: string;
+  icon?: React.ReactNode;
 }
 
 const variantStyles: Record<
@@ -34,6 +36,7 @@ export default function Button({
   variant = 'primary',
   disabled = false,
   className = '',
+  icon,
 }: ButtonProps) {
   const v = variantStyles[variant];
 
@@ -42,6 +45,7 @@ export default function Button({
       className={`flex-row items-center justify-center rounded-button ${v.container} ${disabled ? 'opacity-50' : ''} ${className}`}
       disabled={disabled}
       onPress={onPress}>
+      {icon && <View className="mr-2">{icon}</View>}
       <Text className={v.text}>
         {label}
       </Text>

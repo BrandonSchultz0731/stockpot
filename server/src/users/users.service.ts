@@ -50,8 +50,41 @@ export class UsersService {
     return this.usersRepo.findOne({ where: { id } });
   }
 
-  async validatePassword(plaintext: string, hash: string): Promise<boolean> {
+  async validatePassword(
+    plaintext: string,
+    hash: string | null,
+  ): Promise<boolean> {
+    if (!hash) return false;
     return bcrypt.compare(plaintext, hash);
+  }
+
+  async findByProviderUserId(
+    provider: string,
+    providerUserId: string,
+  ): Promise<User | null> {
+    return this.usersRepo.findOne({
+      where: { authProvider: provider, providerUserId },
+    });
+  }
+
+  async createSocialUser(data: {
+    email: string;
+    firstName: string;
+    lastName?: string;
+    avatarUrl?: string;
+    authProvider: string;
+    providerUserId: string;
+  }): Promise<User> {
+    const user = this.usersRepo.create({
+      email: data.email,
+      passwordHash: null,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      avatarUrl: data.avatarUrl,
+      authProvider: data.authProvider,
+      providerUserId: data.providerUserId,
+    });
+    return this.usersRepo.save(user);
   }
 
   async createSession(data: {

@@ -7,6 +7,8 @@ const mockAuthService = {
   login: jest.fn(),
   refresh: jest.fn(),
   logout: jest.fn(),
+  appleAuth: jest.fn(),
+  googleAuth: jest.fn(),
 };
 
 describe('AuthController', () => {
@@ -64,6 +66,40 @@ describe('AuthController', () => {
         'a@b.com',
         'pass1234',
       );
+      expect(result).toEqual(tokens);
+    });
+  });
+
+  describe('apple', () => {
+    it('should delegate to AuthService.appleAuth', async () => {
+      const dto = { identityToken: 'apple-token', firstName: 'John' };
+      const tokens = {
+        accessToken: 'at',
+        refreshToken: 'rt',
+        expiresIn: '15m',
+      };
+      mockAuthService.appleAuth.mockResolvedValue(tokens);
+
+      const result = await controller.apple(dto);
+
+      expect(mockAuthService.appleAuth).toHaveBeenCalledWith(dto);
+      expect(result).toEqual(tokens);
+    });
+  });
+
+  describe('google', () => {
+    it('should delegate to AuthService.googleAuth', async () => {
+      const dto = { idToken: 'google-token' };
+      const tokens = {
+        accessToken: 'at',
+        refreshToken: 'rt',
+        expiresIn: '15m',
+      };
+      mockAuthService.googleAuth.mockResolvedValue(tokens);
+
+      const result = await controller.google(dto);
+
+      expect(mockAuthService.googleAuth).toHaveBeenCalledWith(dto);
       expect(result).toEqual(tokens);
     });
   });

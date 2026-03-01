@@ -162,6 +162,81 @@ describe('UsersService', () => {
 
       expect(result).toBe(false);
     });
+
+    it('should return false for null hash (social-only user)', async () => {
+      const result = await service.validatePassword('any-password', null);
+
+      expect(result).toBe(false);
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('findByProviderUserId', () => {
+    it('should return user when found', async () => {
+      const user = { id: 'u1', authProvider: 'google', providerUserId: 'g-123' };
+      mockUsersRepo.findOne.mockResolvedValue(user);
+
+      const result = await service.findByProviderUserId('google', 'g-123');
+
+      expect(result).toEqual(user);
+      expect(mockUsersRepo.findOne).toHaveBeenCalledWith({
+        where: { authProvider: 'google', providerUserId: 'g-123' },
+      });
+    });
+
+    it('should return null when not found', async () => {
+      mockUsersRepo.findOne.mockResolvedValue(null);
+
+      const result = await service.findByProviderUserId('apple', 'nope');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('createSocialUser', () => {
+    it('should create user with null passwordHash', async () => {
+      const userData = {
+        email: 'social@example.com',
+        firstName: 'Social',
+        lastName: 'User',
+        authProvider: 'google',
+        providerUserId: 'g-123',
+      };
+      const createdUser = { id: 'u1', ...userData, passwordHash: null };
+      mockUsersRepo.create.mockReturnValue(createdUser);
+      mockUsersRepo.save.mockResolvedValue(createdUser);
+
+      const result = await service.createSocialUser(userData);
+
+      expect(mockUsersRepo.create).toHaveBeenCalledWith({
+        email: 'social@example.com',
+        passwordHash: null,
+        firstName: 'Social',
+        lastName: 'User',
+        avatarUrl: undefined,
+        authProvider: 'google',
+        providerUserId: 'g-123',
+      });
+      expect(result).toEqual(createdUser);
+    });
+
+    it('should store avatarUrl when provided', async () => {
+      const userData = {
+        email: 'social@example.com',
+        firstName: 'Social',
+        authProvider: 'google',
+        providerUserId: 'g-123',
+        avatarUrl: 'https://example.com/photo.jpg',
+      };
+      mockUsersRepo.create.mockReturnValue({});
+      mockUsersRepo.save.mockResolvedValue({});
+
+      await service.createSocialUser(userData);
+
+      expect(mockUsersRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ avatarUrl: 'https://example.com/photo.jpg' }),
+      );
+    });
   });
 
   describe('session CRUD', () => {

@@ -2,11 +2,16 @@ import {
   Injectable,
   UnauthorizedException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { OAuth2Client } from 'google-auth-library';
+import * as jwt from 'jsonwebtoken';
+import { JwksClient } from 'jwks-rsa';
 import { UsersService } from '../users/users.service';
+import { AppleAuthDto, GoogleAuthDto } from './dto/social-auth.dto';
 
 export interface TokenPair {
   accessToken: string;
@@ -36,6 +41,13 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.authProvider !== 'email') {
+      const providerLabel = user.authProvider === 'apple' ? 'Apple' : 'Google';
+      throw new ConflictException(
+        `An account with this email already exists. Please log in with ${providerLabel}.`,
+      );
     }
 
     const valid = await this.usersService.validatePassword(
@@ -103,6 +115,135 @@ export class AuthService {
     if (payload.jti) {
       await this.usersService.deleteSession(payload.jti);
     }
+  }
+
+  async appleAuth(dto: AppleAuthDto): Promise<TokenPair> {
+    const { sub, email } = await this.verifyAppleToken(dto.identityToken);
+    return this.socialAuth({
+      provider: 'apple',
+      providerUserId: sub,
+      email,
+      firstName: dto.firstName || email.split('@')[0],
+      lastName: dto.lastName,
+    });
+  }
+
+  async googleAuth(dto: GoogleAuthDto): Promise<TokenPair> {
+    const { sub, email, firstName, lastName, picture } =
+      await this.verifyGoogleToken(dto.idToken);
+    return this.socialAuth({
+      provider: 'google',
+      providerUserId: sub,
+      email,
+      firstName: firstName || email.split('@')[0],
+      lastName,
+      avatarUrl: picture,
+    });
+  }
+
+  private async socialAuth(params: {
+    provider: string;
+    providerUserId: string;
+    email: string;
+    firstName: string;
+    lastName?: string;
+    avatarUrl?: string;
+  }): Promise<TokenPair> {
+    // 1. Look up by provider + providerUserId (returning social user)
+    const existingSocial = await this.usersService.findByProviderUserId(
+      params.provider,
+      params.providerUserId,
+    );
+    if (existingSocial) {
+      return this.issueTokenPair(existingSocial.id, existingSocial.email);
+    }
+
+    // 2. Look up by email — existing account with different provider
+    const existingEmail = await this.usersService.findByEmail(params.email);
+    if (existingEmail) {
+      const providerLabel =
+        existingEmail.authProvider === 'email'
+          ? 'email and password'
+          : existingEmail.authProvider === 'apple'
+            ? 'Apple'
+            : 'Google';
+      throw new ConflictException(
+        `An account with this email already exists. Please log in with ${providerLabel}.`,
+      );
+    }
+
+    // 3. No match — create new social user
+    const user = await this.usersService.createSocialUser({
+      email: params.email,
+      firstName: params.firstName,
+      lastName: params.lastName,
+      avatarUrl: params.avatarUrl,
+      authProvider: params.provider,
+      providerUserId: params.providerUserId,
+    });
+
+    return this.issueTokenPair(user.id, user.email);
+  }
+
+  private async verifyAppleToken(
+    identityToken: string,
+  ): Promise<{ sub: string; email: string }> {
+    const client = new JwksClient({
+      jwksUri: 'https://appleid.apple.com/auth/keys',
+      cache: true,
+    });
+
+    const decoded = jwt.decode(identityToken, { complete: true });
+    if (!decoded || typeof decoded === 'string') {
+      throw new UnauthorizedException('Invalid Apple identity token');
+    }
+
+    const kid = decoded.header.kid;
+    const key = await client.getSigningKey(kid);
+    const publicKey = key.getPublicKey();
+
+    const payload = jwt.verify(identityToken, publicKey, {
+      algorithms: ['RS256'],
+      issuer: 'https://appleid.apple.com',
+      audience: this.configService.get<string>('APPLE_CLIENT_ID'),
+    }) as jwt.JwtPayload;
+
+    if (!payload.sub || !payload.email) {
+      throw new UnauthorizedException('Apple token missing required claims');
+    }
+
+    return { sub: payload.sub, email: payload.email as string };
+  }
+
+  private async verifyGoogleToken(
+    idToken: string,
+  ): Promise<{
+    sub: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    picture?: string;
+  }> {
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    const client = new OAuth2Client(clientId);
+
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: clientId,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.sub || !payload.email) {
+      throw new UnauthorizedException('Invalid Google ID token');
+    }
+
+    return {
+      sub: payload.sub,
+      email: payload.email,
+      firstName: payload.given_name,
+      lastName: payload.family_name,
+      picture: payload.picture,
+    };
   }
 
   private async issueTokenPair(
