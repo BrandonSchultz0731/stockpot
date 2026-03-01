@@ -48,7 +48,7 @@ export default function QuantityUnitInput({
         <ChevronDown size={16} color={colors.muted} />
       </Pressable>
 
-      <Modal visible={showPicker} transparent animationType="slide">
+      <Modal visible={showPicker} transparent animationType="fade">
         <Pressable
           className="flex-1 bg-black/40"
           onPress={() => setShowPicker(false)}

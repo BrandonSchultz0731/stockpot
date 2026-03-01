@@ -31,6 +31,8 @@ interface OpenFoodFactsResponse {
   status: number;
   product?: {
     product_name?: string;
+    generic_name?: string;
+    ingredients_text?: string;
     brands?: string;
     code?: string;
     quantity?: string;
@@ -471,7 +473,7 @@ export class FoodCacheService {
   ): Promise<FoodSearchResult | null> {
     try {
       const response = await fetch(
-        `https://world.openfoodfacts.org/api/v2/product/${barcode}?fields=product_name,brands,code,quantity,serving_size,nutriments`,
+        `https://world.openfoodfacts.org/api/v2/product/${barcode}?fields=product_name,generic_name,ingredients_text,brands,code,quantity,serving_size,nutriments`,
       );
 
       if (!response.ok) {
@@ -482,12 +484,18 @@ export class FoodCacheService {
       }
 
       const data: OpenFoodFactsResponse = await response.json();
-      if (data.status !== 1 || !data.product?.product_name) return null;
+      if (data.status !== 1 || !data.product) return null;
 
       const product = data.product;
+      const name =
+        product.product_name ||
+        product.generic_name ||
+        product.ingredients_text ||
+        null;
+      if (!name) return null;
 
       const result: FoodSearchResult = {
-        name: product.product_name,
+        name,
         brand: product.brands || null,
         barcode: product.code || barcode,
         nutritionPer100g: this.extractOffNutrition(product.nutriments),
