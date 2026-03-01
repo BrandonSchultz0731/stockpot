@@ -6,7 +6,7 @@ import { FoodCache } from './entities/food-cache.entity';
 import { UnitOfMeasure, StorageLocation, ShelfLife, FOOD_CATEGORIES } from '@shared/enums';
 import { AnthropicService } from '../anthropic/anthropic.service';
 import { CLAUDE_MODELS } from '../ai-models';
-import { buildIngredientResolutionPrompt, buildBatchCategoryPrompt, buildShelfLifePrompt } from '../prompts';
+import { buildIngredientResolutionPrompt, buildBatchCategoryPrompt, buildShelfLifePrompt, buildFoodMatchPrompt } from '../prompts';
 
 interface UsdaFoodNutrient {
   nutrientNumber: string;
@@ -170,8 +170,8 @@ export class FoodCacheService {
     }
 
     for (const [lower, originalName] of uniqueNames) {
-      // Search local food_cache for matches
-      const localResults = await this.searchLocal(originalName, 3);
+      // Search local food_cache for matches (with word-level fallback)
+      const localResults = await this.searchLocalWithFallback(originalName, 3);
 
       // Combine local results with pantry items
       const candidatePool = new Map<string, string>();
@@ -196,10 +196,16 @@ export class FoodCacheService {
       if (exactMatch) {
         result.set(lower, exactMatch);
       } else {
-        unresolvedNames.push(originalName);
-        // Add candidates to the global pool for the AI call
-        for (const [id, name] of candidatePool) {
-          allCandidates.set(id, { id, name });
+        // Check aliases before falling through to AI batch
+        const aliasMatch = await this.findByAlias(originalName);
+        if (aliasMatch) {
+          result.set(lower, aliasMatch.id);
+        } else {
+          unresolvedNames.push(originalName);
+          // Add candidates to the global pool for the AI call
+          for (const [id, name] of candidatePool) {
+            allCandidates.set(id, { id, name });
+          }
         }
       }
     }
@@ -244,9 +250,14 @@ export class FoodCacheService {
       }
     }
 
-    // Merge AI results
+    // Merge AI results and persist aliases
     for (const [lower, id] of aiResolved) {
       result.set(lower, id);
+      // Persist alias so this name resolves instantly next time
+      const originalName = uniqueNames.get(lower);
+      if (originalName) {
+        this.addAlias(id, originalName).catch(() => {});
+      }
     }
 
     // 4. Create food_cache entries for still-unresolved names
@@ -264,18 +275,22 @@ export class FoodCacheService {
   }
 
   async searchLocal(query: string, limit: number): Promise<FoodSearchResult[]> {
-    const results = await this.foodCacheRepo.find({
-      where: [
-        { name: ILike(`%${query}%`), usdaDataType: ILike('Foundation') },
-        { name: ILike(`%${query}%`), usdaDataType: ILike('SR Legacy') },
-        { usdaDescription: ILike(`%${query}%`), usdaDataType: ILike('Foundation') },
-        { usdaDescription: ILike(`%${query}%`), usdaDataType: ILike('SR Legacy') },
-        // Include items with no data type (user-created / non-USDA)
-        { name: ILike(`%${query}%`), usdaDataType: IsNull() },
-      ],
-      take: limit,
-      order: { name: 'ASC' },
-    });
+    const results = await this.foodCacheRepo
+      .createQueryBuilder('fc')
+      .where(
+        `(
+          (fc.name ILIKE :q AND fc.usda_data_type ILIKE 'Foundation')
+          OR (fc.name ILIKE :q AND fc.usda_data_type ILIKE 'SR Legacy')
+          OR (fc.usda_description ILIKE :q AND fc.usda_data_type ILIKE 'Foundation')
+          OR (fc.usda_description ILIKE :q AND fc.usda_data_type ILIKE 'SR Legacy')
+          OR (fc.name ILIKE :q AND fc.usda_data_type IS NULL)
+          OR (fc.aliases::text ILIKE :q)
+        )`,
+        { q: `%${query}%` },
+      )
+      .orderBy('fc.name', 'ASC')
+      .take(limit)
+      .getMany();
 
     return results.map((r) => ({
       id: r.id,
@@ -512,6 +527,207 @@ export class FoodCacheService {
 
   async findByFdcId(fdcId: number): Promise<FoodCache | null> {
     return this.foodCacheRepo.findOne({ where: { fdcId } });
+  }
+
+  async findByAlias(name: string): Promise<FoodCache | null> {
+    const result = await this.foodCacheRepo
+      .createQueryBuilder('fc')
+      .where(
+        `EXISTS (SELECT 1 FROM jsonb_array_elements_text(fc.aliases) AS a WHERE LOWER(a) = LOWER(:name))`,
+        { name },
+      )
+      .getOne();
+    return result ?? null;
+  }
+
+  async addAlias(foodCacheId: string, alias: string): Promise<void> {
+    const entry = await this.foodCacheRepo.findOne({
+      where: { id: foodCacheId },
+    });
+    if (!entry) return;
+
+    const lowerAlias = alias.toLowerCase();
+    if (entry.name.toLowerCase() === lowerAlias) return;
+
+    const existing = entry.aliases ?? [];
+    if (existing.some((a) => a.toLowerCase() === lowerAlias)) return;
+
+    entry.aliases = [...existing, alias];
+    await this.foodCacheRepo.save(entry);
+  }
+
+  /**
+   * Searches local food_cache with word-level fallback.
+   * If the full name (e.g. "Broccoli Florets") finds nothing,
+   * tries individual words (e.g. "Broccoli", "Florets") to find candidates.
+   */
+  private async searchLocalWithFallback(
+    name: string,
+    limit: number,
+  ): Promise<FoodSearchResult[]> {
+    const results = await this.searchLocal(name, limit);
+    if (results.length > 0) return results;
+
+    const words = name.split(/\s+/).filter((w) => w.length >= 3);
+    if (words.length <= 1) return results;
+
+    const seen = new Set<string>();
+    const combined: FoodSearchResult[] = [];
+    for (const word of words) {
+      const wordResults = await this.searchLocal(word, limit);
+      for (const r of wordResults) {
+        if (r.id && !seen.has(r.id)) {
+          seen.add(r.id);
+          combined.push(r);
+        }
+      }
+    }
+    return combined.slice(0, limit);
+  }
+
+  async findBestMatch(name: string, userId: string): Promise<FoodCache | null> {
+    // 1. Exact match
+    const exact = await this.foodCacheRepo.findOne({
+      where: { name: ILike(name) },
+    });
+    if (exact) return exact;
+
+    // 2. Alias match
+    const aliasMatch = await this.findByAlias(name);
+    if (aliasMatch) return aliasMatch;
+
+    // 3. AI match — search with word-level fallback to find candidates
+    const candidates = await this.searchLocalWithFallback(name, 5);
+    const candidatesWithIds = candidates.filter((c) => c.id);
+    if (candidatesWithIds.length === 0) return null;
+
+    const prompt = buildFoodMatchPrompt([
+      {
+        name,
+        candidates: candidatesWithIds.map((c) => ({ id: c.id!, name: c.name })),
+      },
+    ]);
+
+    try {
+      const response = await this.anthropicService.sendMessage(userId, {
+        model: CLAUDE_MODELS['haiku-4.5'],
+        maxTokens: 256,
+        messages: [{ role: 'user', content: prompt }],
+        messageType: 'food-match',
+      });
+
+      const rawText =
+        response.content[0]?.type === 'text' ? response.content[0].text : '';
+      let parsed: Record<string, string | null> = {};
+      try {
+        parsed = JSON.parse(rawText);
+      } catch {
+        const objectMatch = rawText.match(/\{[\s\S]*\}/);
+        if (objectMatch) {
+          try {
+            parsed = JSON.parse(objectMatch[0]);
+          } catch {
+            // fall through
+          }
+        }
+      }
+
+      const matchedId = parsed[name];
+      if (matchedId) {
+        const matched = await this.findById(matchedId);
+        if (matched) return matched;
+      }
+    } catch (error) {
+      this.logger.error(`AI food matching failed for "${name}"`, error);
+    }
+
+    return null;
+  }
+
+  async findBestMatches(
+    names: string[],
+    userId: string,
+  ): Promise<Map<string, FoodCache | null>> {
+    const result = new Map<string, FoodCache | null>();
+    if (names.length === 0) return result;
+
+    const needsAi: { name: string; candidates: { id: string; name: string }[] }[] = [];
+
+    // 1. Check exact and alias matches locally
+    for (const name of names) {
+      const exact = await this.foodCacheRepo.findOne({
+        where: { name: ILike(name) },
+      });
+      if (exact) {
+        result.set(name, exact);
+        continue;
+      }
+
+      const aliasMatch = await this.findByAlias(name);
+      if (aliasMatch) {
+        result.set(name, aliasMatch);
+        continue;
+      }
+
+      // Gather candidates for AI — with word-level fallback
+      const candidates = await this.searchLocalWithFallback(name, 5);
+      const candidatesWithIds = candidates
+        .filter((c) => c.id)
+        .map((c) => ({ id: c.id!, name: c.name }));
+
+      if (candidatesWithIds.length > 0) {
+        needsAi.push({ name, candidates: candidatesWithIds });
+      } else {
+        result.set(name, null);
+      }
+    }
+
+    // 2. Single AI call for all unresolved names
+    if (needsAi.length > 0) {
+      const prompt = buildFoodMatchPrompt(needsAi);
+
+      try {
+        const response = await this.anthropicService.sendMessage(userId, {
+          model: CLAUDE_MODELS['haiku-4.5'],
+          maxTokens: 1024,
+          messages: [{ role: 'user', content: prompt }],
+          messageType: 'food-match',
+        });
+
+        const rawText =
+          response.content[0]?.type === 'text' ? response.content[0].text : '';
+        let parsed: Record<string, string | null> = {};
+        try {
+          parsed = JSON.parse(rawText);
+        } catch {
+          const objectMatch = rawText.match(/\{[\s\S]*\}/);
+          if (objectMatch) {
+            try {
+              parsed = JSON.parse(objectMatch[0]);
+            } catch {
+              // fall through
+            }
+          }
+        }
+
+        for (const item of needsAi) {
+          const matchedId = parsed[item.name];
+          if (matchedId) {
+            const matched = await this.findById(matchedId);
+            result.set(item.name, matched);
+          } else {
+            result.set(item.name, null);
+          }
+        }
+      } catch (error) {
+        this.logger.error('AI batch food matching failed', error);
+        for (const item of needsAi) {
+          result.set(item.name, null);
+        }
+      }
+    }
+
+    return result;
   }
 
   async findByBarcode(barcode: string, userId?: string): Promise<FoodSearchResult | null> {

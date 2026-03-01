@@ -52,16 +52,11 @@ export class PantryService {
     }
 
     if (!foodCacheId) {
-      // Fully manual entry — try to match an existing food cache entry by name
-      const localResults = await this.foodCacheService.searchLocal(
-        dto.displayName,
-        5,
-      );
-      const exactMatch = localResults.find(
-        (r) => r.name.toLowerCase() === dto.displayName.toLowerCase(),
-      );
-      if (exactMatch?.id) {
-        foodCacheId = exactMatch.id;
+      // Fully manual entry — try to match an existing food cache entry
+      const match = await this.foodCacheService.findBestMatch(dto.displayName, userId);
+      if (match) {
+        foodCacheId = match.id;
+        this.foodCacheService.addAlias(match.id, dto.displayName).catch(() => {});
       } else {
         const cached = await this.foodCacheService.cacheUsdaFood({
           name: dto.displayName,
@@ -130,6 +125,26 @@ export class PantryService {
     userId: string,
     items: CreatePantryItemDto[],
   ): Promise<PantryItem[]> {
+    // Batch AI match for items that need fuzzy matching
+    const needsMatch = items.filter((i) => !i.foodCacheId && !i.fdcId);
+    const names = needsMatch.map((i) => i.displayName);
+
+    const matchMap =
+      names.length > 0
+        ? await this.foodCacheService.findBestMatches(names, userId)
+        : new Map();
+
+    // Pre-assign matched foodCacheIds and persist aliases
+    for (const dto of items) {
+      if (!dto.foodCacheId && !dto.fdcId) {
+        const match = matchMap.get(dto.displayName);
+        if (match) {
+          dto.foodCacheId = match.id;
+          this.foodCacheService.addAlias(match.id, dto.displayName).catch(() => {});
+        }
+      }
+    }
+
     const results: PantryItem[] = [];
     for (const dto of items) {
       results.push(await this.create(userId, dto));
