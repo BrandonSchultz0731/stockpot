@@ -15,6 +15,7 @@ export interface FoodSearchResult {
   barcode: string | null;
   packageQuantity?: number;
   packageUnit?: string;
+  shelfLife?: Record<string, number>;
 }
 
 function useDebouncedValue(value: string, delayMs: number): string {

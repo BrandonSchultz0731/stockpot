@@ -7,6 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { GetUser } from '../auth/decorators/get-user.decorator';
 import { FoodCacheService } from './food-cache.service';
 
 @Controller('food')
@@ -26,8 +27,11 @@ export class FoodCacheController {
   }
 
   @Get('barcode/:code')
-  async findByBarcode(@Param('code') code: string) {
-    const result = await this.foodCacheService.findByBarcode(code);
+  async findByBarcode(
+    @GetUser('id') userId: string,
+    @Param('code') code: string,
+  ) {
+    const result = await this.foodCacheService.findByBarcode(code, userId);
     if (!result) {
       throw new NotFoundException('No food found for this barcode');
     }

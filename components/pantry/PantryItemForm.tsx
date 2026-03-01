@@ -4,8 +4,8 @@ import Button from '../Button';
 import StorageLocationPills from './StorageLocationPills';
 import QuantityUnitInput from './QuantityUnitInput';
 import ExpirationDateInput from './ExpirationDateInput';
-import { UnitOfMeasure, StorageLocation } from '../../shared/enums';
-import { formatISODate } from '../../shared/dates';
+import { UnitOfMeasure, StorageLocation, type ShelfLife } from '../../shared/enums';
+import { calculateExpirationDate, formatISODate } from '../../shared/dates';
 import colors from '../../theme/colors';
 
 interface PantryItemFormValues {
@@ -25,6 +25,7 @@ interface PantryItemFormProps {
     unit?: UnitOfMeasure;
     storageLocation?: StorageLocation | null;
     expirationDate?: Date | null;
+    estimatedShelfLife?: ShelfLife;
     notes?: string;
   };
   onSubmit: (values: PantryItemFormValues) => void;
@@ -38,6 +39,13 @@ export default function PantryItemForm({
   submitLabel,
   isPending,
 }: PantryItemFormProps) {
+  const shelfLife = initialValues?.estimatedShelfLife;
+
+  // Pre-compute expiration from shelf life if no explicit date provided
+  const prefilledDate = !initialValues?.expirationDate && shelfLife
+    ? calculateExpirationDate(shelfLife, initialValues?.storageLocation)
+    : null;
+
   const [displayName, setDisplayName] = useState(initialValues?.displayName ?? '');
   const [quantity, setQuantity] = useState(initialValues?.quantity ?? '1');
   const [unit, setUnit] = useState<UnitOfMeasure>(initialValues?.unit ?? UnitOfMeasure.Count);
@@ -45,9 +53,35 @@ export default function PantryItemForm({
     initialValues?.storageLocation ?? null,
   );
   const [expirationDate, setExpirationDate] = useState<Date | null>(
-    initialValues?.expirationDate ?? null,
+    initialValues?.expirationDate ?? prefilledDate,
   );
+  const [expiryIsEstimated, setExpiryIsEstimated] = useState(!!prefilledDate);
   const [notes, setNotes] = useState(initialValues?.notes ?? '');
+
+  const handleStorageChange = (newStorage: StorageLocation | null) => {
+    setStorageLocation(newStorage);
+
+    // Recalculate expiration if still estimated
+    if (expiryIsEstimated && shelfLife) {
+      const newDate = calculateExpirationDate(shelfLife, newStorage);
+      setExpirationDate(newDate);
+    }
+  };
+
+  const handleExpirationChange = (date: Date | null) => {
+    setExpirationDate(date);
+    if (date) {
+      // User manually set a date — no longer estimated
+      setExpiryIsEstimated(false);
+    } else if (shelfLife) {
+      // User cleared the date — recalculate from shelf life
+      const recalc = calculateExpirationDate(shelfLife, storageLocation);
+      if (recalc) {
+        setExpirationDate(recalc);
+        setExpiryIsEstimated(true);
+      }
+    }
+  };
 
   const handleSubmit = () => {
     const qty = parseFloat(quantity);
@@ -70,9 +104,7 @@ export default function PantryItemForm({
       unit,
       storageLocation: storageLocation ?? undefined,
       expirationDate: formattedDate,
-      // When user provides a date, mark it as not estimated.
-      // When blank, omit so the backend can estimate.
-      expiryIsEstimated: formattedDate ? false : undefined,
+      expiryIsEstimated: formattedDate ? expiryIsEstimated : undefined,
       notes: notes.trim() || undefined,
     });
   };
@@ -115,7 +147,7 @@ export default function PantryItemForm({
       <View className="mb-4">
         <StorageLocationPills
           selected={storageLocation}
-          onSelect={setStorageLocation}
+          onSelect={handleStorageChange}
         />
       </View>
 
@@ -126,7 +158,7 @@ export default function PantryItemForm({
       <View className="mb-4">
         <ExpirationDateInput
           date={expirationDate}
-          onChange={setExpirationDate}
+          onChange={handleExpirationChange}
         />
       </View>
 

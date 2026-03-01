@@ -61,16 +61,16 @@ describe('FoodCacheController', () => {
       const food = { name: 'Greek Yogurt', barcode: '894700010045', source: 'cache' };
       mockFoodCacheService.findByBarcode.mockResolvedValue(food);
 
-      const result = await controller.findByBarcode('894700010045');
+      const result = await controller.findByBarcode('user-1', '894700010045');
 
-      expect(mockFoodCacheService.findByBarcode).toHaveBeenCalledWith('894700010045');
+      expect(mockFoodCacheService.findByBarcode).toHaveBeenCalledWith('894700010045', 'user-1');
       expect(result).toEqual(food);
     });
 
     it('should throw NotFoundException when barcode is not found', async () => {
       mockFoodCacheService.findByBarcode.mockResolvedValue(null);
 
-      await expect(controller.findByBarcode('000000000000')).rejects.toThrow(
+      await expect(controller.findByBarcode('user-1', '000000000000')).rejects.toThrow(
         NotFoundException,
       );
     });
