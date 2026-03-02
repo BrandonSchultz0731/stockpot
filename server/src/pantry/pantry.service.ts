@@ -6,7 +6,7 @@ import { FoodCacheService } from '../food-cache/food-cache.service';
 import { AnthropicService } from '../anthropic/anthropic.service';
 import { CreatePantryItemDto } from './dto/create-pantry-item.dto';
 import { UpdatePantryItemDto } from './dto/update-pantry-item.dto';
-import { StorageLocation, ShelfLife, FOOD_CATEGORIES } from '@shared/enums';
+import { StorageLocation, ShelfLife, FOOD_CATEGORIES, MessageType } from '@shared/enums';
 import { calculateExpirationDate, formatISODate } from '@shared/dates';
 import { CLAUDE_MODELS } from '../ai-models';
 import { buildShelfLifePrompt, buildCategoryPrompt } from '../prompts';
@@ -268,7 +268,7 @@ export class PantryService {
             content: buildShelfLifePrompt(displayName),
           },
         ],
-        messageType: 'shelf-life',
+        messageType: MessageType.ShelfLife,
       });
 
       const rawText =
@@ -338,7 +338,7 @@ export class PantryService {
           content: buildCategoryPrompt(displayName),
         },
       ],
-      messageType: 'food-category',
+      messageType: MessageType.FoodCategory,
     });
 
     const rawText =

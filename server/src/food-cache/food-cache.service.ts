@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, IsNull, In } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { FoodCache } from './entities/food-cache.entity';
-import { UnitOfMeasure, StorageLocation, ShelfLife, FOOD_CATEGORIES } from '@shared/enums';
+import { UnitOfMeasure, StorageLocation, ShelfLife, FOOD_CATEGORIES, MessageType } from '@shared/enums';
 import { AnthropicService } from '../anthropic/anthropic.service';
 import { CLAUDE_MODELS } from '../ai-models';
 import { buildIngredientResolutionPrompt, buildBatchCategoryPrompt, buildShelfLifePrompt, buildFoodMatchPrompt } from '../prompts';
@@ -221,7 +221,7 @@ export class FoodCacheService {
           model: CLAUDE_MODELS['haiku-4.5'],
           maxTokens: 1024,
           messages: [{ role: 'user', content: prompt }],
-          messageType: 'ingredient-resolution',
+          messageType: MessageType.IngredientResolution,
         });
 
         const rawText =
@@ -379,7 +379,7 @@ export class FoodCacheService {
         model: CLAUDE_MODELS['haiku-4.5'],
         maxTokens: 256,
         messages: [{ role: 'user', content: buildShelfLifePrompt(foodName) }],
-        messageType: 'shelf-life',
+        messageType: MessageType.ShelfLife,
       });
 
       const rawText =
@@ -468,7 +468,7 @@ export class FoodCacheService {
         model: CLAUDE_MODELS['haiku-4.5'],
         maxTokens: 1024,
         messages: [{ role: 'user', content: prompt }],
-        messageType: 'food-category',
+        messageType: MessageType.FoodCategory,
       });
 
       const rawText =
@@ -613,7 +613,7 @@ export class FoodCacheService {
         model: CLAUDE_MODELS['haiku-4.5'],
         maxTokens: 256,
         messages: [{ role: 'user', content: prompt }],
-        messageType: 'food-match',
+        messageType: MessageType.FoodMatch,
       });
 
       const rawText =
@@ -691,7 +691,7 @@ export class FoodCacheService {
           model: CLAUDE_MODELS['haiku-4.5'],
           maxTokens: 1024,
           messages: [{ role: 'user', content: prompt }],
-          messageType: 'food-match',
+          messageType: MessageType.FoodMatch,
         });
 
         const rawText =

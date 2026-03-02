@@ -12,12 +12,11 @@ import { MealPlanEntry } from './entities/meal-plan-entry.entity';
 import { Recipe } from '../recipes/entities/recipe.entity';
 import { PantryService } from '../pantry/pantry.service';
 import { AnthropicService } from '../anthropic/anthropic.service';
-import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
 import { UsersService } from '../users/users.service';
 import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
-import { MealType, UnitOfMeasure, RecipeIngredient, RecipeSource, MealScheduleSlot, DAY_NAMES } from '@shared/enums';
+import { MealType, UnitOfMeasure, RecipeIngredient, RecipeSource, MealScheduleSlot, DAY_NAMES, MessageType } from '@shared/enums';
 import { ACTIVE_MODEL, CLAUDE_MODELS } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
@@ -39,7 +38,6 @@ export class MealPlansService {
     private readonly recipeRepo: Repository<Recipe>,
     private readonly pantryService: PantryService,
     private readonly anthropicService: AnthropicService,
-    private readonly usageTrackingService: UsageTrackingService,
     private readonly usersService: UsersService,
     private readonly foodCacheService: FoodCacheService,
     private readonly shoppingListsService: ShoppingListsService,
@@ -155,10 +153,8 @@ export class MealPlansService {
         model: ACTIVE_MODEL,
         maxTokens: 16384,
         messages: [{ role: 'user', content: prompt }],
-        messageType: 'meal-plan',
+        messageType: MessageType.MealPlan,
       });
-
-      await this.usageTrackingService.increment(userId, 'mealPlansGenerated');
 
       const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
       const meals = this.parseMealPlanResponse(rawText);
@@ -299,7 +295,7 @@ export class MealPlansService {
         model: ACTIVE_MODEL,
         maxTokens: 2048,
         messages: [{ role: 'user', content: prompt }],
-        messageType: 'meal-swap',
+        messageType: MessageType.MealSwap,
       });
     } catch (error) {
       this.logger.error('Claude API call failed for meal swap', error);
@@ -448,7 +444,7 @@ export class MealPlansService {
               ],
             },
           ],
-          messageType: 'photo-import',
+          messageType: MessageType.PhotoImport,
         });
       } catch (error) {
         this.logger.error('Claude API call failed for photo recipe import', error);
@@ -504,7 +500,7 @@ export class MealPlansService {
           model: ACTIVE_MODEL,
           maxTokens: 2048,
           messages: [{ role: 'user', content: prompt }],
-          messageType: 'url-import',
+          messageType: MessageType.UrlImport,
         });
       } catch (error) {
         this.logger.error('Claude API call failed for URL recipe import', error);
@@ -551,7 +547,7 @@ export class MealPlansService {
           model: ACTIVE_MODEL,
           maxTokens: 2048,
           messages: [{ role: 'user', content: prompt }],
-          messageType: 'meal-swap',
+          messageType: MessageType.MealSwap,
         });
       } catch (error) {
         this.logger.error('Claude API call failed for add entry', error);
@@ -688,7 +684,7 @@ export class MealPlansService {
         model: CLAUDE_MODELS['haiku-4.5'],
         maxTokens: 4096,
         messages: [{ role: 'user', content: prompt }],
-        messageType: 'cook-deduction',
+        messageType: MessageType.CookDeduction,
       });
     } catch (error) {
       this.logger.error('Claude API call failed for cook deduction preview', error);

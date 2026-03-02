@@ -7,6 +7,7 @@ import {
   Unique,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { MessageType } from '@shared/enums';
 
 @Entity('usage_tracking')
 @Unique(['userId', 'periodStart'])
@@ -20,20 +21,8 @@ export class UsageTracking {
   @Column({ type: 'date', name: 'period_start' })
   periodStart: string;
 
-  @Column({ type: 'int', name: 'receipt_scans', default: 0 })
-  receiptScans: number;
-
-  @Column({ type: 'int', name: 'meal_plans_generated', default: 0 })
-  mealPlansGenerated: number;
-
-  @Column({ type: 'int', name: 'recipes_generated', default: 0 })
-  recipesGenerated: number;
-
-  @Column({ type: 'int', name: 'ai_chat_messages', default: 0 })
-  aiChatMessages: number;
-
-  @Column({ type: 'int', name: 'substitution_requests', default: 0 })
-  substitutionRequests: number;
+  @Column({ type: 'jsonb', name: 'feature_counts', default: () => "'{}'" })
+  featureCounts: Partial<Record<MessageType, number>>;
 
   @Column({ type: 'int', name: 'total_input_tokens', default: 0 })
   totalInputTokens: number;

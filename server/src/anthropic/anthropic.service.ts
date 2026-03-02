@@ -4,20 +4,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { MessageStream } from '@anthropic-ai/sdk/lib/MessageStream';
 import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
 import { ModelConfig, ACTIVE_MODEL, estimateCostCents } from '../ai-models';
-
-export type MessageType =
-  | 'meal-plan'
-  | 'meal-swap'
-  | 'recipe-generation'
-  | 'shelf-life'
-  | 'receipt-scan'
-  | 'ingredient-resolution'
-  | 'food-category'
-  | 'cook-deduction'
-  | 'ai-chat'
-  | 'food-match'
-  | 'url-import'
-  | 'photo-import';
+import { MessageType } from '@shared/enums';
 
 @Injectable()
 export class AnthropicService {
@@ -39,7 +26,7 @@ export class AnthropicService {
       model?: ModelConfig;
       maxTokens: number;
       messages: Anthropic.MessageParam[];
-      messageType?: MessageType;
+      messageType: MessageType;
     },
   ): Promise<Anthropic.Message> {
     const model = params.model ?? ACTIVE_MODEL;
@@ -50,7 +37,7 @@ export class AnthropicService {
       messages: params.messages,
     });
 
-    await this.trackUsage(userId, response, model);
+    await this.trackUsage(userId, response, model, params.messageType);
 
     return response;
   }
@@ -77,15 +64,17 @@ export class AnthropicService {
   async trackStreamUsage(
     userId: string,
     message: Anthropic.Message,
+    messageType: MessageType,
     model?: ModelConfig,
   ): Promise<void> {
-    await this.trackUsage(userId, message, model ?? ACTIVE_MODEL);
+    await this.trackUsage(userId, message, model ?? ACTIVE_MODEL, messageType);
   }
 
   private async trackUsage(
     userId: string,
     response: Anthropic.Message,
     model: ModelConfig,
+    messageType: MessageType,
   ): Promise<void> {
     const inputTokens = response.usage?.input_tokens ?? 0;
     const outputTokens = response.usage?.output_tokens ?? 0;
@@ -107,6 +96,7 @@ export class AnthropicService {
         'estimatedCostCents',
         costCents,
       ),
+      this.usageTrackingService.incrementFeatureCount(userId, messageType),
     ]);
   }
 }

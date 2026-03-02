@@ -3,6 +3,7 @@ import { useUsageQuery } from './useUsageQuery';
 import { api } from '../services/api';
 import { createAuthWrapper } from '../test-utils/wrapper';
 import * as Keychain from 'react-native-keychain';
+import { MessageType } from '../shared/enums';
 
 jest.mock('../services/api', () => ({
   api: { post: jest.fn(), get: jest.fn(), patch: jest.fn() },
@@ -40,11 +41,7 @@ describe('useUsageQuery', () => {
     (api.get as jest.Mock).mockResolvedValue({
       id: 'ut-1',
       periodStart: '2026-02-01',
-      receiptScans: 3,
-      mealPlansGenerated: 1,
-      recipesGenerated: 5,
-      aiChatMessages: 10,
-      substitutionRequests: 2,
+      featureCounts: { [MessageType.ReceiptScan]: 3, [MessageType.MealPlan]: 1, [MessageType.RecipeGeneration]: 5, [MessageType.AiChat]: 10 },
     });
 
     const wrapper = createAuthWrapper();

@@ -7,7 +7,6 @@ import { MealPlansService } from './meal-plans.service';
 import { MealPlansController } from './meal-plans.controller';
 import { PantryModule } from '../pantry/pantry.module';
 import { AnthropicModule } from '../anthropic/anthropic.module';
-import { UsageTrackingModule } from '../usage-tracking/usage-tracking.module';
 import { UsersModule } from '../users/users.module';
 import { FoodCacheModule } from '../food-cache/food-cache.module';
 import { ShoppingListsModule } from '../shopping-lists/shopping-lists.module';
@@ -17,7 +16,6 @@ import { ShoppingListsModule } from '../shopping-lists/shopping-lists.module';
     TypeOrmModule.forFeature([MealPlan, MealPlanEntry, Recipe]),
     PantryModule,
     AnthropicModule,
-    UsageTrackingModule,
     UsersModule,
     FoodCacheModule,
     ShoppingListsModule,

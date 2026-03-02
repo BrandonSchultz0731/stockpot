@@ -3,15 +3,12 @@ import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
 import { useAuth } from '../contexts/AuthContext';
+import { MessageType } from '../shared/enums';
 
 export interface UsageRecord {
   id: string;
   periodStart: string;
-  receiptScans: number;
-  mealPlansGenerated: number;
-  recipesGenerated: number;
-  aiChatMessages: number;
-  substitutionRequests: number;
+  featureCounts: Partial<Record<MessageType, number>>;
 }
 
 export function useUsageQuery() {

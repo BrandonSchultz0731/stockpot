@@ -228,6 +228,21 @@ export interface ShoppingListItem {
   recipeCount: number;
 }
 
+export enum MessageType {
+  MealPlan = 'meal-plan',
+  MealSwap = 'meal-swap',
+  RecipeGeneration = 'recipe-generation',
+  ShelfLife = 'shelf-life',
+  ReceiptScan = 'receipt-scan',
+  IngredientResolution = 'ingredient-resolution',
+  FoodCategory = 'food-category',
+  CookDeduction = 'cook-deduction',
+  AiChat = 'ai-chat',
+  FoodMatch = 'food-match',
+  UrlImport = 'url-import',
+  PhotoImport = 'photo-import',
+}
+
 export const DEFAULT_FOOD_CATEGORY = 'Other';
 
 export const FOOD_CATEGORIES: string[] = [

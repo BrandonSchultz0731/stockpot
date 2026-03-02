@@ -11,9 +11,9 @@ import { MealPlanEntry } from './entities/meal-plan-entry.entity';
 import { Recipe } from '../recipes/entities/recipe.entity';
 import { PantryService } from '../pantry/pantry.service';
 import { AnthropicService } from '../anthropic/anthropic.service';
-import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
 import { UsersService } from '../users/users.service';
 import { FoodCacheService } from '../food-cache/food-cache.service';
+import { MessageType } from '@shared/enums';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
 
 const mockMealPlanRepo = {
@@ -44,10 +44,6 @@ const mockAnthropicService = {
   sendMessage: jest.fn(),
 };
 
-const mockUsageTrackingService = {
-  increment: jest.fn(),
-};
-
 const mockUsersService = {
   findById: jest.fn(),
 };
@@ -74,7 +70,6 @@ describe('MealPlansService', () => {
         { provide: getRepositoryToken(Recipe), useValue: mockRecipeRepo },
         { provide: PantryService, useValue: mockPantryService },
         { provide: AnthropicService, useValue: mockAnthropicService },
-        { provide: UsageTrackingService, useValue: mockUsageTrackingService },
         { provide: UsersService, useValue: mockUsersService },
         { provide: FoodCacheService, useValue: mockFoodCacheService },
         { provide: ShoppingListsService, useValue: mockShoppingListsService },
@@ -160,7 +155,7 @@ describe('MealPlansService', () => {
       expect(result.id).toBe('entry-new');
       expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
         'u1',
-        expect.objectContaining({ messageType: 'meal-swap' }),
+        expect.objectContaining({ messageType: MessageType.MealSwap }),
       );
       expect(mockRecipeRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ source: 'ai', sourceUrl: null }),
@@ -191,7 +186,7 @@ describe('MealPlansService', () => {
       expect(mockFetch).toHaveBeenCalledWith('https://example.com/recipe');
       expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
         'u1',
-        expect.objectContaining({ messageType: 'url-import' }),
+        expect.objectContaining({ messageType: MessageType.UrlImport }),
       );
       expect(mockRecipeRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -319,7 +314,7 @@ describe('MealPlansService', () => {
       expect(result.id).toBe('entry-new');
       expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
         'u1',
-        expect.objectContaining({ messageType: 'photo-import' }),
+        expect.objectContaining({ messageType: MessageType.PhotoImport }),
       );
       // Verify multimodal content with image block
       const callArgs = mockAnthropicService.sendMessage.mock.calls[0][1];
@@ -372,7 +367,7 @@ describe('MealPlansService', () => {
       expect(result.id).toBe('entry-new');
       expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
         'u1',
-        expect.objectContaining({ messageType: 'photo-import' }),
+        expect.objectContaining({ messageType: MessageType.PhotoImport }),
       );
       expect(mockRecipeRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ source: 'photo' }),
@@ -501,7 +496,7 @@ describe('MealPlansService', () => {
       expect(result.deductions).toEqual(aiDeductions.deductions);
       expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
         'u1',
-        expect.objectContaining({ messageType: 'cook-deduction' }),
+        expect.objectContaining({ messageType: MessageType.CookDeduction }),
       );
     });
 

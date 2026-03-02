@@ -21,7 +21,7 @@ import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
 import { useUsageQuery } from '../hooks/useUsageQuery';
 import { useCurrentMealPlanQuery } from '../hooks/useCurrentMealPlanQuery';
 import { getTodayDayOfWeek } from '../utils/dayOfWeek';
-import { SubscriptionTier } from '../shared/enums';
+import { SubscriptionTier, MessageType } from '../shared/enums';
 import type { DietaryProfile, NutritionalGoals } from '../shared/enums';
 import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
@@ -437,7 +437,7 @@ export default function ProfileScreen() {
 
         {/* Section 3: Subscription Card (Free tier only) */}
         {tier === SubscriptionTier.Free && (
-          <SubscriptionCard recipesUsed={usage?.recipesGenerated ?? 0} />
+          <SubscriptionCard recipesUsed={usage?.featureCounts?.[MessageType.RecipeGeneration] ?? 0} />
         )}
 
         {/* Section 4: Dietary Profile */}

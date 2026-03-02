@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { FoodCacheService } from './food-cache.service';
 import { FoodCache } from './entities/food-cache.entity';
 import { AnthropicService } from '../anthropic/anthropic.service';
+import { MessageType } from '@shared/enums';
 
 const createMockQueryBuilder = (results: any[] = []) => {
   const qb: any = {
@@ -759,7 +760,7 @@ describe('FoodCacheService', () => {
       expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
         'user-1',
         expect.objectContaining({
-          messageType: 'food-match',
+          messageType: MessageType.FoodMatch,
         }),
       );
       expect(result).toEqual({ id: 'fc-1', name: 'Broccoli' });

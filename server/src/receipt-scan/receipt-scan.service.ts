@@ -5,9 +5,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { AnthropicService } from '../anthropic/anthropic.service';
-import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
 import { ACTIVE_MODEL } from '../ai-models';
-import { UnitOfMeasure, StorageLocation, ShelfLife } from '@shared/enums';
+import { UnitOfMeasure, StorageLocation, ShelfLife, MessageType } from '@shared/enums';
 import { buildReceiptScanPrompt } from '../prompts';
 import { ScanReceiptDto } from './dto/scan-receipt.dto';
 
@@ -28,7 +27,6 @@ export class ReceiptScanService {
 
   constructor(
     private readonly anthropicService: AnthropicService,
-    private readonly usageTrackingService: UsageTrackingService,
   ) {}
 
   async scanReceipt(
@@ -41,6 +39,7 @@ export class ReceiptScanService {
       response = await this.anthropicService.sendMessage(userId, {
         model: ACTIVE_MODEL,
         maxTokens: 4096,
+        messageType: MessageType.ReceiptScan,
         messages: [
           {
             role: 'user',
@@ -70,9 +69,6 @@ export class ReceiptScanService {
       this.logger.error('Claude API call failed', error);
       throw new BadGatewayException('Receipt scanning service unavailable');
     }
-
-    // Track feature-specific counter (token/cost tracking handled by AnthropicService)
-    await this.usageTrackingService.increment(userId, 'receiptScans');
 
     const rawText =
       response.content[0]?.type === 'text' ? response.content[0].text : '';
