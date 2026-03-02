@@ -137,6 +137,7 @@ export enum PantryStatus {
   None = 'none',
   Low = 'low',
   Enough = 'enough',
+  NA = 'na',
 }
 
 export enum RecipeSource {
