@@ -142,7 +142,7 @@ export enum PantryStatus {
 export enum RecipeSource {
   AI = 'ai',
   Manual = 'manual',
-  Imported = 'imported',
+  Website = 'website',
 }
 
 export interface RecipeIngredient {

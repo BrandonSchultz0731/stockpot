@@ -40,6 +40,7 @@ export const ROUTES = {
     CURRENT: '/meal-plans/current',
     WEEK: (date: string) => `/meal-plans/week/${date}`,
     UPDATE_ENTRY: (id: string) => `/meal-plans/entries/${id}`,
+    ADD_ENTRY: '/meal-plans/entries/add',
     SWAP_ENTRY: (id: string) => `/meal-plans/entries/${id}/swap`,
     COOK_PREVIEW: (id: string) => `/meal-plans/entries/${id}/cook/preview`,
     COOK_CONFIRM: (id: string) => `/meal-plans/entries/${id}/cook/confirm`,

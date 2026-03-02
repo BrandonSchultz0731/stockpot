@@ -383,14 +383,32 @@ export function ShoppingListBanner({
   );
 }
 
-export function AddSnackButton() {
+export function MealPlaceholder({
+  mealType,
+  onPress,
+  isLoading,
+}: {
+  mealType: string;
+  onPress: () => void;
+  isLoading: boolean;
+}) {
   return (
-    <View className="mx-4 mb-4 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-border py-3.5 opacity-50">
-      <Plus size={16} color={colors.muted} />
-      <Text className="ml-2 text-[13px] font-semibold text-muted">
-        Add Snack
-      </Text>
-    </View>
+    <Pressable
+      onPress={onPress}
+      disabled={isLoading}
+      className="mx-4 mb-2.5 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-border py-3.5"
+    >
+      {isLoading ? (
+        <ActivityIndicator size="small" color={colors.orange.DEFAULT} />
+      ) : (
+        <>
+          <Plus size={16} color={colors.muted} />
+          <Text className="ml-2 text-[13px] font-semibold text-muted">
+            Add {mealType}
+          </Text>
+        </>
+      )}
+    </Pressable>
   );
 }
 

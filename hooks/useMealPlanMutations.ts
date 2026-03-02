@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
@@ -25,6 +26,31 @@ export function useGenerateMealPlanMutation() {
       api.post<MealPlan>(ROUTES.MEAL_PLANS.GENERATE, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
+    },
+  });
+}
+
+export interface AddMealPlanEntryRequest {
+  mealPlanId: string;
+  dayOfWeek: number;
+  mealType: MealType;
+  url?: string;
+}
+
+export function useAddMealPlanEntryMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: AddMealPlanEntryRequest) =>
+      api.post<MealPlanEntry>(ROUTES.MEAL_PLANS.ADD_ENTRY, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SHOPPING_LISTS.ALL });
+    },
+    onError: (error: any) => {
+      const message =
+        error?.message || 'Something went wrong';
+      Alert.alert('Failed to Add Meal', message);
     },
   });
 }
