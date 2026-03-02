@@ -30,6 +30,7 @@ jest.mock('react-native-bootsplash', () => ({
 // Mock react-native-image-picker (native module not available in Jest)
 jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn(),
+  launchCamera: jest.fn(),
 }));
 
 // Mock react-native-bootsplash (native module not available in Jest)

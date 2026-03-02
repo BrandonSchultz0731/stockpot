@@ -35,6 +35,8 @@ export interface AddMealPlanEntryRequest {
   dayOfWeek: number;
   mealType: MealType;
   url?: string;
+  imageBase64?: string;
+  mimeType?: string;
 }
 
 export function useAddMealPlanEntryMutation() {

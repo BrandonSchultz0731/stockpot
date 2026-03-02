@@ -331,6 +331,35 @@ For each ingredient, "baseQuantity" is the equivalent quantity normalized to a b
 No markdown fences, no explanation — only the JSON object.`;
 }
 
+export function buildPhotoRecipeImportPrompt(mealType: string): string {
+  return `You are a recipe extraction assistant. Extract the recipe from this photo of a physical recipe (cookbook page, recipe card, handwritten recipe, printout, etc.) and return it as structured JSON.
+
+If the image does not contain a recipe, return { "error": "This image doesn't appear to contain a recipe. Please take a photo of a cookbook page, recipe card, or handwritten recipe." }.
+
+Return ONLY a JSON object with:
+- "title": string (recipe name)
+- "description": string (1-2 sentence description)
+- "prepTimeMinutes": number
+- "cookTimeMinutes": number
+- "totalTimeMinutes": number
+- "servings": number
+- "difficulty": "Easy" | "Medium" | "Hard"
+- "cuisine": string
+- "ingredients": array of { "name": string, "quantity": number, "unit": string, "baseQuantity": number, "baseUnit": "g" | "ml" | "count", "notes": string (optional) }
+- "steps": array of { "stepNumber": number, "instruction": string, "duration": number (optional, in minutes) }
+- "tags": array of strings
+- "dietaryFlags": array of strings
+- "nutrition": { "calories": number, "protein": number, "carbs": number, "fat": number } (estimated per serving)
+
+The mealType for this recipe is "${mealType}".
+
+Do NOT include basic pantry staples that every kitchen has (e.g. water, salt, black pepper). Only list ingredients that are specific to the recipe.
+${INGREDIENT_NAMING_INSTRUCTION}
+For each ingredient, "baseQuantity" is the equivalent quantity normalized to a base unit and "baseUnit" is one of "g", "ml", or "count". For weight ingredients use grams, for liquids/volumes use milliliters, for countable items use count. Account for ingredient density when converting (e.g. 1 cup flour ≈ 125g, 1 cup butter ≈ 227g).
+
+No markdown fences, no explanation — only the JSON object.`;
+}
+
 export function buildFoodMatchPrompt(
   items: { name: string; candidates: { id: string; name: string }[] }[],
 ): string {

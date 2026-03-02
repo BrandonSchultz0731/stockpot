@@ -21,7 +21,7 @@ import { MealType, UnitOfMeasure, RecipeIngredient, RecipeSource, MealScheduleSl
 import { ACTIVE_MODEL, CLAUDE_MODELS } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
-import { buildMealPlanPrompt, buildMealSwapPrompt, buildCookDeductionPrompt, buildUrlRecipeImportPrompt } from '../prompts';
+import { buildMealPlanPrompt, buildMealSwapPrompt, buildCookDeductionPrompt, buildUrlRecipeImportPrompt, buildPhotoRecipeImportPrompt } from '../prompts';
 import { enrichPantryStatus } from '../pantry/enrich-pantry';
 import { ConfirmCookDto } from './dto/confirm-cook.dto';
 import { AddMealPlanEntryDto } from './dto/add-meal-plan-entry.dto';
@@ -418,7 +418,66 @@ export class MealPlansService {
     let source: RecipeSource;
     let sourceUrl: string | null = null;
 
-    if (dto.url) {
+    if (dto.imageBase64) {
+      // Photo recipe import path
+      const normalizedMime = ['image/jpg', 'image/heic', 'image/heif'].includes(dto.mimeType)
+        ? 'image/jpeg'
+        : (dto.mimeType || 'image/jpeg');
+
+      let response;
+      try {
+        response = await this.anthropicService.sendMessage(userId, {
+          model: ACTIVE_MODEL,
+          maxTokens: 2048,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'image',
+                  source: {
+                    type: 'base64',
+                    media_type: normalizedMime as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+                    data: dto.imageBase64,
+                  },
+                },
+                {
+                  type: 'text',
+                  text: buildPhotoRecipeImportPrompt(dto.mealType),
+                },
+              ],
+            },
+          ],
+          messageType: 'photo-import',
+        });
+      } catch (error) {
+        this.logger.error('Claude API call failed for photo recipe import', error);
+        throw new BadGatewayException('Recipe import service unavailable');
+      }
+
+      const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
+
+      // Check for an error response before strict recipe validation
+      let rawParsed: any;
+      try {
+        rawParsed = JSON.parse(rawText);
+      } catch {
+        const codeBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (codeBlockMatch) {
+          try { rawParsed = JSON.parse(codeBlockMatch[1].trim()); } catch { /* fall through */ }
+        }
+      }
+      if (rawParsed?.error) {
+        throw new BadRequestException(rawParsed.error);
+      }
+
+      parsed = this.parseRecipeObject(rawText);
+      if (!parsed) {
+        throw new BadGatewayException('Failed to parse recipe from photo');
+      }
+
+      source = RecipeSource.Photo;
+    } else if (dto.url) {
       // Website import path
       let pageContent: string;
       try {

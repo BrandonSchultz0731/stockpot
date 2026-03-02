@@ -15,6 +15,7 @@ import { MealPlanStatus, MealType } from '../shared/enums';
 import type { MealScheduleSlot } from '../shared/enums';
 import type { MealsStackParamList } from '../navigation/types';
 import { getCurrentWeekStartDate, getTodayDayOfWeek } from '../utils/dayOfWeek';
+import { captureFromCamera, pickFromGallery } from '../utils/imageCapture';
 
 import { useCurrentMealPlanQuery } from '../hooks/useCurrentMealPlanQuery';
 import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
@@ -197,6 +198,36 @@ export default function MealsScreen() {
     [mealPlan, addSheetMealType, selectedDay, addEntryMutation],
   );
 
+  const handlePhotoCapture = useCallback(
+    (source: 'camera' | 'gallery') => {
+      if (!mealPlan) return;
+      const mealType = addSheetMealType;
+      setShowAddSheet(false);
+
+      setTimeout(async () => {
+        const result =
+          source === 'camera'
+            ? await captureFromCamera()
+            : await pickFromGallery();
+
+        if (result) {
+          setLoadingMealType(mealType);
+          addEntryMutation.mutate(
+            {
+              mealPlanId: mealPlan.id,
+              dayOfWeek: selectedDay,
+              mealType,
+              imageBase64: result.base64,
+              mimeType: result.mimeType,
+            },
+            { onSettled: () => setLoadingMealType(null) },
+          );
+        }
+      }, 500);
+    },
+    [mealPlan, addSheetMealType, selectedDay, addEntryMutation],
+  );
+
   // Determine screen state
   const isGenerating =
     generateMutation.isPending || mealPlan?.status === MealPlanStatus.Draft;
@@ -336,6 +367,7 @@ export default function MealsScreen() {
         mealType={addSheetMealType}
         onClose={() => setShowAddSheet(false)}
         onAddMeal={handleAddMeal}
+        onPhotoCapture={handlePhotoCapture}
         isLoading={addEntryMutation.isPending}
       />
     </SafeAreaView>

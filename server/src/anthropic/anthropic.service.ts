@@ -16,7 +16,8 @@ export type MessageType =
   | 'cook-deduction'
   | 'ai-chat'
   | 'food-match'
-  | 'url-import';
+  | 'url-import'
+  | 'photo-import';
 
 @Injectable()
 export class AnthropicService {

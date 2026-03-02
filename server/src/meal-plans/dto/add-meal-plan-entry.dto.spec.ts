@@ -126,4 +126,58 @@ describe('AddMealPlanEntryDto', () => {
     const errors = await validate(dto);
     expect(errors).toHaveLength(0);
   });
+
+  it('should pass with valid imageBase64 and mimeType (photo import)', async () => {
+    const dto = createDto({
+      mealPlanId: 'plan-1',
+      dayOfWeek: 1,
+      mealType: 'Dinner',
+      imageBase64: 'iVBORw0KGgoAAAANS...',
+      mimeType: 'image/jpeg',
+    });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
+  it.each([
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/heic',
+    'image/heif',
+  ])('should pass with mimeType %s', async (mimeType) => {
+    const dto = createDto({
+      mealPlanId: 'plan-1',
+      dayOfWeek: 0,
+      mealType: 'Breakfast',
+      imageBase64: 'base64data',
+      mimeType,
+    });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('should fail when mimeType is not an allowed value', async () => {
+    const dto = createDto({
+      mealPlanId: 'plan-1',
+      dayOfWeek: 1,
+      mealType: 'Lunch',
+      imageBase64: 'base64data',
+      mimeType: 'image/bmp',
+    });
+    const errors = await validate(dto);
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('should pass when imageBase64 and mimeType are omitted', async () => {
+    const dto = createDto({
+      mealPlanId: 'plan-1',
+      dayOfWeek: 3,
+      mealType: 'Dinner',
+    });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
 });

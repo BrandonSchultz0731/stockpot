@@ -302,6 +302,139 @@ describe('MealPlansService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it('should import a recipe from photo when imageBase64 is provided', async () => {
+      setupCommonMocks();
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify(mockParsedRecipe) }],
+      });
+
+      const result = await service.addEntry('u1', {
+        mealPlanId: 'plan-1',
+        dayOfWeek: 3,
+        mealType: 'Lunch' as any,
+        imageBase64: 'iVBORw0KGgoAAAANS...',
+        mimeType: 'image/jpeg',
+      });
+
+      expect(result.id).toBe('entry-new');
+      expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
+        'u1',
+        expect.objectContaining({ messageType: 'photo-import' }),
+      );
+      // Verify multimodal content with image block
+      const callArgs = mockAnthropicService.sendMessage.mock.calls[0][1];
+      const content = callArgs.messages[0].content;
+      expect(content).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'image' }),
+          expect.objectContaining({ type: 'text' }),
+        ]),
+      );
+      expect(mockRecipeRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ source: 'photo', sourceUrl: null }),
+      );
+    });
+
+    it('should normalize image/jpg mimeType to image/jpeg for photo import', async () => {
+      setupCommonMocks();
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify(mockParsedRecipe) }],
+      });
+
+      await service.addEntry('u1', {
+        mealPlanId: 'plan-1',
+        dayOfWeek: 1,
+        mealType: 'Dinner' as any,
+        imageBase64: 'base64data',
+        mimeType: 'image/jpg',
+      });
+
+      const callArgs = mockAnthropicService.sendMessage.mock.calls[0][1];
+      const imageBlock = callArgs.messages[0].content[0];
+      expect(imageBlock.source.media_type).toBe('image/jpeg');
+    });
+
+    it('should prioritize imageBase64 over url when both are provided', async () => {
+      setupCommonMocks();
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify(mockParsedRecipe) }],
+      });
+
+      const result = await service.addEntry('u1', {
+        mealPlanId: 'plan-1',
+        dayOfWeek: 1,
+        mealType: 'Dinner' as any,
+        imageBase64: 'base64data',
+        mimeType: 'image/png',
+        url: 'https://example.com/recipe',
+      });
+
+      expect(result.id).toBe('entry-new');
+      expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
+        'u1',
+        expect.objectContaining({ messageType: 'photo-import' }),
+      );
+      expect(mockRecipeRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ source: 'photo' }),
+      );
+    });
+
+    it('should throw BadRequestException when photo contains no recipe', async () => {
+      setupCommonMocks();
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: "This image doesn't appear to contain a recipe.",
+            }),
+          },
+        ],
+      });
+
+      await expect(
+        service.addEntry('u1', {
+          mealPlanId: 'plan-1',
+          dayOfWeek: 1,
+          mealType: 'Dinner' as any,
+          imageBase64: 'base64data',
+          mimeType: 'image/jpeg',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadGatewayException when AI call fails for photo import', async () => {
+      setupCommonMocks();
+      mockAnthropicService.sendMessage.mockRejectedValue(new Error('API down'));
+
+      await expect(
+        service.addEntry('u1', {
+          mealPlanId: 'plan-1',
+          dayOfWeek: 1,
+          mealType: 'Dinner' as any,
+          imageBase64: 'base64data',
+          mimeType: 'image/jpeg',
+        }),
+      ).rejects.toThrow(BadGatewayException);
+    });
+
+    it('should throw BadGatewayException when photo AI response is unparseable', async () => {
+      setupCommonMocks();
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: 'not valid json at all' }],
+      });
+
+      await expect(
+        service.addEntry('u1', {
+          mealPlanId: 'plan-1',
+          dayOfWeek: 1,
+          mealType: 'Dinner' as any,
+          imageBase64: 'base64data',
+          mimeType: 'image/jpeg',
+        }),
+      ).rejects.toThrow(BadGatewayException);
+    });
+
     it('should still return entry when shopping list regeneration fails', async () => {
       setupCommonMocks();
       mockAnthropicService.sendMessage.mockResolvedValue({
