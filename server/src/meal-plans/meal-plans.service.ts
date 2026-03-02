@@ -453,13 +453,24 @@ export class MealPlansService {
       }
 
       const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
-      parsed = this.parseRecipeObject(rawText);
 
+      // Check for an error response before strict recipe validation
+      let rawParsed: any;
+      try {
+        rawParsed = JSON.parse(rawText);
+      } catch {
+        const codeBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (codeBlockMatch) {
+          try { rawParsed = JSON.parse(codeBlockMatch[1].trim()); } catch { /* fall through */ }
+        }
+      }
+      if (rawParsed?.error) {
+        throw new BadRequestException(rawParsed.error);
+      }
+
+      parsed = this.parseRecipeObject(rawText);
       if (!parsed) {
         throw new BadGatewayException('Failed to parse recipe from URL');
-      }
-      if (parsed.error) {
-        throw new BadRequestException(parsed.error);
       }
 
       source = RecipeSource.Website;

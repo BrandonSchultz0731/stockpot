@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException, BadGatewayException } from '@nestjs/common';
+import {
+  NotFoundException,
+  BadRequestException,
+  BadGatewayException,
+} from '@nestjs/common';
 import { MealPlansService } from './meal-plans.service';
 import { MealPlan } from './entities/meal-plan.entity';
 import { MealPlanEntry } from './entities/meal-plan-entry.entity';
@@ -82,6 +86,239 @@ describe('MealPlansService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('addEntry', () => {
+    const mockPlan = { id: 'plan-1', userId: 'u1', status: 'active' };
+    const mockPantryItems = [
+      { id: 'pi-1', displayName: 'Chicken Breast', quantity: 2, unit: 'lb', foodCacheId: 'fc-1' },
+    ];
+    const mockParsedRecipe = {
+      title: 'Grilled Chicken',
+      description: 'A simple grilled chicken',
+      prepTimeMinutes: 10,
+      cookTimeMinutes: 20,
+      totalTimeMinutes: 30,
+      servings: 2,
+      difficulty: 'Easy',
+      cuisine: 'American',
+      ingredients: [
+        { name: 'Chicken Breast', quantity: 1, unit: 'lb', baseQuantity: 454, baseUnit: 'g' },
+      ],
+      steps: [{ stepNumber: 1, instruction: 'Grill the chicken' }],
+      tags: ['grilled'],
+      dietaryFlags: [],
+      nutrition: { calories: 300, protein: 40, carbs: 0, fat: 8 },
+    };
+
+    const savedEntryResult = {
+      id: 'entry-new',
+      mealPlanId: 'plan-1',
+      dayOfWeek: 1,
+      mealType: 'Breakfast',
+      mealPlan: { userId: 'u1' },
+      recipe: { ...mockParsedRecipe, id: 'recipe-new', ingredients: mockParsedRecipe.ingredients },
+    };
+
+    const originalFetch = global.fetch;
+
+    afterEach(() => {
+      global.fetch = originalFetch;
+    });
+
+    function setupCommonMocks() {
+      mockMealPlanRepo.findOne.mockResolvedValue(mockPlan);
+      // Reset findOne so no stale mockResolvedValueOnce values leak
+      mockEntryRepo.findOne.mockReset();
+      mockEntryRepo.findOne
+        .mockResolvedValueOnce(null) // no existing entry for this slot
+        .mockResolvedValueOnce(savedEntryResult); // returned entry after save
+      mockPantryService.findAllForUser.mockResolvedValue(mockPantryItems);
+      mockFoodCacheService.resolveIngredientNames.mockResolvedValue(
+        new Map([['chicken breast', 'fc-1']]),
+      );
+      mockUsersService.findById.mockResolvedValue({ dietaryProfile: { householdSize: 2 } });
+      mockRecipeRepo.create.mockImplementation((data) => data);
+      mockRecipeRepo.save.mockImplementation((data) => Promise.resolve({ ...data, id: 'recipe-new' }));
+      mockEntryRepo.create.mockImplementation((data) => data);
+      mockEntryRepo.save.mockImplementation((data) => Promise.resolve({ ...data, id: 'entry-new' }));
+      mockShoppingListsService.generateForMealPlan.mockResolvedValue(undefined);
+    }
+
+    it('should generate a meal via AI when no url is provided', async () => {
+      setupCommonMocks();
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify(mockParsedRecipe) }],
+      });
+
+      const result = await service.addEntry('u1', {
+        mealPlanId: 'plan-1',
+        dayOfWeek: 1,
+        mealType: 'Breakfast' as any,
+      });
+
+      expect(result.id).toBe('entry-new');
+      expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
+        'u1',
+        expect.objectContaining({ messageType: 'meal-swap' }),
+      );
+      expect(mockRecipeRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ source: 'ai', sourceUrl: null }),
+      );
+      expect(mockShoppingListsService.generateForMealPlan).toHaveBeenCalledWith('plan-1', 'u1');
+    });
+
+    it('should import a recipe from URL when url is provided', async () => {
+      setupCommonMocks();
+      // Mock global fetch for URL import
+      const mockFetch = jest.fn().mockResolvedValue({
+        text: () => Promise.resolve('<html><body>Recipe content</body></html>'),
+      });
+      (global as any).fetch = mockFetch;
+
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify(mockParsedRecipe) }],
+      });
+
+      const result = await service.addEntry('u1', {
+        mealPlanId: 'plan-1',
+        dayOfWeek: 2,
+        mealType: 'Dinner' as any,
+        url: 'https://example.com/recipe',
+      });
+
+      expect(result.id).toBe('entry-new');
+      expect(mockFetch).toHaveBeenCalledWith('https://example.com/recipe');
+      expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
+        'u1',
+        expect.objectContaining({ messageType: 'url-import' }),
+      );
+      expect(mockRecipeRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          source: 'website',
+          sourceUrl: 'https://example.com/recipe',
+        }),
+      );
+    });
+
+    it('should throw NotFoundException when meal plan not found', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.addEntry('u1', {
+          mealPlanId: 'bad-id',
+          dayOfWeek: 1,
+          mealType: 'Breakfast' as any,
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException when plan is not active', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue({
+        ...mockPlan,
+        status: 'draft',
+      });
+
+      await expect(
+        service.addEntry('u1', {
+          mealPlanId: 'plan-1',
+          dayOfWeek: 1,
+          mealType: 'Breakfast' as any,
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when entry already exists for slot', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue(mockPlan);
+      mockEntryRepo.findOne.mockResolvedValueOnce({ id: 'existing-entry' });
+
+      await expect(
+        service.addEntry('u1', {
+          mealPlanId: 'plan-1',
+          dayOfWeek: 1,
+          mealType: 'Breakfast' as any,
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadGatewayException when AI call fails', async () => {
+      setupCommonMocks();
+      mockAnthropicService.sendMessage.mockRejectedValue(new Error('API down'));
+
+      await expect(
+        service.addEntry('u1', {
+          mealPlanId: 'plan-1',
+          dayOfWeek: 1,
+          mealType: 'Breakfast' as any,
+        }),
+      ).rejects.toThrow(BadGatewayException);
+    });
+
+    it('should throw BadGatewayException when AI returns unparseable response', async () => {
+      setupCommonMocks();
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: 'not valid json at all' }],
+      });
+
+      await expect(
+        service.addEntry('u1', {
+          mealPlanId: 'plan-1',
+          dayOfWeek: 1,
+          mealType: 'Breakfast' as any,
+        }),
+      ).rejects.toThrow(BadGatewayException);
+    });
+
+    it('should throw BadGatewayException when URL fetch fails', async () => {
+      setupCommonMocks();
+      (global as any).fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+
+      await expect(
+        service.addEntry('u1', {
+          mealPlanId: 'plan-1',
+          dayOfWeek: 1,
+          mealType: 'Dinner' as any,
+          url: 'https://bad-url.example.com',
+        }),
+      ).rejects.toThrow(BadGatewayException);
+    });
+
+    it('should throw BadRequestException when URL page has no recipe', async () => {
+      setupCommonMocks();
+      (global as any).fetch = jest.fn().mockResolvedValue({
+        text: () => Promise.resolve('<html><body>No recipe here</body></html>'),
+      });
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify({ error: 'No recipe found on this page.' }) }],
+      });
+
+      await expect(
+        service.addEntry('u1', {
+          mealPlanId: 'plan-1',
+          dayOfWeek: 1,
+          mealType: 'Dinner' as any,
+          url: 'https://example.com/no-recipe',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should still return entry when shopping list regeneration fails', async () => {
+      setupCommonMocks();
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify(mockParsedRecipe) }],
+      });
+      mockShoppingListsService.generateForMealPlan.mockRejectedValue(
+        new Error('Shopping list error'),
+      );
+
+      const result = await service.addEntry('u1', {
+        mealPlanId: 'plan-1',
+        dayOfWeek: 1,
+        mealType: 'Breakfast' as any,
+      });
+
+      expect(result.id).toBe('entry-new');
+    });
   });
 
   describe('cookPreview', () => {

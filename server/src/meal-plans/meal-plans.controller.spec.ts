@@ -6,6 +6,7 @@ const mockMealPlansService = {
   generatePlan: jest.fn(),
   getCurrentPlan: jest.fn(),
   getPlanByWeek: jest.fn(),
+  addEntry: jest.fn(),
   updateEntry: jest.fn(),
   swapEntry: jest.fn(),
   cookPreview: jest.fn(),
@@ -31,6 +32,29 @@ describe('MealPlansController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe('addEntry', () => {
+    it('should delegate to MealPlansService.addEntry', async () => {
+      const dto = {
+        mealPlanId: 'plan-1',
+        dayOfWeek: 1,
+        mealType: 'Breakfast',
+      };
+      const entryResult = {
+        id: 'entry-new',
+        mealPlanId: 'plan-1',
+        dayOfWeek: 1,
+        mealType: 'Breakfast',
+        recipe: { title: 'Pancakes' },
+      };
+      mockMealPlansService.addEntry.mockResolvedValue(entryResult);
+
+      const result = await controller.addEntry('u1', dto as any);
+
+      expect(mockMealPlansService.addEntry).toHaveBeenCalledWith('u1', dto);
+      expect(result).toEqual(entryResult);
+    });
   });
 
   describe('cookPreview', () => {
