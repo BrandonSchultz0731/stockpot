@@ -9,17 +9,18 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { ArrowLeft, Globe, X, Zap } from 'lucide-react-native';
+import { ArrowLeft, Camera, Globe, Image, X, Zap } from 'lucide-react-native';
 import colors from '../../theme/colors';
 import Button from '../../components/Button';
 
-type Mode = 'choose' | 'url';
+type Mode = 'choose' | 'url' | 'photo';
 
 export interface AddMealActionSheetProps {
   visible: boolean;
   mealType: string;
   onClose: () => void;
   onAddMeal: (url?: string) => void;
+  onPhotoCapture: (source: 'camera' | 'gallery') => void;
   isLoading: boolean;
 }
 
@@ -28,6 +29,7 @@ export default function AddMealActionSheet({
   mealType,
   onClose,
   onAddMeal,
+  onPhotoCapture,
   isLoading,
 }: AddMealActionSheetProps) {
   const [mode, setMode] = useState<Mode>('choose');
@@ -70,7 +72,7 @@ export default function AddMealActionSheet({
         {/* Header */}
         <View className="mb-5 flex-row items-center justify-between">
           <View className="flex-row items-center">
-            {mode === 'url' && (
+            {(mode === 'url' || mode === 'photo') && (
               <Pressable
                 onPress={() => setMode('choose')}
                 hitSlop={10}
@@ -134,8 +136,27 @@ export default function AddMealActionSheet({
                 </Text>
               </View>
             </Pressable>
+
+            {/* Scan from Photo */}
+            <Pressable
+              onPress={() => setMode('photo')}
+              disabled={isLoading}
+              className="flex-row items-center rounded-2xl border border-border bg-white p-4"
+            >
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-success/10">
+                <Camera size={20} color={colors.success.DEFAULT} />
+              </View>
+              <View className="ml-3 flex-1">
+                <Text className="text-[15px] font-semibold text-dark">
+                  Scan from Photo
+                </Text>
+                <Text className="mt-0.5 text-[12px] text-muted">
+                  Take a photo of a recipe
+                </Text>
+              </View>
+            </Pressable>
           </View>
-        ) : (
+        ) : mode === 'url' ? (
           <View>
             <Text className="mb-2 text-[13px] font-semibold text-muted">
               Recipe URL
@@ -155,6 +176,44 @@ export default function AddMealActionSheet({
               onPress={handleImportUrl}
               disabled={!url.trim() || isLoading}
             />
+          </View>
+        ) : (
+          <View className="gap-3">
+            {/* Take Photo */}
+            <Pressable
+              onPress={() => onPhotoCapture('camera')}
+              className="flex-row items-center rounded-2xl border border-border bg-white p-4"
+            >
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-success/10">
+                <Camera size={20} color={colors.success.DEFAULT} />
+              </View>
+              <View className="ml-3 flex-1">
+                <Text className="text-[15px] font-semibold text-dark">
+                  Take Photo
+                </Text>
+                <Text className="mt-0.5 text-[12px] text-muted">
+                  Use your camera to capture a recipe
+                </Text>
+              </View>
+            </Pressable>
+
+            {/* Choose from Library */}
+            <Pressable
+              onPress={() => onPhotoCapture('gallery')}
+              className="flex-row items-center rounded-2xl border border-border bg-white p-4"
+            >
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-success/10">
+                <Image size={20} color={colors.success.DEFAULT} />
+              </View>
+              <View className="ml-3 flex-1">
+                <Text className="text-[15px] font-semibold text-dark">
+                  Choose from Library
+                </Text>
+                <Text className="mt-0.5 text-[12px] text-muted">
+                  Pick a photo from your gallery
+                </Text>
+              </View>
+            </Pressable>
           </View>
         )}
       </View>

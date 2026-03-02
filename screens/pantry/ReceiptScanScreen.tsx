@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   GestureResponderEvent,
-  Image as RNImage,
   Linking,
   Pressable,
   StyleSheet,
@@ -18,12 +17,11 @@ import {
   useCameraDevice,
   useCameraPermission,
 } from 'react-native-vision-camera';
-import { launchImageLibrary } from 'react-native-image-picker';
-import ImageCropPicker from 'react-native-image-crop-picker';
 import { Camera as CameraIcon, Image, Zap, ZapOff, X } from 'lucide-react-native';
 import { useReceiptScanMutation } from '../../hooks/useReceiptScanMutation';
 import colors from '../../theme/colors';
 import type { PantryStackParamList } from '../../navigation/types';
+import { cropImage, pickFromGallery } from '../../utils/imageCapture';
 
 type Nav = NativeStackNavigationProp<PantryStackParamList, 'ReceiptScan'>;
 
@@ -57,73 +55,30 @@ export default function ReceiptScanScreen() {
     }
   };
 
-  const cropAndProcess = async (imagePath: string) => {
-    try {
-      // openCropper needs a file:// URI — ensure the prefix is present
-      const path = imagePath.startsWith('file://') ? imagePath : `file://${imagePath}`;
-
-      // Get actual image dimensions so the crop box starts at "Original"
-      const { width, height } = await new Promise<{ width: number; height: number }>(
-        (resolve, reject) =>
-          RNImage.getSize(path, (w, h) => resolve({ width: w, height: h }), reject),
-      );
-
-      const result = await ImageCropPicker.openCropper({
-        path,
-        width,
-        height,
-        mediaType: 'photo',
-        includeBase64: true,
-        compressImageQuality: 0.8,
-        freeStyleCropEnabled: true,
-      });
-
-      if (result.data) {
-        processImage(result.data, result.mime || 'image/jpeg');
-      }
-    } catch {
-      // User dismissed the cropper — do nothing
-    }
-  };
-
   const handleCapture = async () => {
     if (!cameraRef.current || scanMutation.isPending) return;
 
     try {
-      // takeSnapshot captures from the video pipeline with physically
-      // correct pixel orientation (no EXIF rotation issues in the cropper).
-      // Torch is handled by the Camera `torch` prop if flash is enabled.
       const snapshot = await cameraRef.current.takeSnapshot({
         quality: 100,
       });
 
-      await cropAndProcess(snapshot.path);
+      const result = await cropImage(snapshot.path);
+      if (result) {
+        processImage(result.base64, result.mimeType);
+      }
     } catch {
       Alert.alert('Error', 'Failed to capture photo. Please try again.');
     }
   };
 
-  const handleGallery = () => {
+  const handleGallery = async () => {
     if (scanMutation.isPending) return;
 
-    launchImageLibrary(
-      {
-        mediaType: 'photo',
-        maxWidth: 1500,
-        maxHeight: 2000,
-        quality: 0.8,
-      },
-      (response) => {
-        if (response.didCancel || response.errorCode) return;
-
-        const uri = response.assets?.[0]?.uri;
-        if (!uri) return;
-
-        // Delay so the image picker modal fully dismisses before
-        // openCropper presents its own modal on iOS
-        setTimeout(() => cropAndProcess(uri), 1000);
-      },
-    );
+    const result = await pickFromGallery();
+    if (result) {
+      processImage(result.base64, result.mimeType);
+    }
   };
 
   const processImage = (imageBase64: string, mimeType: string) => {

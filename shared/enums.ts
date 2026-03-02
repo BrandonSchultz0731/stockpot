@@ -143,6 +143,7 @@ export enum RecipeSource {
   AI = 'ai',
   Manual = 'manual',
   Website = 'website',
+  Photo = 'photo',
 }
 
 export interface RecipeIngredient {
