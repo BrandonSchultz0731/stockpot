@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { UsageTrackingService } from './usage-tracking.service';
 import { UsageTracking } from './entities/usage-tracking.entity';
 import { formatISODate } from '@shared/dates';
+import { MessageType } from '@shared/enums';
 
 const mockRepo = {
   findOne: jest.fn(),
@@ -49,7 +50,7 @@ describe('UsageTrackingService', () => {
         id: 'ut-1',
         userId: 'u1',
         periodStart: expectedPeriodStart,
-        receiptScans: 5,
+        featureCounts: { [MessageType.ReceiptScan]: 5 },
       };
       mockRepo.findOne.mockResolvedValue(existing);
 
@@ -68,7 +69,7 @@ describe('UsageTrackingService', () => {
         id: 'ut-new',
         userId: 'u1',
         periodStart: expectedPeriodStart,
-        receiptScans: 0,
+        featureCounts: {},
       };
       mockRepo.create.mockReturnValue(created);
       mockRepo.save.mockResolvedValue(created);
@@ -89,7 +90,7 @@ describe('UsageTrackingService', () => {
       const record = { id: 'ut-1', userId: 'u1' };
       mockRepo.findOne.mockResolvedValue(record);
 
-      await service.increment('u1', 'receiptScans', 1);
+      await service.increment('u1', 'totalInputTokens', 100);
 
       expect(mockRepo.createQueryBuilder).toHaveBeenCalled();
       expect(mockQueryBuilder.update).toHaveBeenCalledWith(UsageTracking);
@@ -103,11 +104,30 @@ describe('UsageTrackingService', () => {
       const record = { id: 'ut-1', userId: 'u1' };
       mockRepo.findOne.mockResolvedValue(record);
 
-      await service.increment('u1', 'aiChatMessages');
+      await service.increment('u1', 'totalOutputTokens');
 
       expect(mockQueryBuilder.set).toHaveBeenCalledWith({
-        aiChatMessages: expect.any(Function),
+        totalOutputTokens: expect.any(Function),
       });
+    });
+  });
+
+  describe('incrementFeatureCount', () => {
+    it('should increment a feature count via JSONB update', async () => {
+      const record = { id: 'ut-1', userId: 'u1' };
+      mockRepo.findOne.mockResolvedValue(record);
+
+      await service.incrementFeatureCount('u1', MessageType.ReceiptScan);
+
+      expect(mockRepo.createQueryBuilder).toHaveBeenCalled();
+      expect(mockQueryBuilder.update).toHaveBeenCalledWith(UsageTracking);
+      expect(mockQueryBuilder.set).toHaveBeenCalledWith({
+        featureCounts: expect.any(Function),
+      });
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith('id = :id', {
+        id: 'ut-1',
+      });
+      expect(mockQueryBuilder.execute).toHaveBeenCalled();
     });
   });
 });

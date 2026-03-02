@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsageTrackingController } from './usage-tracking.controller';
 import { UsageTrackingService } from './usage-tracking.service';
+import { MessageType } from '@shared/enums';
 
 const mockService = {
   getCurrentPeriod: jest.fn(),
@@ -32,11 +33,7 @@ describe('UsageTrackingController', () => {
         id: 'ut-1',
         userId: 'u1',
         periodStart: '2026-02-01',
-        receiptScans: 3,
-        mealPlansGenerated: 1,
-        recipesGenerated: 5,
-        aiChatMessages: 10,
-        substitutionRequests: 2,
+        featureCounts: { [MessageType.ReceiptScan]: 3, [MessageType.MealPlan]: 1, [MessageType.RecipeGeneration]: 5, [MessageType.AiChat]: 10 },
         totalInputTokens: 0,
         totalOutputTokens: 0,
         estimatedCostCents: 0,

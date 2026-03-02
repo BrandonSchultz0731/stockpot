@@ -6,7 +6,6 @@ import { RecipesService } from './recipes.service';
 import { RecipesController } from './recipes.controller';
 import { PantryModule } from '../pantry/pantry.module';
 import { AnthropicModule } from '../anthropic/anthropic.module';
-import { UsageTrackingModule } from '../usage-tracking/usage-tracking.module';
 import { FoodCacheModule } from '../food-cache/food-cache.module';
 
 @Module({
@@ -14,7 +13,6 @@ import { FoodCacheModule } from '../food-cache/food-cache.module';
     TypeOrmModule.forFeature([Recipe, SavedRecipe]),
     PantryModule,
     AnthropicModule,
-    UsageTrackingModule,
     FoodCacheModule,
   ],
   controllers: [RecipesController],

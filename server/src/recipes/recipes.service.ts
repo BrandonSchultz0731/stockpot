@@ -10,13 +10,12 @@ import { Recipe } from './entities/recipe.entity';
 import { SavedRecipe } from './entities/saved-recipe.entity';
 import { PantryService } from '../pantry/pantry.service';
 import { AnthropicService } from '../anthropic/anthropic.service';
-import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { GenerateRecipeDto } from './dto/generate-recipe.dto';
 import { SaveRecipeDto } from './dto/save-recipe.dto';
 import { UpdateSavedRecipeDto } from './dto/update-saved-recipe.dto';
 import { ACTIVE_MODEL } from '../ai-models';
-import { UnitOfMeasure, RecipeIngredient, RecipeSource } from '@shared/enums';
+import { UnitOfMeasure, RecipeIngredient, RecipeSource, MessageType } from '@shared/enums';
 import { buildRecipeGenerationPrompt } from '../prompts';
 import { enrichPantryStatus } from '../pantry/enrich-pantry';
 
@@ -31,7 +30,6 @@ export class RecipesService {
     private readonly savedRecipeRepo: Repository<SavedRecipe>,
     private readonly pantryService: PantryService,
     private readonly anthropicService: AnthropicService,
-    private readonly usageTrackingService: UsageTrackingService,
     private readonly foodCacheService: FoodCacheService,
   ) {}
 
@@ -81,13 +79,12 @@ export class RecipesService {
         model: ACTIVE_MODEL,
         maxTokens: 4096,
         messages: [{ role: 'user', content: prompt }],
+        messageType: MessageType.RecipeGeneration,
       });
     } catch (error) {
       this.logger.error('Claude API call failed for recipe generation', error);
       throw new BadGatewayException('Recipe generation service unavailable');
     }
-
-    await this.usageTrackingService.increment(userId, 'recipesGenerated');
 
     const rawText =
       response.content[0]?.type === 'text' ? response.content[0].text : '';

@@ -6,13 +6,13 @@ import { Subject } from 'rxjs';
 import { Conversation } from './entities/conversation.entity';
 import { ChatMessage } from './entities/chat-message.entity';
 import { AnthropicService } from '../anthropic/anthropic.service';
-import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
 import { AiChatToolsService } from './ai-chat-tools.service';
 import { AI_CHAT_TOOLS } from './ai-chat-tools.definitions';
 import { buildAiChefSystemPrompt } from '../prompts';
 import { parseRichBlocks } from '@shared/richBlocks';
 import { CLAUDE_MODELS } from '../ai-models';
 import { formatISODate } from '@shared/dates';
+import { MessageType } from '@shared/enums';
 import type { ToolCall } from './types';
 
 const MAX_TOOL_ROUNDS = 5;
@@ -33,7 +33,6 @@ export class AiChatService {
     @InjectRepository(ChatMessage)
     private readonly messageRepo: Repository<ChatMessage>,
     private readonly anthropicService: AnthropicService,
-    private readonly usageTrackingService: UsageTrackingService,
     private readonly toolsService: AiChatToolsService,
   ) {}
 
@@ -155,8 +154,7 @@ export class AiChatService {
       const finalMessage = await stream.finalMessage();
 
       // Track usage
-      await this.anthropicService.trackStreamUsage(userId, finalMessage);
-      await this.usageTrackingService.increment(userId, 'aiChatMessages');
+      await this.anthropicService.trackStreamUsage(userId, finalMessage, MessageType.AiChat);
 
       // Check for tool use in the response
       for (const block of finalMessage.content) {
@@ -299,7 +297,7 @@ export class AiChatService {
             content: `Generate a short title (3-5 words) for a cooking chat that started with this message: "${firstMessage}". Reply with ONLY the title, no quotes or punctuation.`,
           },
         ],
-        messageType: 'ai-chat',
+        messageType: MessageType.AiChat,
       });
 
       const title =

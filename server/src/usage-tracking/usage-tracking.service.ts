@@ -3,13 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsageTracking } from './entities/usage-tracking.entity';
 import { formatISODate } from '@shared/dates';
+import { MessageType } from '@shared/enums';
 
 type CounterField =
-  | 'receiptScans'
-  | 'mealPlansGenerated'
-  | 'recipesGenerated'
-  | 'aiChatMessages'
-  | 'substitutionRequests'
   | 'totalInputTokens'
   | 'totalOutputTokens'
   | 'estimatedCostCents';
@@ -53,13 +49,25 @@ export class UsageTrackingService {
       .execute();
   }
 
+  async incrementFeatureCount(
+    userId: string,
+    messageType: MessageType,
+  ): Promise<void> {
+    const record = await this.getCurrentPeriod(userId);
+
+    await this.usageRepo
+      .createQueryBuilder()
+      .update(UsageTracking)
+      .set({
+        featureCounts: () =>
+          `jsonb_set(feature_counts, '{${messageType}}', (COALESCE((feature_counts->>'${messageType}')::int, 0) + 1)::text::jsonb)`,
+      })
+      .where('id = :id', { id: record.id })
+      .execute();
+  }
+
   private columnName(field: CounterField): string {
     const map: Record<CounterField, string> = {
-      receiptScans: 'receipt_scans',
-      mealPlansGenerated: 'meal_plans_generated',
-      recipesGenerated: 'recipes_generated',
-      aiChatMessages: 'ai_chat_messages',
-      substitutionRequests: 'substitution_requests',
       totalInputTokens: 'total_input_tokens',
       totalOutputTokens: 'total_output_tokens',
       estimatedCostCents: 'estimated_cost_cents',
