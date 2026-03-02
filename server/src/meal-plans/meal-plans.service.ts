@@ -17,13 +17,14 @@ import { UsersService } from '../users/users.service';
 import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
-import { MealType, UnitOfMeasure, RecipeIngredient, MealScheduleSlot, DAY_NAMES } from '@shared/enums';
+import { MealType, UnitOfMeasure, RecipeIngredient, RecipeSource, MealScheduleSlot, DAY_NAMES } from '@shared/enums';
 import { ACTIVE_MODEL, CLAUDE_MODELS } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
-import { buildMealPlanPrompt, buildMealSwapPrompt, buildCookDeductionPrompt } from '../prompts';
+import { buildMealPlanPrompt, buildMealSwapPrompt, buildCookDeductionPrompt, buildUrlRecipeImportPrompt } from '../prompts';
 import { enrichPantryStatus } from '../pantry/enrich-pantry';
 import { ConfirmCookDto } from './dto/confirm-cook.dto';
+import { AddMealPlanEntryDto } from './dto/add-meal-plan-entry.dto';
 
 @Injectable()
 export class MealPlansService {
@@ -90,7 +91,7 @@ export class MealPlansService {
       userId,
       weekStartDate: dto.weekStartDate,
       status: 'draft',
-      source: 'ai',
+      source: RecipeSource.AI,
     });
     const savedPlan = await this.mealPlanRepo.save(mealPlan);
 
@@ -204,7 +205,7 @@ export class MealPlansService {
           difficulty: meal.difficulty,
           cuisine: meal.cuisine,
           mealType: meal.mealType,
-          source: 'ai',
+          source: RecipeSource.AI,
           ingredients: resolvedIngredients,
           steps: meal.steps ?? [],
           tags: meal.tags,
@@ -347,7 +348,7 @@ export class MealPlansService {
       difficulty: parsed.difficulty,
       cuisine: parsed.cuisine,
       mealType: entry.mealType,
-      source: 'ai',
+      source: RecipeSource.AI,
       ingredients: resolvedIngredients,
       steps: parsed.steps ?? [],
       tags: parsed.tags,
@@ -377,6 +378,218 @@ export class MealPlansService {
     this.shoppingListsService.generateForMealPlan(entry.mealPlanId, userId).catch((err) => {
       this.logger.error(`Shopping list regeneration failed after swap for plan ${entry.mealPlanId}`, err);
     });
+
+    return returnedEntry;
+  }
+
+  async addEntry(
+    userId: string,
+    dto: AddMealPlanEntryDto,
+  ): Promise<MealPlanEntry> {
+    const plan = await this.mealPlanRepo.findOne({
+      where: { id: dto.mealPlanId, userId },
+    });
+    if (!plan) {
+      throw new NotFoundException('Meal plan not found');
+    }
+    if (plan.status !== 'active') {
+      throw new BadRequestException('Meal plan is not active');
+    }
+
+    const existingEntry = await this.entryRepo.findOne({
+      where: {
+        mealPlanId: dto.mealPlanId,
+        dayOfWeek: dto.dayOfWeek,
+        mealType: dto.mealType,
+      },
+    });
+    if (existingEntry) {
+      throw new BadRequestException(
+        `A ${dto.mealType} entry already exists for this day`,
+      );
+    }
+
+    const pantryItems = await this.pantryService.findAllForUser(userId);
+    const ingredientList = pantryItems
+      .map((item) => `${item.displayName} (${item.quantity} ${item.unit})`)
+      .join('\n');
+
+    let parsed: any;
+    let source: RecipeSource;
+    let sourceUrl: string | null = null;
+
+    if (dto.url) {
+      // Website import path
+      let pageContent: string;
+      try {
+        const res = await fetch(dto.url);
+        const html = await res.text();
+        // Strip script/style tags, then all HTML tags
+        pageContent = html
+          .replace(/<script[\s\S]*?<\/script>/gi, '')
+          .replace(/<style[\s\S]*?<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 15000);
+      } catch (error) {
+        this.logger.error('Failed to fetch recipe URL', error);
+        throw new BadGatewayException('Could not fetch the provided URL');
+      }
+
+      const prompt = buildUrlRecipeImportPrompt(pageContent, dto.mealType);
+
+      let response;
+      try {
+        response = await this.anthropicService.sendMessage(userId, {
+          model: ACTIVE_MODEL,
+          maxTokens: 2048,
+          messages: [{ role: 'user', content: prompt }],
+          messageType: 'url-import',
+        });
+      } catch (error) {
+        this.logger.error('Claude API call failed for URL recipe import', error);
+        throw new BadGatewayException('Recipe import service unavailable');
+      }
+
+      const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
+
+      // Check for an error response before strict recipe validation
+      let rawParsed: any;
+      try {
+        rawParsed = JSON.parse(rawText);
+      } catch {
+        const codeBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (codeBlockMatch) {
+          try { rawParsed = JSON.parse(codeBlockMatch[1].trim()); } catch { /* fall through */ }
+        }
+      }
+      if (rawParsed?.error) {
+        throw new BadRequestException(rawParsed.error);
+      }
+
+      parsed = this.parseRecipeObject(rawText);
+      if (!parsed) {
+        throw new BadGatewayException('Failed to parse recipe from URL');
+      }
+
+      source = RecipeSource.Website;
+      sourceUrl = dto.url;
+    } else {
+      // AI generation path — mirrors swapEntry
+      const dayName = DAY_NAMES[dto.dayOfWeek] ?? `Day ${dto.dayOfWeek}`;
+      const prompt = buildMealSwapPrompt(
+        ingredientList,
+        dayName,
+        dto.mealType,
+        '(none — this is a new meal)',
+        '',
+      );
+
+      let response;
+      try {
+        response = await this.anthropicService.sendMessage(userId, {
+          model: ACTIVE_MODEL,
+          maxTokens: 2048,
+          messages: [{ role: 'user', content: prompt }],
+          messageType: 'meal-swap',
+        });
+      } catch (error) {
+        this.logger.error('Claude API call failed for add entry', error);
+        throw new BadGatewayException('Meal generation service unavailable');
+      }
+
+      const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
+      parsed = this.parseRecipeObject(rawText);
+
+      if (!parsed) {
+        throw new BadGatewayException('Failed to parse generated recipe');
+      }
+
+      source = RecipeSource.AI;
+    }
+
+    // Resolve ingredient names to food_cache IDs
+    const addIngredientNames = (parsed.ingredients ?? []).map(
+      (ing: any) => ing.name as string,
+    );
+    const pantryFoodItems = pantryItems.map((item) => ({
+      foodCacheId: item.foodCacheId,
+      displayName: item.displayName,
+    }));
+    const resolvedMap = await this.foodCacheService.resolveIngredientNames(
+      addIngredientNames,
+      pantryFoodItems,
+      userId,
+    );
+
+    const resolvedIngredients: RecipeIngredient[] = (parsed.ingredients ?? []).map(
+      (ing: any) => ({
+        name: ing.name,
+        quantity: ing.quantity,
+        unit: ing.unit,
+        baseQuantity: ing.baseQuantity ?? 0,
+        baseUnit: ing.baseUnit ?? UnitOfMeasure.Count,
+        ...(ing.notes ? { notes: ing.notes } : {}),
+        foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
+      }),
+    );
+
+    const user = await this.usersService.findById(userId);
+    const servings = user?.dietaryProfile?.householdSize ?? 2;
+
+    const recipe = this.recipeRepo.create({
+      userId,
+      title: parsed.title,
+      description: parsed.description,
+      prepTimeMinutes: parsed.prepTimeMinutes,
+      cookTimeMinutes: parsed.cookTimeMinutes,
+      totalTimeMinutes: parsed.totalTimeMinutes,
+      servings: parsed.servings ?? servings,
+      difficulty: parsed.difficulty,
+      cuisine: parsed.cuisine,
+      mealType: dto.mealType,
+      source,
+      sourceUrl,
+      ingredients: resolvedIngredients,
+      steps: parsed.steps ?? [],
+      tags: parsed.tags,
+      dietaryFlags: parsed.dietaryFlags,
+      nutrition: parsed.nutrition,
+    });
+    const savedRecipe = await this.recipeRepo.save(recipe);
+
+    const entry = this.entryRepo.create({
+      mealPlanId: dto.mealPlanId,
+      recipeId: savedRecipe.id,
+      dayOfWeek: dto.dayOfWeek,
+      mealType: dto.mealType,
+      servings: parsed.servings ?? servings,
+    });
+    const savedEntry = await this.entryRepo.save(entry);
+
+    const returnedEntry = await this.entryRepo.findOne({
+      where: { id: savedEntry.id },
+      relations: ['mealPlan', 'recipe'],
+    });
+
+    // Enrich with pantryStatus for the API response
+    if (returnedEntry?.recipe?.ingredients) {
+      returnedEntry.recipe.ingredients = enrichPantryStatus(
+        returnedEntry.recipe.ingredients,
+        pantryItems,
+      );
+    }
+
+    // Regenerate shopping list before returning so the client gets fresh data
+    try {
+      await this.shoppingListsService.generateForMealPlan(dto.mealPlanId, userId);
+    } catch (err) {
+      this.logger.error(
+        `Shopping list regeneration failed after add entry for plan ${dto.mealPlanId}`,
+        err,
+      );
+    }
 
     return returnedEntry;
   }

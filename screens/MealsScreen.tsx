@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CalendarDays } from 'lucide-react-native';
 import colors from '../theme/colors';
-import { MealPlanStatus } from '../shared/enums';
+import { MealPlanStatus, MealType } from '../shared/enums';
 import type { MealScheduleSlot } from '../shared/enums';
 import type { MealsStackParamList } from '../navigation/types';
 import { getCurrentWeekStartDate, getTodayDayOfWeek } from '../utils/dayOfWeek';
@@ -22,6 +22,7 @@ import { useSavedRecipes } from '../hooks/useSavedRecipes';
 import {
   useGenerateMealPlanMutation,
   useSwapMealPlanEntryMutation,
+  useAddMealPlanEntryMutation,
 } from '../hooks/useMealPlanMutations';
 import { useShoppingListQuery } from '../hooks/useShoppingListQuery';
 import {
@@ -34,10 +35,11 @@ import {
   NutritionSummaryBar,
   MealCard,
   ShoppingListBanner,
-  AddSnackButton,
+  MealPlaceholder,
   SaveTemplateButton,
 } from './meals/MealPlanComponents';
 import MealScheduleSelector from './meals/MealScheduleSelector';
+import AddMealActionSheet from './meals/AddMealActionSheet';
 
 export default function MealsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MealsStackParamList>>();
@@ -57,6 +59,7 @@ export default function MealsScreen() {
   // Mutations
   const generateMutation = useGenerateMealPlanMutation();
   const swapMutation = useSwapMealPlanEntryMutation();
+  const addEntryMutation = useAddMealPlanEntryMutation();
 
   // Shopping list
   const { data: shoppingList } = useShoppingListQuery(mealPlan?.id);
@@ -65,6 +68,9 @@ export default function MealsScreen() {
   const [selectedDay, setSelectedDay] = useState(getTodayDayOfWeek);
   const [swappingEntryId, setSwappingEntryId] = useState<string | null>(null);
   const [showScheduleSelector, setShowScheduleSelector] = useState(false);
+  const [showAddSheet, setShowAddSheet] = useState(false);
+  const [addSheetMealType, setAddSheetMealType] = useState<MealType>(MealType.Breakfast);
+  const [loadingMealType, setLoadingMealType] = useState<MealType | null>(null);
 
   // Derived data
   const weekDates = useMemo(() => getWeekDates(weekStart), [weekStart]);
@@ -101,6 +107,16 @@ export default function MealsScreen() {
       fat: goals.dailyFatGrams,
     };
   }, [userProfile?.nutritionalGoals]);
+
+  const ALL_MEAL_TYPES = [MealType.Breakfast, MealType.Lunch, MealType.Dinner, MealType.Snack] as const;
+
+  const entryByMealType = useMemo(() => {
+    const map = new Map<MealType, typeof selectedDayEntries[number]>();
+    for (const entry of selectedDayEntries) {
+      map.set(entry.mealType, entry);
+    }
+    return map;
+  }, [selectedDayEntries]);
 
   // Polling for draft status
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -156,6 +172,30 @@ export default function MealsScreen() {
       });
     }
   }, [mealPlan, navigation, weekStart]);
+
+  const handlePlaceholderPress = useCallback((mealType: MealType) => {
+    setAddSheetMealType(mealType);
+    setShowAddSheet(true);
+  }, []);
+
+  const handleAddMeal = useCallback(
+    (url?: string) => {
+      if (!mealPlan) return;
+      const mealType = addSheetMealType;
+      setShowAddSheet(false);
+      setLoadingMealType(mealType);
+      addEntryMutation.mutate(
+        {
+          mealPlanId: mealPlan.id,
+          dayOfWeek: selectedDay,
+          mealType,
+          url,
+        },
+        { onSettled: () => setLoadingMealType(null) },
+      );
+    },
+    [mealPlan, addSheetMealType, selectedDay, addEntryMutation],
+  );
 
   // Determine screen state
   const isGenerating =
@@ -246,29 +286,32 @@ export default function MealsScreen() {
               targets={nutritionTargets}
             />
 
-            {selectedDayEntries.length === 0 ? (
-              <View className="items-center pt-16">
-                <Text className="text-[14px] text-muted">
-                  No meals planned for this day
-                </Text>
-              </View>
-            ) : (
-              <View className="mt-1">
-                {selectedDayEntries.map((entry) => (
-                  <MealCard
-                    key={entry.id}
-                    entry={entry}
-                    isSaved={isSaved(entry.recipe.id)}
-                    isSwapping={swappingEntryId === entry.id}
-                    onSwap={() => handleSwap(entry.id)}
-                    onToggleSave={() => handleToggleSave(entry.recipe.id)}
-                    onPress={() => navigation.navigate('RecipeDetail', { recipeId: entry.recipe.id, title: entry.recipe.title, entryId: entry.id, isCooked: entry.isCooked })}
+            <View className="mt-1">
+              {ALL_MEAL_TYPES.map((mealType) => {
+                const entry = entryByMealType.get(mealType);
+                if (entry) {
+                  return (
+                    <MealCard
+                      key={entry.id}
+                      entry={entry}
+                      isSaved={isSaved(entry.recipe.id)}
+                      isSwapping={swappingEntryId === entry.id}
+                      onSwap={() => handleSwap(entry.id)}
+                      onToggleSave={() => handleToggleSave(entry.recipe.id)}
+                      onPress={() => navigation.navigate('RecipeDetail', { recipeId: entry.recipe.id, title: entry.recipe.title, entryId: entry.id, isCooked: entry.isCooked })}
+                    />
+                  );
+                }
+                return (
+                  <MealPlaceholder
+                    key={mealType}
+                    mealType={mealType}
+                    onPress={() => handlePlaceholderPress(mealType)}
+                    isLoading={loadingMealType === mealType}
                   />
-                ))}
-              </View>
-            )}
-
-            <AddSnackButton />
+                );
+              })}
+            </View>
 
             {shoppingList && (
               <ShoppingListBanner
@@ -287,6 +330,13 @@ export default function MealsScreen() {
         visible={showScheduleSelector}
         onClose={() => setShowScheduleSelector(false)}
         onGenerate={handleGenerate}
+      />
+      <AddMealActionSheet
+        visible={showAddSheet}
+        mealType={addSheetMealType}
+        onClose={() => setShowAddSheet(false)}
+        onAddMeal={handleAddMeal}
+        isLoading={addEntryMutation.isPending}
       />
     </SafeAreaView>
   );

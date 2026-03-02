@@ -16,6 +16,7 @@ import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
 import { ConfirmCookDto } from './dto/confirm-cook.dto';
+import { AddMealPlanEntryDto } from './dto/add-meal-plan-entry.dto';
 
 @Controller('meal-plans')
 @UseGuards(JwtAuthGuard)
@@ -42,6 +43,14 @@ export class MealPlansController {
     @Param('date') date: string,
   ) {
     return this.mealPlansService.getPlanByWeek(userId, date);
+  }
+
+  @Post('entries/add')
+  addEntry(
+    @GetUser('id') userId: string,
+    @Body() dto: AddMealPlanEntryDto,
+  ) {
+    return this.mealPlansService.addEntry(userId, dto);
   }
 
   @Patch('entries/:id')

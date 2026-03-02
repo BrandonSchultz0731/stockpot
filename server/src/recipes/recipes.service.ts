@@ -16,7 +16,7 @@ import { GenerateRecipeDto } from './dto/generate-recipe.dto';
 import { SaveRecipeDto } from './dto/save-recipe.dto';
 import { UpdateSavedRecipeDto } from './dto/update-saved-recipe.dto';
 import { ACTIVE_MODEL } from '../ai-models';
-import { UnitOfMeasure, RecipeIngredient } from '@shared/enums';
+import { UnitOfMeasure, RecipeIngredient, RecipeSource } from '@shared/enums';
 import { buildRecipeGenerationPrompt } from '../prompts';
 import { enrichPantryStatus } from '../pantry/enrich-pantry';
 
@@ -133,7 +133,7 @@ export class RecipesService {
         difficulty: item.difficulty,
         cuisine: item.cuisine,
         mealType: item.mealType,
-        source: 'ai',
+        source: RecipeSource.AI,
         ingredients: resolvedIngredients,
         steps: item.steps ?? [],
         tags: item.tags,

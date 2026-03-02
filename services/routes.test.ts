@@ -30,6 +30,7 @@ describe('ROUTES', () => {
     expect(ROUTES.MEAL_PLANS.CURRENT).toBe('/meal-plans/current');
     expect(ROUTES.MEAL_PLANS.WEEK('2026-02-23')).toBe('/meal-plans/week/2026-02-23');
     expect(ROUTES.MEAL_PLANS.UPDATE_ENTRY('abc')).toBe('/meal-plans/entries/abc');
+    expect(ROUTES.MEAL_PLANS.ADD_ENTRY).toBe('/meal-plans/entries/add');
     expect(ROUTES.MEAL_PLANS.SWAP_ENTRY('abc')).toBe('/meal-plans/entries/abc/swap');
     expect(ROUTES.MEAL_PLANS.DELETE('abc')).toBe('/meal-plans/abc');
   });

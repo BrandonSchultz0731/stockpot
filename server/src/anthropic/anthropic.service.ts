@@ -15,7 +15,8 @@ export type MessageType =
   | 'food-category'
   | 'cook-deduction'
   | 'ai-chat'
-  | 'food-match';
+  | 'food-match'
+  | 'url-import';
 
 @Injectable()
 export class AnthropicService {
