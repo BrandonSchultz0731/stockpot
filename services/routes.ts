@@ -48,6 +48,7 @@ export const ROUTES = {
   },
   SHOPPING_LISTS: {
     BY_MEAL_PLAN: (planId: string) => `/shopping-lists/meal-plan/${planId}`,
+    ADD_ITEM: (listId: string) => `/shopping-lists/${listId}/items`,
     TOGGLE_ITEM: (listId: string, itemId: string) =>
       `/shopping-lists/${listId}/items/${itemId}`,
   },

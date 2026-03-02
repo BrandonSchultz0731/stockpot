@@ -7,6 +7,50 @@ interface BaseConversion {
   baseUnit: BaseUnit;
 }
 
+/** Map common aliases and plurals to canonical UnitOfMeasure values */
+const UNIT_ALIASES: Record<string, string> = {
+  cups: UnitOfMeasure.Cup,
+  tbsps: UnitOfMeasure.Tbsp,
+  tablespoon: UnitOfMeasure.Tbsp,
+  tablespoons: UnitOfMeasure.Tbsp,
+  tsps: UnitOfMeasure.Tsp,
+  teaspoon: UnitOfMeasure.Tsp,
+  teaspoons: UnitOfMeasure.Tsp,
+  liters: UnitOfMeasure.Liter,
+  litres: UnitOfMeasure.Liter,
+  litre: UnitOfMeasure.Liter,
+  milliliters: UnitOfMeasure.Ml,
+  millilitres: UnitOfMeasure.Ml,
+  milliliter: UnitOfMeasure.Ml,
+  millilitre: UnitOfMeasure.Ml,
+  grams: UnitOfMeasure.G,
+  gram: UnitOfMeasure.G,
+  kilograms: UnitOfMeasure.Kg,
+  kilogram: UnitOfMeasure.Kg,
+  ounces: UnitOfMeasure.Oz,
+  ounce: UnitOfMeasure.Oz,
+  pounds: UnitOfMeasure.Lb,
+  pound: UnitOfMeasure.Lb,
+  lbs: UnitOfMeasure.Lb,
+  pints: UnitOfMeasure.Pint,
+  quarts: UnitOfMeasure.Quart,
+  gallons: UnitOfMeasure.Gallon,
+  cloves: UnitOfMeasure.Clove,
+  heads: UnitOfMeasure.Head,
+  slices: UnitOfMeasure.Slice,
+  sticks: UnitOfMeasure.Stick,
+  bags: UnitOfMeasure.Bag,
+  cans: UnitOfMeasure.Can,
+  bottles: UnitOfMeasure.Bottle,
+  packages: UnitOfMeasure.Package,
+  bunches: UnitOfMeasure.Bunch,
+};
+
+function normalizeUnit(unit: string): string {
+  const lower = unit.toLowerCase();
+  return UNIT_ALIASES[lower] ?? lower;
+}
+
 const WEIGHT_TO_GRAMS: Record<string, number> = {
   [UnitOfMeasure.G]: 1,
   [UnitOfMeasure.Kg]: 1000,
@@ -44,17 +88,18 @@ export function convertFromBase(
   baseUnit: string,
   targetUnit: string,
 ): number | null {
-  const lower = targetUnit.toLowerCase();
+  const lowerBase = normalizeUnit(baseUnit);
+  const lowerTarget = normalizeUnit(targetUnit);
 
-  if (baseUnit === UnitOfMeasure.G && WEIGHT_TO_GRAMS[lower] != null) {
-    return baseQty / WEIGHT_TO_GRAMS[lower];
+  if (lowerBase === UnitOfMeasure.G && WEIGHT_TO_GRAMS[lowerTarget] != null) {
+    return baseQty / WEIGHT_TO_GRAMS[lowerTarget];
   }
 
-  if (baseUnit === UnitOfMeasure.Ml && VOLUME_TO_ML[lower] != null) {
-    return baseQty / VOLUME_TO_ML[lower];
+  if (lowerBase === UnitOfMeasure.Ml && VOLUME_TO_ML[lowerTarget] != null) {
+    return baseQty / VOLUME_TO_ML[lowerTarget];
   }
 
-  if (baseUnit === UnitOfMeasure.Count && COUNT_UNITS.has(lower)) {
+  if (lowerBase === UnitOfMeasure.Count && COUNT_UNITS.has(lowerTarget)) {
     return baseQty;
   }
 
@@ -69,7 +114,7 @@ export function resolveBaseQuantity(
   item: { quantity: number; unit: string; baseQuantity?: number; baseUnit?: string },
 ): BaseConversion | null {
   if (item.baseQuantity && item.baseUnit) {
-    return { quantity: item.baseQuantity, baseUnit: item.baseUnit as BaseUnit };
+    return { quantity: item.baseQuantity, baseUnit: normalizeUnit(item.baseUnit) as BaseUnit };
   }
   return convertToBase(item.quantity, item.unit);
 }
@@ -78,7 +123,7 @@ export function convertToBase(
   qty: number,
   unit: string,
 ): BaseConversion | null {
-  const lower = unit.toLowerCase();
+  const lower = normalizeUnit(unit);
 
   if (WEIGHT_TO_GRAMS[lower] != null) {
     return { quantity: qty * WEIGHT_TO_GRAMS[lower], baseUnit: UnitOfMeasure.G };

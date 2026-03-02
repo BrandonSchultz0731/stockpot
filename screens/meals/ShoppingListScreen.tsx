@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -30,7 +30,9 @@ import {
 } from '../../hooks/useShoppingListQuery';
 import {
   useToggleShoppingListItemMutation,
+  useAddCustomShoppingListItemMutation,
 } from '../../hooks/useMealPlanMutations';
+import AddCustomItemSheet from './AddCustomItemSheet';
 import { formatWeekDateRange } from './MealPlanComponents';
 
 type ScreenProps = NativeStackScreenProps<MealsStackParamList, 'ShoppingList'>;
@@ -51,6 +53,19 @@ export default function ShoppingListScreen() {
     useShoppingListQuery(mealPlanId);
 
   const toggleMutation = useToggleShoppingListItemMutation(mealPlanId);
+  const addItemMutation = useAddCustomShoppingListItemMutation(mealPlanId);
+  const [showAddItem, setShowAddItem] = useState(false);
+
+  const handleAddCustomItem = useCallback(
+    (item: { displayName: string; quantity: number; unit: string }) => {
+      if (!shoppingList) return;
+      addItemMutation.mutate(
+        { listId: shoppingList.id, ...item },
+        { onSuccess: () => setShowAddItem(false) },
+      );
+    },
+    [shoppingList, addItemMutation],
+  );
 
   const sections: Section[] = useMemo(() => {
     if (!shoppingList?.items) return [];
@@ -236,8 +251,8 @@ export default function ShoppingListScreen() {
             <View className="ml-3 flex-1">
               <Text
                 className={`text-[14px] font-semibold ${item.pantryStatus === PantryStatus.Enough
-                    ? 'text-muted line-through'
-                    : 'text-dark'
+                  ? 'text-muted line-through'
+                  : 'text-dark'
                   }`}
                 numberOfLines={1}
               >
@@ -245,9 +260,11 @@ export default function ShoppingListScreen() {
               </Text>
             </View>
             <View className="ml-2 items-end">
-              <Text className="text-[12px] text-muted">
-                {item.neededQuantity} {item.unit}
-              </Text>
+              {item.pantryStatus !== PantryStatus.Enough && (
+                <Text className="text-[12px] text-muted">
+                  {item.neededQuantity} {item.unit}
+                </Text>
+              )}
               {item.pantryStatus === PantryStatus.Low && (
                 <Text className="text-[10px] text-muted">
                   have {Math.round((item.quantity - item.neededQuantity) * 100) / 100} {item.unit}
@@ -272,12 +289,15 @@ export default function ShoppingListScreen() {
           </Pressable>
         )}
         ListFooterComponent={
-          <View className="mt-4 mb-2 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-border py-3.5 opacity-50">
-            <Plus size={16} color={colors.muted} />
-            <Text className="ml-2 text-[13px] font-semibold text-muted">
+          <Pressable
+            onPress={() => setShowAddItem(true)}
+            className="mt-4 mb-2 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-orange/30 py-3.5"
+          >
+            <Plus size={16} color={colors.orange.DEFAULT} />
+            <Text className="ml-2 text-[13px] font-semibold text-orange">
               Add Custom Item
             </Text>
-          </View>
+          </Pressable>
         }
       />
 
@@ -298,6 +318,13 @@ export default function ShoppingListScreen() {
           </Text>
         </Pressable>
       </View>
+
+      <AddCustomItemSheet
+        visible={showAddItem}
+        onClose={() => setShowAddItem(false)}
+        onAdd={handleAddCustomItem}
+        isLoading={addItemMutation.isPending}
+      />
     </SafeAreaView>
   );
 }

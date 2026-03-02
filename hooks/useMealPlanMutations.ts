@@ -198,6 +198,36 @@ export function useToggleShoppingListItemMutation(mealPlanId: string) {
   });
 }
 
+export interface AddCustomShoppingListItemRequest {
+  listId: string;
+  displayName: string;
+  quantity: number;
+  unit: string;
+}
+
+export function useAddCustomShoppingListItemMutation(mealPlanId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ listId, displayName, quantity, unit }: AddCustomShoppingListItemRequest) =>
+      api.post<ShoppingListResponse>(ROUTES.SHOPPING_LISTS.ADD_ITEM(listId), {
+        displayName,
+        quantity,
+        unit,
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(
+        QUERY_KEYS.SHOPPING_LISTS.BY_MEAL_PLAN(mealPlanId),
+        data,
+      );
+    },
+    onError: (error: any) => {
+      const message = error?.message || 'Something went wrong';
+      Alert.alert('Failed to Add Item', message);
+    },
+  });
+}
+
 export function useUnsaveRecipeMutation() {
   const queryClient = useQueryClient();
 

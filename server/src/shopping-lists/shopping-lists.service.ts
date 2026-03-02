@@ -7,6 +7,7 @@ import { MealPlanEntry } from '../meal-plans/entities/meal-plan-entry.entity';
 import { PantryService } from '../pantry/pantry.service';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { PantryStatus, UnitOfMeasure, ShoppingListItem, DEFAULT_FOOD_CATEGORY, FOOD_CATEGORIES } from '@shared/enums';
+import { AddCustomItemDto } from './dto/add-custom-item.dto';
 import { countByPantryStatus } from '@shared/pantryStatusCounts';
 import { convertToBase, convertFromBase, resolveBaseQuantity } from '../pantry/unit-conversion';
 
@@ -121,7 +122,8 @@ export class ShoppingListsService {
       });
 
       if (list) {
-        list.items = items;
+        const customItems = list.items.filter((i) => i.isCustom);
+        list.items = [...items, ...customItems];
       } else {
         list = this.shoppingListRepo.create({
           userId,
@@ -152,9 +154,11 @@ export class ShoppingListsService {
     }
 
     // Re-enrich pantryStatus and neededQuantity from current pantry data
+    // (skip custom items — they aren't tied to the pantry)
     const pantryItems = await this.pantryService.findAllForUser(userId);
     const pantryMap = this.buildPantryMap(pantryItems);
     for (const item of list.items) {
+      if (item.isCustom) continue;
       const result = this.computePantryResult(item, pantryMap);
       item.pantryStatus = result.pantryStatus;
       item.neededQuantity = result.neededQuantity;
@@ -181,13 +185,46 @@ export class ShoppingListsService {
     await this.shoppingListRepo.save(list);
 
     // Re-enrich pantryStatus and neededQuantity from current pantry data
+    // (skip custom items — they aren't tied to the pantry)
     const pantryItems = await this.pantryService.findAllForUser(userId);
     const pantryMap = this.buildPantryMap(pantryItems);
     for (const i of list.items) {
+      if (i.isCustom) continue;
       const result = this.computePantryResult(i, pantryMap);
       i.pantryStatus = result.pantryStatus;
       i.neededQuantity = result.neededQuantity;
     }
+
+    return this.formatListResponse(list);
+  }
+
+  async addCustomItem(userId: string, listId: string, dto: AddCustomItemDto) {
+    const list = await this.shoppingListRepo.findOne({
+      where: { id: listId, userId },
+    });
+
+    if (!list) {
+      throw new NotFoundException('Shopping list not found');
+    }
+
+    const item: ShoppingListItem = {
+      id: randomUUID(),
+      displayName: dto.displayName,
+      quantity: dto.quantity,
+      unit: dto.unit,
+      baseQuantity: dto.quantity,
+      baseUnit: dto.unit,
+      foodCacheId: null,
+      category: dto.category ?? DEFAULT_FOOD_CATEGORY,
+      pantryStatus: PantryStatus.NA,
+      neededQuantity: dto.quantity,
+      isChecked: false,
+      isCustom: true,
+      recipeCount: 0,
+    };
+
+    list.items.push(item);
+    await this.shoppingListRepo.save(list);
 
     return this.formatListResponse(list);
   }
@@ -275,11 +312,13 @@ export class ShoppingListsService {
       return { pantryStatus: PantryStatus.Enough, neededQuantity: 0 };
     }
 
-    // Compute deficit in display unit
-    const deficitBase = neededQty - available;
-    const deficitDisplay = convertFromBase(deficitBase, neededUnit, item.unit);
-    const neededQuantity = deficitDisplay != null
-      ? Math.round(deficitDisplay * 100) / 100
+    // Convert available pantry amount to display unit, then subtract from
+    // the display quantity so both sides use the same conversion factor.
+    // (Using the deficit in base units can produce inconsistent results when
+    //  the AI's baseQuantity uses a different conversion rate than our tables.)
+    const availableDisplay = convertFromBase(available, neededUnit, item.unit);
+    const neededQuantity = availableDisplay != null
+      ? Math.round(Math.max(0, item.quantity - availableDisplay) * 100) / 100
       : item.quantity;
 
     return { pantryStatus: PantryStatus.Low, neededQuantity };

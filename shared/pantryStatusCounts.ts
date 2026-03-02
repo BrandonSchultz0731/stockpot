@@ -11,7 +11,7 @@ export function countByPantryStatus(
 ): PantryStatusCounts {
   return items.reduce(
     (acc, i) => {
-      if (!i.pantryStatus || i.pantryStatus === PantryStatus.None) acc.none++;
+      if (!i.pantryStatus || i.pantryStatus === PantryStatus.None || i.pantryStatus === PantryStatus.NA) acc.none++;
       else if (i.pantryStatus === PantryStatus.Low) acc.low++;
       else acc.enough++;
       return acc;

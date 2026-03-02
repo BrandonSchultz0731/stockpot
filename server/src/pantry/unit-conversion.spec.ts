@@ -1,4 +1,4 @@
-import { convertToBase } from './unit-conversion';
+import { convertToBase, convertFromBase, resolveBaseQuantity } from './unit-conversion';
 
 describe('convertToBase', () => {
   describe('weight → grams', () => {
@@ -76,9 +76,125 @@ describe('convertToBase', () => {
     );
   });
 
+  describe('plural and alias units', () => {
+    it('converts "cups" (plural) to ml', () => {
+      const result = convertToBase(1, 'cups');
+      expect(result?.baseUnit).toBe('ml');
+      expect(result?.quantity).toBeCloseTo(236.588);
+    });
+
+    it('converts "tablespoons" to ml', () => {
+      const result = convertToBase(1, 'tablespoons');
+      expect(result?.baseUnit).toBe('ml');
+      expect(result?.quantity).toBeCloseTo(14.787);
+    });
+
+    it('converts "lbs" to g', () => {
+      const result = convertToBase(1, 'lbs');
+      expect(result?.baseUnit).toBe('g');
+      expect(result?.quantity).toBeCloseTo(453.592);
+    });
+
+    it('converts "ounces" to g', () => {
+      const result = convertToBase(1, 'ounces');
+      expect(result?.baseUnit).toBe('g');
+      expect(result?.quantity).toBeCloseTo(28.3495);
+    });
+
+    it('converts "liters" to ml', () => {
+      expect(convertToBase(1, 'liters')).toEqual({ quantity: 1000, baseUnit: 'ml' });
+    });
+
+    it('converts "grams" to g', () => {
+      expect(convertToBase(500, 'grams')).toEqual({ quantity: 500, baseUnit: 'g' });
+    });
+  });
+
   describe('incompatible / unknown units', () => {
     it('returns null for unknown units', () => {
       expect(convertToBase(1, 'bushel')).toBeNull();
     });
+  });
+});
+
+describe('convertFromBase', () => {
+  it('converts ml back to cups', () => {
+    const result = convertFromBase(236.588, 'ml', 'cup');
+    expect(result).toBeCloseTo(1);
+  });
+
+  it('converts grams back to oz', () => {
+    const result = convertFromBase(28.3495, 'g', 'oz');
+    expect(result).toBeCloseTo(1);
+  });
+
+  it('handles case-insensitive baseUnit', () => {
+    const result = convertFromBase(236.588, 'Ml', 'cup');
+    expect(result).toBeCloseTo(1);
+  });
+
+  it('handles case-insensitive targetUnit', () => {
+    const result = convertFromBase(236.588, 'ml', 'Cup');
+    expect(result).toBeCloseTo(1);
+  });
+
+  it('handles plural targetUnit "cups"', () => {
+    const result = convertFromBase(236.588, 'ml', 'cups');
+    expect(result).toBeCloseTo(1);
+  });
+
+  it('handles alias targetUnit "tablespoons"', () => {
+    const result = convertFromBase(14.787, 'ml', 'tablespoons');
+    expect(result).toBeCloseTo(1);
+  });
+
+  it('returns null for incompatible units', () => {
+    expect(convertFromBase(100, 'ml', 'lb')).toBeNull();
+  });
+
+  it('returns count quantity as-is', () => {
+    expect(convertFromBase(3, 'count', 'count')).toBe(3);
+  });
+});
+
+describe('resolveBaseQuantity', () => {
+  it('uses baseQuantity/baseUnit when present', () => {
+    const result = resolveBaseQuantity({
+      quantity: 2,
+      unit: 'cup',
+      baseQuantity: 473.176,
+      baseUnit: 'ml',
+    });
+    expect(result).toEqual({ quantity: 473.176, baseUnit: 'ml' });
+  });
+
+  it('normalizes baseUnit to lowercase', () => {
+    const result = resolveBaseQuantity({
+      quantity: 2,
+      unit: 'cup',
+      baseQuantity: 473.176,
+      baseUnit: 'ML',
+    });
+    expect(result).toEqual({ quantity: 473.176, baseUnit: 'ml' });
+  });
+
+  it('falls back to convertToBase when baseQuantity is missing', () => {
+    const result = resolveBaseQuantity({
+      quantity: 2,
+      unit: 'cup',
+    });
+    expect(result?.baseUnit).toBe('ml');
+    expect(result?.quantity).toBeCloseTo(473.176);
+  });
+
+  it('falls back to convertToBase when baseQuantity is 0', () => {
+    const result = resolveBaseQuantity({
+      quantity: 1,
+      unit: 'lb',
+      baseQuantity: 0,
+      baseUnit: 'g',
+    });
+    expect(result?.baseUnit).toBe('g');
+    expect(result?.quantity).toBeCloseTo(453.592);
   });
 });

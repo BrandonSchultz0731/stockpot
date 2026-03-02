@@ -20,6 +20,7 @@ const STATUS_CONFIG: Record<PantryStatus, { icon: typeof CircleCheck; color: str
   [PantryStatus.Enough]: { icon: CircleCheck, color: colors.success.DEFAULT, bg: 'bg-success-pale' },
   [PantryStatus.Low]: { icon: CircleAlert, color: colors.warning.DEFAULT, bg: 'bg-warning-pale' },
   [PantryStatus.None]: { icon: Circle, color: colors.danger.DEFAULT, bg: 'bg-danger-pale' },
+  [PantryStatus.NA]: { icon: Circle, color: colors.muted, bg: 'bg-cream' },
 };
 
 export default function RichIngredientList({ data }: RichIngredientListProps) {
