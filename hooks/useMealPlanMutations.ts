@@ -119,6 +119,8 @@ export interface ConfirmCookRequest {
     deductQuantity: number;
     deductUnit: string;
   }[];
+  servingsToCook?: number;
+  servingsToEat?: number;
 }
 
 export interface ConfirmCookResponse {
@@ -128,11 +130,14 @@ export interface ConfirmCookResponse {
   pantryRemoved: number;
 }
 
-export function useCookPreviewQuery(entryId: string) {
+export function useCookPreviewQuery(entryId: string, servingsToCook?: number) {
   return useQuery({
-    queryKey: QUERY_KEYS.MEAL_PLANS.COOK_PREVIEW(entryId),
+    queryKey: [...QUERY_KEYS.MEAL_PLANS.COOK_PREVIEW(entryId), servingsToCook],
     queryFn: () =>
-      api.post<CookPreviewResponse>(ROUTES.MEAL_PLANS.COOK_PREVIEW(entryId)),
+      api.post<CookPreviewResponse>(
+        ROUTES.MEAL_PLANS.COOK_PREVIEW(entryId),
+        servingsToCook ? { servingsToCook } : undefined,
+      ),
     staleTime: 30 * 1000, // 30 seconds — most deductions are instant
   });
 }
@@ -141,10 +146,10 @@ export function useConfirmCookMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ entryId, deductions }: ConfirmCookRequest) =>
+    mutationFn: ({ entryId, deductions, servingsToCook, servingsToEat }: ConfirmCookRequest) =>
       api.post<ConfirmCookResponse>(
         ROUTES.MEAL_PLANS.COOK_CONFIRM(entryId),
-        { deductions },
+        { deductions, servingsToCook, servingsToEat },
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
@@ -237,6 +242,52 @@ export function useUnsaveRecipeMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECIPES.SAVED });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Leftovers
+// ---------------------------------------------------------------------------
+
+export interface AvailableLeftover {
+  sourceEntryId: string;
+  recipeId: string;
+  recipeTitle: string;
+  recipeImageUrl: string | null;
+  availableServings: number;
+}
+
+export function useAvailableLeftoversQuery(planId: string | undefined) {
+  return useQuery({
+    queryKey: QUERY_KEYS.MEAL_PLANS.LEFTOVERS(planId ?? ''),
+    queryFn: () =>
+      api.get<AvailableLeftover[]>(ROUTES.MEAL_PLANS.LEFTOVERS(planId!)),
+    enabled: !!planId,
+  });
+}
+
+export interface AddLeftoverEntryRequest {
+  mealPlanId: string;
+  sourceEntryId: string;
+  dayOfWeek: number;
+  mealType: MealType;
+  servings: number;
+}
+
+export function useAddLeftoverEntryMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: AddLeftoverEntryRequest) =>
+      api.post<MealPlanEntry>(ROUTES.MEAL_PLANS.ADD_LEFTOVER, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
+    },
+    onError: (error: unknown) => {
+      const message =
+        (error as { message?: string })?.message || 'Something went wrong';
+      Alert.alert('Failed to Add Leftover', message);
     },
   });
 }

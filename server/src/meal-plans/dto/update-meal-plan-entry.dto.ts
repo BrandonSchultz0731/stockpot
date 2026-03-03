@@ -7,6 +7,11 @@ export class UpdateMealPlanEntryDto {
   servings?: number;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
+  servingsToCook?: number;
+
+  @IsOptional()
   @IsBoolean()
   isLocked?: boolean;
 

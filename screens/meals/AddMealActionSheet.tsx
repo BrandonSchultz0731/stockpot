@@ -5,15 +5,17 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   View,
 } from 'react-native';
-import { ArrowLeft, Camera, Globe, Image, X, Zap } from 'lucide-react-native';
+import { ArrowLeft, Camera, Globe, Image, Minus, Plus, UtensilsCrossed, X, Zap } from 'lucide-react-native';
 import colors from '../../theme/colors';
 import Button from '../../components/Button';
+import type { AvailableLeftover } from '../../hooks/useMealPlanMutations';
 
-type Mode = 'choose' | 'url' | 'photo';
+type Mode = 'choose' | 'url' | 'photo' | 'leftovers';
 
 export interface AddMealActionSheetProps {
   visible: boolean;
@@ -22,6 +24,8 @@ export interface AddMealActionSheetProps {
   onAddMeal: (url?: string) => void;
   onPhotoCapture: (source: 'camera' | 'gallery') => void;
   isLoading: boolean;
+  availableLeftovers?: AvailableLeftover[];
+  onAddLeftover?: (sourceEntryId: string, servings: number) => void;
 }
 
 export default function AddMealActionSheet({
@@ -31,15 +35,23 @@ export default function AddMealActionSheet({
   onAddMeal,
   onPhotoCapture,
   isLoading,
+  availableLeftovers,
+  onAddLeftover,
 }: AddMealActionSheetProps) {
   const [mode, setMode] = useState<Mode>('choose');
   const [url, setUrl] = useState('');
+  const [selectedLeftover, setSelectedLeftover] = useState<AvailableLeftover | null>(null);
+  const [leftoverServings, setLeftoverServings] = useState(1);
+
+  const hasLeftovers = (availableLeftovers?.length ?? 0) > 0;
 
   // Reset state when sheet opens
   useEffect(() => {
     if (visible) {
       setMode('choose');
       setUrl('');
+      setSelectedLeftover(null);
+      setLeftoverServings(1);
     }
   }, [visible]);
 
@@ -72,7 +84,7 @@ export default function AddMealActionSheet({
         {/* Header */}
         <View className="mb-5 flex-row items-center justify-between">
           <View className="flex-row items-center">
-            {(mode === 'url' || mode === 'photo') && (
+            {mode !== 'choose' && (
               <Pressable
                 onPress={() => setMode('choose')}
                 hitSlop={10}
@@ -155,6 +167,27 @@ export default function AddMealActionSheet({
                 </Text>
               </View>
             </Pressable>
+
+            {/* Eat Leftovers */}
+            <Pressable
+              onPress={() => setMode('leftovers')}
+              disabled={isLoading || !hasLeftovers}
+              className={`flex-row items-center rounded-2xl border border-border bg-white p-4 ${!hasLeftovers ? 'opacity-40' : ''}`}
+            >
+              <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: colors.warning.pale }}>
+                <UtensilsCrossed size={20} color={colors.warning.icon} />
+              </View>
+              <View className="ml-3 flex-1">
+                <Text className="text-[15px] font-semibold text-dark">
+                  Eat Leftovers
+                </Text>
+                <Text className="mt-0.5 text-[12px] text-muted">
+                  {hasLeftovers
+                    ? 'Use leftover servings from another meal'
+                    : 'No leftovers available'}
+                </Text>
+              </View>
+            </Pressable>
           </View>
         ) : mode === 'url' ? (
           <View>
@@ -177,7 +210,7 @@ export default function AddMealActionSheet({
               disabled={!url.trim() || isLoading}
             />
           </View>
-        ) : (
+        ) : mode === 'photo' ? (
           <View className="gap-3">
             {/* Take Photo */}
             <Pressable
@@ -215,7 +248,77 @@ export default function AddMealActionSheet({
               </View>
             </Pressable>
           </View>
-        )}
+        ) : mode === 'leftovers' ? (
+          <View>
+            {!selectedLeftover ? (
+              <ScrollView className="max-h-[300px]">
+                <View className="gap-3">
+                  {availableLeftovers?.map((lo) => (
+                    <Pressable
+                      key={lo.sourceEntryId}
+                      onPress={() => {
+                        setSelectedLeftover(lo);
+                        setLeftoverServings(1);
+                      }}
+                      className="flex-row items-center rounded-2xl border border-border bg-white p-4"
+                    >
+                      <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: colors.warning.pale }}>
+                        <UtensilsCrossed size={20} color={colors.warning.icon} />
+                      </View>
+                      <View className="ml-3 flex-1">
+                        <Text className="text-[15px] font-semibold text-dark" numberOfLines={1}>
+                          {lo.recipeTitle}
+                        </Text>
+                        <Text className="mt-0.5 text-[12px] text-muted">
+                          {lo.availableServings} {lo.availableServings === 1 ? 'serving' : 'servings'} available
+                        </Text>
+                      </View>
+                    </Pressable>
+                  ))}
+                </View>
+              </ScrollView>
+            ) : (
+              <View>
+                <Text className="mb-1 text-[15px] font-semibold text-dark" numberOfLines={1}>
+                  {selectedLeftover.recipeTitle}
+                </Text>
+                <Text className="mb-4 text-[12px] text-muted">
+                  {selectedLeftover.availableServings} {selectedLeftover.availableServings === 1 ? 'serving' : 'servings'} available
+                </Text>
+                <View className="mb-4 flex-row items-center justify-center">
+                  <Pressable
+                    onPress={() => setLeftoverServings((s) => Math.max(1, s - 1))}
+                    disabled={leftoverServings <= 1}
+                    className={`h-10 w-10 items-center justify-center rounded-lg border border-border ${leftoverServings <= 1 ? 'opacity-30' : ''}`}
+                  >
+                    <Minus size={16} color={colors.dark} />
+                  </Pressable>
+                  <Text className="mx-5 text-[22px] font-bold text-orange">
+                    {leftoverServings}
+                  </Text>
+                  <Pressable
+                    onPress={() =>
+                      setLeftoverServings((s) =>
+                        Math.min(selectedLeftover.availableServings, s + 1),
+                      )
+                    }
+                    disabled={leftoverServings >= selectedLeftover.availableServings}
+                    className={`h-10 w-10 items-center justify-center rounded-lg border border-border ${leftoverServings >= selectedLeftover.availableServings ? 'opacity-30' : ''}`}
+                  >
+                    <Plus size={16} color={colors.dark} />
+                  </Pressable>
+                </View>
+                <Button
+                  label={`Add ${leftoverServings} ${leftoverServings === 1 ? 'serving' : 'servings'}`}
+                  onPress={() => {
+                    onAddLeftover?.(selectedLeftover.sourceEntryId, leftoverServings);
+                    onClose();
+                  }}
+                />
+              </View>
+            )}
+          </View>
+        ) : null}
       </View>
       </KeyboardAvoidingView>
     </Modal>

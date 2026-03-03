@@ -17,8 +17,8 @@ export type OnboardingParamList = {
 };
 
 // Shared screen params used across multiple stacks
-export type RecipeDetailParams = { recipeId: string; title?: string; entryId?: string; isCooked?: boolean };
-export type CookedReviewParams = { entryId: string };
+export type RecipeDetailParams = { recipeId: string; title?: string; entryId?: string; isCooked?: boolean; isLeftover?: boolean };
+export type CookedReviewParams = { entryId: string; servingsToCook?: number; servingsToEat?: number };
 
 export type HomeStackParamList = {
   HomeScreen: undefined;

@@ -17,6 +17,7 @@ import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
 import { ConfirmCookDto } from './dto/confirm-cook.dto';
 import { AddMealPlanEntryDto } from './dto/add-meal-plan-entry.dto';
+import { AddLeftoverEntryDto } from './dto/add-leftover-entry.dto';
 
 @Controller('meal-plans')
 @UseGuards(JwtAuthGuard)
@@ -66,8 +67,9 @@ export class MealPlansController {
   cookPreview(
     @GetUser('id') userId: string,
     @Param('id') entryId: string,
+    @Body() body: { servingsToCook?: number },
   ) {
-    return this.mealPlansService.cookPreview(userId, entryId);
+    return this.mealPlansService.cookPreview(userId, entryId, body?.servingsToCook);
   }
 
   @Post('entries/:id/cook/confirm')
@@ -86,6 +88,22 @@ export class MealPlansController {
     @Body() dto: SwapMealPlanEntryDto,
   ) {
     return this.mealPlansService.swapEntry(userId, entryId, dto);
+  }
+
+  @Get(':planId/leftovers')
+  getAvailableLeftovers(
+    @GetUser('id') userId: string,
+    @Param('planId') planId: string,
+  ) {
+    return this.mealPlansService.getAvailableLeftovers(userId, planId);
+  }
+
+  @Post('entries/add-leftover')
+  addLeftoverEntry(
+    @GetUser('id') userId: string,
+    @Body() dto: AddLeftoverEntryDto,
+  ) {
+    return this.mealPlansService.addLeftoverEntry(userId, dto);
   }
 
   @Delete(':id')

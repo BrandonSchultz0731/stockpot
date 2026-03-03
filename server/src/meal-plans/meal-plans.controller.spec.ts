@@ -77,11 +77,12 @@ describe('MealPlansController', () => {
       };
       mockMealPlansService.cookPreview.mockResolvedValue(previewResult);
 
-      const result = await controller.cookPreview('u1', 'entry-1');
+      const result = await controller.cookPreview('u1', 'entry-1', {});
 
       expect(mockMealPlansService.cookPreview).toHaveBeenCalledWith(
         'u1',
         'entry-1',
+        undefined,
       );
       expect(result).toEqual(previewResult);
     });

@@ -40,10 +40,10 @@ export default function CookedReviewScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<MealsStackParamList>>();
   const route = useRoute<ScreenProps['route']>();
-  const { entryId } = route.params;
+  const { entryId, servingsToCook, servingsToEat } = route.params;
   const queryClient = useQueryClient();
 
-  const { data: preview, isPending: isPreviewLoading, isError: isPreviewError } = useCookPreviewQuery(entryId);
+  const { data: preview, isPending: isPreviewLoading, isError: isPreviewError } = useCookPreviewQuery(entryId, servingsToCook);
   const confirmMutation = useConfirmCookMutation();
 
   const [rows, setRows] = useState<DeductionRow[]>([]);
@@ -94,14 +94,19 @@ export default function CookedReviewScreen() {
     }));
 
     confirmMutation.mutate(
-      { entryId, deductions },
+      {
+        entryId,
+        deductions,
+        servingsToCook,
+        servingsToEat,
+      },
       {
         onSuccess: () => {
           navigation.popToTop();
         },
       },
     );
-  }, [checkedRows, confirmMutation, entryId, navigation]);
+  }, [checkedRows, confirmMutation, entryId, navigation, servingsToCook, servingsToEat]);
 
   const handleSkip = useCallback(async () => {
     await api.patch(ROUTES.MEAL_PLANS.UPDATE_ENTRY(entryId), {

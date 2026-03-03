@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  OneToMany,
   JoinColumn,
   Index,
 } from 'typeorm';
@@ -31,6 +32,12 @@ export class MealPlanEntry {
   @Column({ type: 'int', default: 1 })
   servings: number;
 
+  @Column({ type: 'int', name: 'servings_to_cook', nullable: true })
+  servingsToCook: number | null;
+
+  @Column({ type: 'uuid', name: 'leftover_source_entry_id', nullable: true })
+  leftoverSourceEntryId: string | null;
+
   @Column({ type: 'boolean', name: 'is_locked', default: false })
   isLocked: boolean;
 
@@ -44,4 +51,11 @@ export class MealPlanEntry {
   @ManyToOne(() => Recipe, { onDelete: 'NO ACTION' })
   @JoinColumn({ name: 'recipe_id' })
   recipe: Recipe;
+
+  @ManyToOne(() => MealPlanEntry, (e) => e.leftoverEntries, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'leftover_source_entry_id' })
+  leftoverSourceEntry: MealPlanEntry;
+
+  @OneToMany(() => MealPlanEntry, (e) => e.leftoverSourceEntry)
+  leftoverEntries: MealPlanEntry[];
 }

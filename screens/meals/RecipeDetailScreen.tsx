@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -13,6 +14,8 @@ import {
   CookingPot,
   Flame,
   Heart,
+  Minus,
+  Plus,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -21,6 +24,8 @@ import ErrorState from '../../components/ErrorState';
 import LoadingScreen from '../../components/LoadingScreen';
 import { useRecipeDetailQuery } from '../../hooks/useRecipeDetailQuery';
 import { useSavedRecipes } from '../../hooks/useSavedRecipes';
+import { api } from '../../services/api';
+import { ROUTES } from '../../services/routes';
 import type { MealsStackParamList } from '../../navigation/types';
 import { countByPantryStatus } from '../../shared/pantryStatusCounts';
 import type { RecipeIngredient, RecipeStep } from '../../shared/enums';
@@ -109,6 +114,91 @@ function ServingDisplay({ servings }: { servings: number }) {
       <Text className="text-[13px] font-semibold text-dark">Servings</Text>
       <View className="flex-1" />
       <Text className="text-[16px] font-bold text-orange">{servings}</Text>
+    </View>
+  );
+}
+
+function ServingStepper({
+  label,
+  value,
+  min,
+  onIncrement,
+  onDecrement,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  onIncrement: () => void;
+  onDecrement: () => void;
+}) {
+  return (
+    <View className="flex-row items-center">
+      <Text className="flex-1 text-[13px] font-semibold text-dark">{label}</Text>
+      <Pressable
+        onPress={onDecrement}
+        disabled={value <= min}
+        className={`h-8 w-8 items-center justify-center rounded-lg border border-border ${value <= min ? 'opacity-30' : ''}`}
+      >
+        <Minus size={14} color={colors.dark} />
+      </Pressable>
+      <Text className="mx-3 min-w-[24px] text-center text-[16px] font-bold text-orange">
+        {value}
+      </Text>
+      <Pressable
+        onPress={onIncrement}
+        className="h-8 w-8 items-center justify-center rounded-lg border border-border"
+      >
+        <Plus size={14} color={colors.dark} />
+      </Pressable>
+    </View>
+  );
+}
+
+function ServingsSection({
+  servingsToCook,
+  servingsToEat,
+  onSetCook,
+  onSetEat,
+}: {
+  servingsToCook: number;
+  servingsToEat: number;
+  onSetCook: (v: number) => void;
+  onSetEat: (v: number) => void;
+}) {
+  const leftovers = servingsToCook - servingsToEat;
+
+  return (
+    <View className="mx-5 mt-4 rounded-xl border border-border bg-white px-3.5 py-2.5">
+      <ServingStepper
+        label="Servings to cook"
+        value={servingsToCook}
+        min={1}
+        onIncrement={() => onSetCook(servingsToCook + 1)}
+        onDecrement={() => {
+          const next = servingsToCook - 1;
+          onSetCook(next);
+          if (servingsToEat > next) onSetEat(next);
+        }}
+      />
+      {servingsToCook > 1 && (
+        <>
+          <View className="my-2 h-px bg-border" />
+          <ServingStepper
+            label="Servings to eat"
+            value={servingsToEat}
+            min={1}
+            onIncrement={() => {
+              if (servingsToEat < servingsToCook) onSetEat(servingsToEat + 1);
+            }}
+            onDecrement={() => onSetEat(servingsToEat - 1)}
+          />
+        </>
+      )}
+      {leftovers > 0 && (
+        <Text className="mt-2 text-center text-[12px] font-semibold text-warning-icon">
+          {leftovers} {leftovers === 1 ? 'serving' : 'servings'} of leftovers
+        </Text>
+      )}
     </View>
   );
 }
@@ -204,13 +294,63 @@ function InstructionsSection({ steps }: { steps: RecipeStep[] }) {
 export default function RecipeDetailScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MealsStackParamList>>();
   const route = useRoute<ScreenProps['route']>();
-  const { recipeId, title: routeTitle, entryId, isCooked } = route.params;
+  const { recipeId, title: routeTitle, entryId, isCooked, isLeftover } = route.params;
 
   const { data: recipe, isLoading, isError } = useRecipeDetailQuery(recipeId);
   const { isSaved, toggleSave } = useSavedRecipes();
 
   const saved = isSaved(recipeId);
-  const scale = 1;
+
+  // Serving state — only interactive when viewing from a meal plan entry
+  const [servingsToCook, setServingsToCook] = useState(0);
+  const [servingsToEat, setServingsToEat] = useState(0);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (recipe && !initialized.current) {
+      initialized.current = true;
+      setServingsToCook(recipe.servings);
+      setServingsToEat(recipe.servings);
+    }
+  }, [recipe]);
+
+  // Debounced PATCH to save serving changes
+  const patchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const patchServings = useCallback(
+    (cook: number, eat: number) => {
+      if (!entryId) return;
+      if (patchTimer.current) clearTimeout(patchTimer.current);
+      patchTimer.current = setTimeout(() => {
+        api.patch(ROUTES.MEAL_PLANS.UPDATE_ENTRY(entryId), {
+          servingsToCook: cook,
+          servings: eat,
+        });
+      }, 600);
+    },
+    [entryId],
+  );
+
+  const handleSetCook = useCallback(
+    (v: number) => {
+      setServingsToCook(v);
+      setServingsToEat((prev) => {
+        const eat = Math.min(prev, v);
+        patchServings(v, eat);
+        return eat;
+      });
+    },
+    [patchServings],
+  );
+
+  const handleSetEat = useCallback(
+    (v: number) => {
+      setServingsToEat(v);
+      patchServings(servingsToCook, v);
+    },
+    [patchServings, servingsToCook],
+  );
+
+  const scale = recipe ? servingsToCook / (recipe.servings || 1) : 1;
 
   // Loading state
   if (isLoading || !recipe) {
@@ -266,15 +406,30 @@ export default function RecipeDetailScreen() {
           title={recipe.title}
           description={recipe.description}
         />
-        <ServingDisplay servings={recipe.servings} />
+        {entryId && !isCooked && !isLeftover ? (
+          <ServingsSection
+            servingsToCook={servingsToCook}
+            servingsToEat={servingsToEat}
+            onSetCook={handleSetCook}
+            onSetEat={handleSetEat}
+          />
+        ) : (
+          <ServingDisplay servings={isLeftover ? servingsToEat : recipe.servings} />
+        )}
         <IngredientsSection
           ingredients={recipe.ingredients}
           scale={scale}
         />
         <InstructionsSection steps={recipe.steps} />
-        {entryId && !isCooked && (
+        {entryId && !isCooked && !isLeftover && (
           <Pressable
-            onPress={() => navigation.navigate('CookedReview', { entryId })}
+            onPress={() =>
+              navigation.navigate('CookedReview', {
+                entryId,
+                servingsToCook,
+                servingsToEat,
+              })
+            }
             className="mx-5 mt-6 flex-row items-center justify-center rounded-[14px] bg-success py-3.5"
           >
             <CookingPot size={18} color="#fff" />

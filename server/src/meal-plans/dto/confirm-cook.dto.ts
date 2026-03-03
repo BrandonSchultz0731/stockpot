@@ -1,7 +1,9 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsInt,
   IsNumber,
+  IsOptional,
   IsString,
   Min,
   ValidateNested,
@@ -24,4 +26,14 @@ export class ConfirmCookDto {
   @ValidateNested({ each: true })
   @Type(() => DeductionItemDto)
   deductions: DeductionItemDto[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  servingsToCook?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  servingsToEat?: number;
 }

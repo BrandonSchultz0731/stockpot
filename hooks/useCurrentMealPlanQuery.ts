@@ -12,6 +12,9 @@ export interface MealPlanEntry {
   dayOfWeek: number;
   mealType: MealType;
   servings: number;
+  servingsToCook: number | null;
+  leftoverSourceEntryId: string | null;
+  leftoverEntries?: MealPlanEntry[];
   isLocked: boolean;
   isCooked: boolean;
   recipe: MealPlanRecipe;
