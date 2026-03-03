@@ -15,9 +15,11 @@ import { GenerateRecipeDto } from './dto/generate-recipe.dto';
 import { SaveRecipeDto } from './dto/save-recipe.dto';
 import { UpdateSavedRecipeDto } from './dto/update-saved-recipe.dto';
 import { ACTIVE_MODEL } from '../ai-models';
-import { UnitOfMeasure, RecipeIngredient, RecipeSource, MessageType } from '@shared/enums';
+import { RecipeSource, MessageType } from '@shared/enums';
 import { buildRecipeGenerationPrompt } from '../prompts';
 import { enrichPantryStatus } from '../pantry/enrich-pantry';
+import { extractText, parseArrayFromAI } from '../utils/ai-response';
+import { formatPantryForPrompt, buildPantryFoodItems, mapResolvedIngredients, buildRecipeData, ParsedRecipe } from '../utils/recipe-builder';
 
 @Injectable()
 export class RecipesService {
@@ -50,10 +52,7 @@ export class RecipesService {
     dto: GenerateRecipeDto,
   ): Promise<Recipe[]> {
     const pantryItems = await this.pantryService.findAllForUser(userId);
-
-    const ingredientList = pantryItems
-      .map((item) => `${item.displayName} (${item.quantity} ${item.unit})`)
-      .join('\n');
+    const ingredientList = formatPantryForPrompt(pantryItems);
 
     const filters: string[] = [];
     if (dto.mealType) filters.push(`Meal type: ${dto.mealType}`);
@@ -86,56 +85,34 @@ export class RecipesService {
       throw new BadGatewayException('Recipe generation service unavailable');
     }
 
-    const rawText =
-      response.content[0]?.type === 'text' ? response.content[0].text : '';
+    const rawText = extractText(response);
 
-    const parsed = this.parseRecipeResponse(rawText);
+    const rawParsed = parseArrayFromAI<ParsedRecipe>(rawText) ?? [];
+    const parsed = rawParsed.filter(
+      (item) =>
+        item &&
+        typeof item.title === 'string' &&
+        item.title.trim().length > 0 &&
+        Array.isArray(item.ingredients) &&
+        Array.isArray(item.steps),
+    );
 
     // Resolve ingredient names to food_cache IDs
     const allIngredientNames = parsed.flatMap(
-      (item: any) => (item.ingredients ?? []).map((ing: any) => ing.name as string),
+      (item) => item.ingredients.map((ing) => ing.name),
     );
-    const pantryFoodItems = pantryItems.map((item) => ({
-      foodCacheId: item.foodCacheId,
-      displayName: item.displayName,
-    }));
     const resolvedMap = await this.foodCacheService.resolveIngredientNames(
       allIngredientNames,
-      pantryFoodItems,
+      buildPantryFoodItems(pantryItems),
       userId,
     );
 
     const recipes: Recipe[] = [];
     for (const item of parsed) {
-      const resolvedIngredients: RecipeIngredient[] = (item.ingredients ?? []).map(
-        (ing: any) => ({
-          name: ing.name,
-          quantity: ing.quantity,
-          unit: ing.unit,
-          baseQuantity: ing.baseQuantity ?? 0,
-          baseUnit: ing.baseUnit ?? UnitOfMeasure.Count,
-          ...(ing.notes ? { notes: ing.notes } : {}),
-          foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
-        }),
-      );
-
+      const resolvedIngredients = mapResolvedIngredients(item.ingredients ?? [], resolvedMap);
       const recipe = this.recipeRepo.create({
-        userId,
-        title: item.title,
-        description: item.description,
-        prepTimeMinutes: item.prepTimeMinutes,
-        cookTimeMinutes: item.cookTimeMinutes,
-        totalTimeMinutes: item.totalTimeMinutes,
-        servings: item.servings,
-        difficulty: item.difficulty,
-        cuisine: item.cuisine,
-        mealType: item.mealType,
-        source: RecipeSource.AI,
+        ...buildRecipeData(item, { userId, source: RecipeSource.AI }),
         ingredients: resolvedIngredients,
-        steps: item.steps ?? [],
-        tags: item.tags,
-        dietaryFlags: item.dietaryFlags,
-        nutrition: item.nutrition,
       });
       recipes.push(await this.recipeRepo.save(recipe));
     }
@@ -219,48 +196,4 @@ export class RecipesService {
     return this.savedRecipeRepo.save(savedRecipe);
   }
 
-  private parseRecipeResponse(raw: string): any[] {
-    let parsed: unknown;
-
-    // Try 1: Direct JSON parse
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      // Try 2: Extract from markdown code block
-      const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeBlockMatch) {
-        try {
-          parsed = JSON.parse(codeBlockMatch[1].trim());
-        } catch {
-          // fall through
-        }
-      }
-
-      // Try 3: Find array via regex
-      if (!parsed) {
-        const arrayMatch = raw.match(/\[[\s\S]*\]/);
-        if (arrayMatch) {
-          try {
-            parsed = JSON.parse(arrayMatch[0]);
-          } catch {
-            // fall through
-          }
-        }
-      }
-    }
-
-    if (!Array.isArray(parsed)) {
-      this.logger.warn('Failed to parse recipe generation response');
-      return [];
-    }
-
-    return parsed.filter(
-      (item: any) =>
-        item &&
-        typeof item.title === 'string' &&
-        item.title.trim().length > 0 &&
-        Array.isArray(item.ingredients) &&
-        Array.isArray(item.steps),
-    );
-  }
 }

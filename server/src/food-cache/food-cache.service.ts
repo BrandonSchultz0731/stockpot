@@ -3,10 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, IsNull, In } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { FoodCache } from './entities/food-cache.entity';
-import { UnitOfMeasure, StorageLocation, ShelfLife, FOOD_CATEGORIES, MessageType } from '@shared/enums';
+import { UnitOfMeasure, ShelfLife, FOOD_CATEGORIES, MessageType } from '@shared/enums';
 import { AnthropicService } from '../anthropic/anthropic.service';
 import { CLAUDE_MODELS } from '../ai-models';
 import { buildIngredientResolutionPrompt, buildBatchCategoryPrompt, buildShelfLifePrompt, buildFoodMatchPrompt } from '../prompts';
+import { extractText, parseObjectFromAI } from '../utils/ai-response';
+import { parseShelfLife } from '../utils/shelf-life';
 
 interface UsdaFoodNutrient {
   nutrientNumber: string;
@@ -224,21 +226,8 @@ export class FoodCacheService {
           messageType: MessageType.IngredientResolution,
         });
 
-        const rawText =
-          response.content[0]?.type === 'text' ? response.content[0].text : '';
-        let parsed: Record<string, string> = {};
-        try {
-          parsed = JSON.parse(rawText);
-        } catch {
-          const objectMatch = rawText.match(/\{[\s\S]*\}/);
-          if (objectMatch) {
-            try {
-              parsed = JSON.parse(objectMatch[0]);
-            } catch {
-              // fall through
-            }
-          }
-        }
+        const rawText = extractText(response);
+        const parsed = (parseObjectFromAI(rawText) ?? {}) as Record<string, string>;
 
         for (const [name, id] of Object.entries(parsed)) {
           if (id && id !== 'NONE') {
@@ -382,35 +371,12 @@ export class FoodCacheService {
         messageType: MessageType.ShelfLife,
       });
 
-      const rawText =
-        response.content[0]?.type === 'text' ? response.content[0].text : '';
+      const rawText = extractText(response);
+      const obj = parseObjectFromAI(rawText);
+      if (!obj) return null;
 
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(rawText);
-      } catch {
-        const match = rawText.match(/\{[\s\S]*\}/);
-        if (match) {
-          try {
-            parsed = JSON.parse(match[0]);
-          } catch {
-            return null;
-          }
-        }
-      }
-
-      if (!parsed || typeof parsed !== 'object') return null;
-
-      const obj = parsed as Record<string, unknown>;
-      const shelfLife: ShelfLife = {};
-      for (const loc of Object.values(StorageLocation)) {
-        const val = Number(obj[loc]);
-        if (Number.isFinite(val) && val > 0) {
-          shelfLife[loc] = Math.round(val);
-        }
-      }
-
-      if (Object.keys(shelfLife).length === 0) return null;
+      const shelfLife = parseShelfLife(obj);
+      if (!shelfLife) return null;
 
       // Cache the result for future lookups
       if (foodCacheId) {
@@ -471,22 +437,8 @@ export class FoodCacheService {
         messageType: MessageType.FoodCategory,
       });
 
-      const rawText =
-        response.content[0]?.type === 'text' ? response.content[0].text : '';
-
-      let parsed: Record<string, string> = {};
-      try {
-        parsed = JSON.parse(rawText);
-      } catch {
-        const objectMatch = rawText.match(/\{[\s\S]*\}/);
-        if (objectMatch) {
-          try {
-            parsed = JSON.parse(objectMatch[0]);
-          } catch {
-            // fall through
-          }
-        }
-      }
+      const rawText = extractText(response);
+      const parsed = (parseObjectFromAI(rawText) ?? {}) as Record<string, string>;
 
       for (const [name, category] of Object.entries(parsed)) {
         if (!category || !FOOD_CATEGORIES.includes(category)) continue;
@@ -616,21 +568,8 @@ export class FoodCacheService {
         messageType: MessageType.FoodMatch,
       });
 
-      const rawText =
-        response.content[0]?.type === 'text' ? response.content[0].text : '';
-      let parsed: Record<string, string | null> = {};
-      try {
-        parsed = JSON.parse(rawText);
-      } catch {
-        const objectMatch = rawText.match(/\{[\s\S]*\}/);
-        if (objectMatch) {
-          try {
-            parsed = JSON.parse(objectMatch[0]);
-          } catch {
-            // fall through
-          }
-        }
-      }
+      const rawText = extractText(response);
+      const parsed = (parseObjectFromAI(rawText) ?? {}) as Record<string, string | null>;
 
       const matchedId = parsed[name];
       if (matchedId) {
@@ -694,21 +633,8 @@ export class FoodCacheService {
           messageType: MessageType.FoodMatch,
         });
 
-        const rawText =
-          response.content[0]?.type === 'text' ? response.content[0].text : '';
-        let parsed: Record<string, string | null> = {};
-        try {
-          parsed = JSON.parse(rawText);
-        } catch {
-          const objectMatch = rawText.match(/\{[\s\S]*\}/);
-          if (objectMatch) {
-            try {
-              parsed = JSON.parse(objectMatch[0]);
-            } catch {
-              // fall through
-            }
-          }
-        }
+        const rawText = extractText(response);
+        const parsed = (parseObjectFromAI(rawText) ?? {}) as Record<string, string | null>;
 
         for (const item of needsAi) {
           const matchedId = parsed[item.name];

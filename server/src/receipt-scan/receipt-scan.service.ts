@@ -9,6 +9,9 @@ import { ACTIVE_MODEL } from '../ai-models';
 import { UnitOfMeasure, StorageLocation, ShelfLife, MessageType } from '@shared/enums';
 import { buildReceiptScanPrompt } from '../prompts';
 import { ScanReceiptDto } from './dto/scan-receipt.dto';
+import { extractText, parseArrayFromAI } from '../utils/ai-response';
+import { parseShelfLife } from '../utils/shelf-life';
+import { normalizeImageMime } from '../utils/mime';
 
 export interface ScannedItem {
   displayName: string;
@@ -48,12 +51,7 @@ export class ReceiptScanService {
                 type: 'image',
                 source: {
                   type: 'base64',
-                  // Normalize non-standard mime types to ones Claude Vision accepts
-                  media_type: (
-                    ['image/jpg', 'image/heic', 'image/heif'].includes(dto.mimeType)
-                      ? 'image/jpeg'
-                      : dto.mimeType
-                  ) as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif',
+                  media_type: normalizeImageMime(dto.mimeType),
                   data: dto.imageBase64,
                 },
               },
@@ -70,54 +68,14 @@ export class ReceiptScanService {
       throw new BadGatewayException('Receipt scanning service unavailable');
     }
 
-    const rawText =
-      response.content[0]?.type === 'text' ? response.content[0].text : '';
+    const rawText = extractText(response);
 
-    const items = this.parseResponse(rawText);
-    return { items };
-  }
-
-  private parseResponse(raw: string): ScannedItem[] {
-    let parsed: unknown;
-
-    // Try 1: Direct JSON parse
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      // Try 2: Extract from markdown code block
-      const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeBlockMatch) {
-        try {
-          parsed = JSON.parse(codeBlockMatch[1].trim());
-        } catch {
-          // fall through
-        }
-      }
-
-      // Try 3: Find array via regex
-      if (!parsed) {
-        const arrayMatch = raw.match(/\[[\s\S]*\]/);
-        if (arrayMatch) {
-          try {
-            parsed = JSON.parse(arrayMatch[0]);
-          } catch {
-            // fall through
-          }
-        }
-      }
+    const parsed = parseArrayFromAI(rawText);
+    if (parsed === undefined) {
+      return { items: [] };
     }
 
-    if (!Array.isArray(parsed)) {
-      if (parsed === undefined || parsed === null) {
-        // Likely unreadable receipt
-        return [];
-      }
-      throw new UnprocessableEntityException(
-        'Could not parse receipt scan response',
-      );
-    }
-
-    return parsed
+    const items: ScannedItem[] = parsed
       .filter(
         (item: any) =>
           item &&
@@ -132,27 +90,13 @@ export class ReceiptScanService {
             : 1,
         unit: VALID_UNITS.has(item.unit) ? item.unit : UnitOfMeasure.Count,
         ...(item.estimatedShelfLife && {
-          estimatedShelfLife: this.parseShelfLife(item.estimatedShelfLife),
+          estimatedShelfLife: parseShelfLife(item.estimatedShelfLife),
         }),
         ...(VALID_STORAGE_LOCATIONS.has(item.suggestedStorageLocation) && {
           suggestedStorageLocation: item.suggestedStorageLocation,
         }),
       }));
-  }
 
-  private parseShelfLife(raw: unknown): ShelfLife | undefined {
-    if (!raw || typeof raw !== 'object') return undefined;
-
-    const result: ShelfLife = {};
-    const obj = raw as Record<string, unknown>;
-
-    for (const loc of Object.values(StorageLocation)) {
-      const val = Number(obj[loc]);
-      if (Number.isFinite(val) && val > 0) {
-        result[loc] = Math.round(val);
-      }
-    }
-
-    return Object.keys(result).length > 0 ? result : undefined;
+    return { items };
   }
 }

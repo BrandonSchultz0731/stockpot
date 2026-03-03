@@ -9,7 +9,7 @@ import { FoodCacheService } from '../food-cache/food-cache.service';
 import { PantryStatus, UnitOfMeasure, ShoppingListItem, DEFAULT_FOOD_CATEGORY, FOOD_CATEGORIES } from '@shared/enums';
 import { AddCustomItemDto } from './dto/add-custom-item.dto';
 import { countByPantryStatus } from '@shared/pantryStatusCounts';
-import { convertToBase, convertFromBase, resolveBaseQuantity } from '../pantry/unit-conversion';
+import { convertToBase, convertFromBase, resolveBaseQuantity, buildPantryMap } from '../pantry/unit-conversion';
 
 interface AggregatedIngredient {
   displayName: string;
@@ -44,7 +44,7 @@ export class ShoppingListsService {
 
       // 2. Load pantry items and build lookup by foodCacheId
       const pantryItems = await this.pantryService.findAllForUser(userId);
-      const pantryMap = this.buildPantryMap(pantryItems);
+      const pantryMap = buildPantryMap(pantryItems);
 
       // 3. Aggregate all recipe ingredients, dedup by foodCacheId or lowercase name
       const byKey = new Map<string, AggregatedIngredient>();
@@ -153,17 +153,7 @@ export class ShoppingListsService {
       throw new NotFoundException('Shopping list not found for this meal plan');
     }
 
-    // Re-enrich pantryStatus and neededQuantity from current pantry data
-    // (skip custom items — they aren't tied to the pantry)
-    const pantryItems = await this.pantryService.findAllForUser(userId);
-    const pantryMap = this.buildPantryMap(pantryItems);
-    for (const item of list.items) {
-      if (item.isCustom) continue;
-      const result = this.computePantryResult(item, pantryMap);
-      item.pantryStatus = result.pantryStatus;
-      item.neededQuantity = result.neededQuantity;
-    }
-
+    await this.enrichPantryStatuses(userId, list);
     return this.formatListResponse(list);
   }
 
@@ -184,17 +174,7 @@ export class ShoppingListsService {
     item.isChecked = !item.isChecked;
     await this.shoppingListRepo.save(list);
 
-    // Re-enrich pantryStatus and neededQuantity from current pantry data
-    // (skip custom items — they aren't tied to the pantry)
-    const pantryItems = await this.pantryService.findAllForUser(userId);
-    const pantryMap = this.buildPantryMap(pantryItems);
-    for (const i of list.items) {
-      if (i.isCustom) continue;
-      const result = this.computePantryResult(i, pantryMap);
-      i.pantryStatus = result.pantryStatus;
-      i.neededQuantity = result.neededQuantity;
-    }
-
+    await this.enrichPantryStatuses(userId, list);
     return this.formatListResponse(list);
   }
 
@@ -229,6 +209,17 @@ export class ShoppingListsService {
     return this.formatListResponse(list);
   }
 
+  private async enrichPantryStatuses(userId: string, list: ShoppingList): Promise<void> {
+    const pantryItems = await this.pantryService.findAllForUser(userId);
+    const pantryMap = buildPantryMap(pantryItems);
+    for (const item of list.items) {
+      if (item.isCustom) continue;
+      const result = this.computePantryResult(item, pantryMap);
+      item.pantryStatus = result.pantryStatus;
+      item.neededQuantity = result.neededQuantity;
+    }
+  }
+
   private formatListResponse(list: ShoppingList) {
     const categoryOrder = new Map(
       FOOD_CATEGORIES.map((cat, idx) => [cat, idx]),
@@ -254,20 +245,6 @@ export class ShoppingListsService {
         total: sortedItems.length,
       },
     };
-  }
-
-  private buildPantryMap(
-    pantryItems: { foodCacheId: string; quantity: number; unit: string }[],
-  ): Map<string, { quantity: number; unit: string }[]> {
-    const map = new Map<string, { quantity: number; unit: string }[]>();
-    for (const item of pantryItems) {
-      if (item.foodCacheId) {
-        const existing = map.get(item.foodCacheId) ?? [];
-        existing.push({ quantity: Number(item.quantity), unit: item.unit });
-        map.set(item.foodCacheId, existing);
-      }
-    }
-    return map;
   }
 
   private computePantryResult(
