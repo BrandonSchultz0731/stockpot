@@ -42,6 +42,17 @@ After installing native dependencies in the app, run `cd ios && pod install`.
 - Components: Shared UI in `components/` (Button, TextInputRow, Divider).
 - Navigation: `RootNavigator.tsx` conditionally renders auth screens vs app screens based on `isAuthenticated`.
 
+## Code Reuse
+
+Before writing new code, always search for existing patterns, utilities, and components that can be reused. Never duplicate logic that already exists.
+
+- **Server utilities:** Check `server/src/utils/` first — AI response parsing (`ai-response.ts`), shelf life validation (`shelf-life.ts`), MIME normalization (`mime.ts`), recipe building (`recipe-builder.ts`). Also check `server/src/pantry/unit-conversion.ts` for `buildPantryMap` and conversion helpers.
+- **Client components:** Check `components/` for shared UI (Button, TextInputRow, ScreenHeader, EmptyState, LoadingScreen, ErrorState, SectionHeader, InfoBanner, Divider, MacroProgressBar, PantryStatusIcon). Use these instead of building one-off equivalents.
+- **Client hooks:** Check `hooks/` for existing query/mutation hooks before creating new ones.
+- **Shared types:** Use `shared/enums.ts` (`@shared/enums`) for enums and types shared between client and server. Add new shared types there, not in individual files.
+- **Never use `any` casts.** Use generics instead (e.g., `parseObjectFromAI<Record<string, string>>()` not `parseObjectFromAI() as Record<string, string>`).
+- When unsure whether a pattern exists, search the codebase before writing new code. If you find a similar pattern used elsewhere, follow it exactly.
+
 ## Running Locally
 
 ```bash
