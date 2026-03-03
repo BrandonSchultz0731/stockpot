@@ -53,6 +53,14 @@ Before writing new code, always search for existing patterns, utilities, and com
 - **Never use `any` casts.** Use generics instead (e.g., `parseObjectFromAI<Record<string, string>>()` not `parseObjectFromAI() as Record<string, string>`).
 - When unsure whether a pattern exists, search the codebase before writing new code. If you find a similar pattern used elsewhere, follow it exactly.
 
+## Testing
+
+After making changes, always check if tests need to be added or updated. Follow existing test patterns in the codebase (see `*.spec.ts` files). Run `cd server && pnpm test` to verify all server tests pass before considering work complete.
+
+## Git
+
+Never commit or push without first confirming with the user. Always ask before running `git commit`, `git push`, or creating branches/PRs.
+
 ## Running Locally
 
 ```bash
