@@ -16,7 +16,7 @@ import { UsersService } from '../users/users.service';
 import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
-import { MealType, UnitOfMeasure, RecipeIngredient, RecipeSource, MealScheduleSlot, DAY_NAMES, MessageType } from '@shared/enums';
+import { MealType, RecipeSource, MealScheduleSlot, DAY_NAMES, MessageType } from '@shared/enums';
 import { ACTIVE_MODEL } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
@@ -26,6 +26,9 @@ import { computeCookDeductions } from '../pantry/cook-deduction';
 import { resolveAiConversions } from '../pantry/cook-deduction-ai';
 import { ConfirmCookDto } from './dto/confirm-cook.dto';
 import { AddMealPlanEntryDto } from './dto/add-meal-plan-entry.dto';
+import { extractText, parseJsonFromAI, parseObjectFromAI } from '../utils/ai-response';
+import { normalizeImageMime } from '../utils/mime';
+import { formatPantryForPrompt, buildPantryFoodItems, mapResolvedIngredients, buildRecipeData, ParsedRecipe } from '../utils/recipe-builder';
 
 @Injectable()
 export class MealPlansService {
@@ -112,9 +115,7 @@ export class MealPlansService {
       const pantryItems = await this.pantryService.findAllForUser(userId);
       const user = await this.usersService.findById(userId);
 
-      const ingredientList = pantryItems
-        .map((item) => `${item.displayName} (${item.quantity} ${item.unit})`)
-        .join('\n');
+      const ingredientList = formatPantryForPrompt(pantryItems);
 
       let mealSchedule: MealScheduleSlot[];
 
@@ -158,7 +159,7 @@ export class MealPlansService {
         messageType: MessageType.MealPlan,
       });
 
-      const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
+      const rawText = extractText(response);
       const meals = this.parseMealPlanResponse(rawText);
 
       if (meals.length === 0) {
@@ -167,48 +168,19 @@ export class MealPlansService {
 
       // Resolve ingredient names to food_cache IDs
       const allIngredientNames = meals.flatMap(
-        (meal: any) => (meal.ingredients ?? []).map((ing: any) => ing.name as string),
+        (meal) => meal.ingredients.map((ing) => ing.name),
       );
-      const pantryFoodItems = pantryItems.map((item) => ({
-        foodCacheId: item.foodCacheId,
-        displayName: item.displayName,
-      }));
       const resolvedMap = await this.foodCacheService.resolveIngredientNames(
         allIngredientNames,
-        pantryFoodItems,
+        buildPantryFoodItems(pantryItems),
         userId,
       );
 
       for (const meal of meals) {
-        const resolvedIngredients: RecipeIngredient[] = (meal.ingredients ?? []).map(
-          (ing: any) => ({
-            name: ing.name,
-            quantity: ing.quantity,
-            unit: ing.unit,
-            baseQuantity: ing.baseQuantity ?? 0,
-            baseUnit: ing.baseUnit ?? UnitOfMeasure.Count,
-            ...(ing.notes ? { notes: ing.notes } : {}),
-            foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
-          }),
-        );
-
+        const resolvedIngredients = mapResolvedIngredients(meal.ingredients ?? [], resolvedMap);
         const recipe = this.recipeRepo.create({
-          userId,
-          title: meal.title,
-          description: meal.description,
-          prepTimeMinutes: meal.prepTimeMinutes,
-          cookTimeMinutes: meal.cookTimeMinutes,
-          totalTimeMinutes: meal.totalTimeMinutes,
-          servings: meal.servings ?? servings,
-          difficulty: meal.difficulty,
-          cuisine: meal.cuisine,
-          mealType: meal.mealType,
-          source: RecipeSource.AI,
+          ...buildRecipeData(meal, { userId, source: RecipeSource.AI, servings }),
           ingredients: resolvedIngredients,
-          steps: meal.steps ?? [],
-          tags: meal.tags,
-          dietaryFlags: meal.dietaryFlags,
-          nutrition: meal.nutrition,
         });
         const savedRecipe = await this.recipeRepo.save(recipe);
 
@@ -216,7 +188,7 @@ export class MealPlansService {
           mealPlanId: planId,
           recipeId: savedRecipe.id,
           dayOfWeek: meal.dayOfWeek,
-          mealType: meal.mealType,
+          mealType: meal.mealType as MealType,
           servings: meal.servings ?? servings,
         });
         await this.entryRepo.save(entry);
@@ -272,9 +244,7 @@ export class MealPlansService {
     }
 
     const pantryItems = await this.pantryService.findAllForUser(userId);
-    const ingredientList = pantryItems
-      .map((item) => `${item.displayName} (${item.quantity} ${item.unit})`)
-      .join('\n');
+    const ingredientList = formatPantryForPrompt(pantryItems);
 
     const constraints: string[] = [];
     if (dto.cuisine) constraints.push(`Cuisine preference: ${dto.cuisine}`);
@@ -304,56 +274,17 @@ export class MealPlansService {
       throw new BadGatewayException('Meal swap service unavailable');
     }
 
-    const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
-    const parsed = this.parseRecipeObject(rawText);
+    const rawText = extractText(response);
+    const parsed = this.parseRecipeFromAI(rawText);
 
     if (!parsed) {
       throw new BadGatewayException('Failed to parse replacement recipe');
     }
 
-    // Resolve ingredient names to food_cache IDs
-    const swapIngredientNames = (parsed.ingredients ?? []).map((ing: any) => ing.name as string);
-    const pantryFoodItems = pantryItems.map((item) => ({
-      foodCacheId: item.foodCacheId,
-      displayName: item.displayName,
-    }));
-    const resolvedMap = await this.foodCacheService.resolveIngredientNames(
-      swapIngredientNames,
-      pantryFoodItems,
-      userId,
+    const savedRecipe = await this.createRecipeFromParsed(
+      userId, parsed, pantryItems,
+      { source: RecipeSource.AI, mealType: entry.mealType, servings: entry.servings },
     );
-
-    const resolvedIngredients: RecipeIngredient[] = (parsed.ingredients ?? []).map(
-      (ing: any) => ({
-        name: ing.name,
-        quantity: ing.quantity,
-        unit: ing.unit,
-        baseQuantity: ing.baseQuantity ?? 0,
-        baseUnit: ing.baseUnit ?? UnitOfMeasure.Count,
-        ...(ing.notes ? { notes: ing.notes } : {}),
-        foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
-      }),
-    );
-
-    const recipe = this.recipeRepo.create({
-      userId,
-      title: parsed.title,
-      description: parsed.description,
-      prepTimeMinutes: parsed.prepTimeMinutes,
-      cookTimeMinutes: parsed.cookTimeMinutes,
-      totalTimeMinutes: parsed.totalTimeMinutes,
-      servings: parsed.servings ?? entry.servings,
-      difficulty: parsed.difficulty,
-      cuisine: parsed.cuisine,
-      mealType: entry.mealType,
-      source: RecipeSource.AI,
-      ingredients: resolvedIngredients,
-      steps: parsed.steps ?? [],
-      tags: parsed.tags,
-      dietaryFlags: parsed.dietaryFlags,
-      nutrition: parsed.nutrition,
-    });
-    const savedRecipe = await this.recipeRepo.save(recipe);
 
     entry.recipe = savedRecipe;
     entry.recipeId = savedRecipe.id;
@@ -408,213 +339,26 @@ export class MealPlansService {
     }
 
     const pantryItems = await this.pantryService.findAllForUser(userId);
-    const ingredientList = pantryItems
-      .map((item) => `${item.displayName} (${item.quantity} ${item.unit})`)
-      .join('\n');
 
-    let parsed: any;
+    let parsed: ParsedRecipe;
     let source: RecipeSource;
     let sourceUrl: string | null = null;
 
     if (dto.imageBase64) {
-      // Photo recipe import path
-      const normalizedMime = ['image/jpg', 'image/heic', 'image/heif'].includes(dto.mimeType)
-        ? 'image/jpeg'
-        : (dto.mimeType || 'image/jpeg');
-
-      let response;
-      try {
-        response = await this.anthropicService.sendMessage(userId, {
-          model: ACTIVE_MODEL,
-          maxTokens: 2048,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'image',
-                  source: {
-                    type: 'base64',
-                    media_type: normalizedMime as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
-                    data: dto.imageBase64,
-                  },
-                },
-                {
-                  type: 'text',
-                  text: buildPhotoRecipeImportPrompt(dto.mealType),
-                },
-              ],
-            },
-          ],
-          messageType: MessageType.PhotoImport,
-        });
-      } catch (error) {
-        this.logger.error('Claude API call failed for photo recipe import', error);
-        throw new BadGatewayException('Recipe import service unavailable');
-      }
-
-      const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
-
-      // Check for an error response before strict recipe validation
-      let rawParsed: any;
-      try {
-        rawParsed = JSON.parse(rawText);
-      } catch {
-        const codeBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
-        if (codeBlockMatch) {
-          try { rawParsed = JSON.parse(codeBlockMatch[1].trim()); } catch { /* fall through */ }
-        }
-      }
-      if (rawParsed?.error) {
-        throw new BadRequestException(rawParsed.error);
-      }
-
-      parsed = this.parseRecipeObject(rawText);
-      if (!parsed) {
-        throw new BadGatewayException('Failed to parse recipe from photo');
-      }
-
-      source = RecipeSource.Photo;
+      ({ parsed, source } = await this.addEntryFromPhoto(userId, dto));
     } else if (dto.url) {
-      // Website import path
-      let pageContent: string;
-      try {
-        const res = await fetch(dto.url);
-        const html = await res.text();
-        // Strip script/style tags, then all HTML tags
-        pageContent = html
-          .replace(/<script[\s\S]*?<\/script>/gi, '')
-          .replace(/<style[\s\S]*?<\/style>/gi, '')
-          .replace(/<[^>]+>/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .slice(0, 15000);
-      } catch (error) {
-        this.logger.error('Failed to fetch recipe URL', error);
-        throw new BadGatewayException('Could not fetch the provided URL');
-      }
-
-      const prompt = buildUrlRecipeImportPrompt(pageContent, dto.mealType);
-
-      let response;
-      try {
-        response = await this.anthropicService.sendMessage(userId, {
-          model: ACTIVE_MODEL,
-          maxTokens: 2048,
-          messages: [{ role: 'user', content: prompt }],
-          messageType: MessageType.UrlImport,
-        });
-      } catch (error) {
-        this.logger.error('Claude API call failed for URL recipe import', error);
-        throw new BadGatewayException('Recipe import service unavailable');
-      }
-
-      const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
-
-      // Check for an error response before strict recipe validation
-      let rawParsed: any;
-      try {
-        rawParsed = JSON.parse(rawText);
-      } catch {
-        const codeBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
-        if (codeBlockMatch) {
-          try { rawParsed = JSON.parse(codeBlockMatch[1].trim()); } catch { /* fall through */ }
-        }
-      }
-      if (rawParsed?.error) {
-        throw new BadRequestException(rawParsed.error);
-      }
-
-      parsed = this.parseRecipeObject(rawText);
-      if (!parsed) {
-        throw new BadGatewayException('Failed to parse recipe from URL');
-      }
-
-      source = RecipeSource.Website;
-      sourceUrl = dto.url;
+      ({ parsed, source, sourceUrl } = await this.addEntryFromUrl(userId, dto));
     } else {
-      // AI generation path — mirrors swapEntry
-      const dayName = DAY_NAMES[dto.dayOfWeek] ?? `Day ${dto.dayOfWeek}`;
-      const prompt = buildMealSwapPrompt(
-        ingredientList,
-        dayName,
-        dto.mealType,
-        '(none — this is a new meal)',
-        '',
-      );
-
-      let response;
-      try {
-        response = await this.anthropicService.sendMessage(userId, {
-          model: ACTIVE_MODEL,
-          maxTokens: 2048,
-          messages: [{ role: 'user', content: prompt }],
-          messageType: MessageType.MealSwap,
-        });
-      } catch (error) {
-        this.logger.error('Claude API call failed for add entry', error);
-        throw new BadGatewayException('Meal generation service unavailable');
-      }
-
-      const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
-      parsed = this.parseRecipeObject(rawText);
-
-      if (!parsed) {
-        throw new BadGatewayException('Failed to parse generated recipe');
-      }
-
-      source = RecipeSource.AI;
+      ({ parsed, source } = await this.addEntryViaAI(userId, dto, pantryItems));
     }
-
-    // Resolve ingredient names to food_cache IDs
-    const addIngredientNames = (parsed.ingredients ?? []).map(
-      (ing: any) => ing.name as string,
-    );
-    const pantryFoodItems = pantryItems.map((item) => ({
-      foodCacheId: item.foodCacheId,
-      displayName: item.displayName,
-    }));
-    const resolvedMap = await this.foodCacheService.resolveIngredientNames(
-      addIngredientNames,
-      pantryFoodItems,
-      userId,
-    );
-
-    const resolvedIngredients: RecipeIngredient[] = (parsed.ingredients ?? []).map(
-      (ing: any) => ({
-        name: ing.name,
-        quantity: ing.quantity,
-        unit: ing.unit,
-        baseQuantity: ing.baseQuantity ?? 0,
-        baseUnit: ing.baseUnit ?? UnitOfMeasure.Count,
-        ...(ing.notes ? { notes: ing.notes } : {}),
-        foodCacheId: resolvedMap.get(ing.name.toLowerCase()),
-      }),
-    );
 
     const user = await this.usersService.findById(userId);
     const servings = user?.dietaryProfile?.householdSize ?? 2;
 
-    const recipe = this.recipeRepo.create({
-      userId,
-      title: parsed.title,
-      description: parsed.description,
-      prepTimeMinutes: parsed.prepTimeMinutes,
-      cookTimeMinutes: parsed.cookTimeMinutes,
-      totalTimeMinutes: parsed.totalTimeMinutes,
-      servings: parsed.servings ?? servings,
-      difficulty: parsed.difficulty,
-      cuisine: parsed.cuisine,
-      mealType: dto.mealType,
-      source,
-      sourceUrl,
-      ingredients: resolvedIngredients,
-      steps: parsed.steps ?? [],
-      tags: parsed.tags,
-      dietaryFlags: parsed.dietaryFlags,
-      nutrition: parsed.nutrition,
-    });
-    const savedRecipe = await this.recipeRepo.save(recipe);
+    const savedRecipe = await this.createRecipeFromParsed(
+      userId, parsed, pantryItems,
+      { source, mealType: dto.mealType, servings, sourceUrl },
+    );
 
     const entry = this.entryRepo.create({
       mealPlanId: dto.mealPlanId,
@@ -649,6 +393,171 @@ export class MealPlansService {
     }
 
     return returnedEntry;
+  }
+
+  private async addEntryFromPhoto(
+    userId: string,
+    dto: AddMealPlanEntryDto,
+  ): Promise<{ parsed: ParsedRecipe; source: RecipeSource }> {
+    let response;
+    try {
+      response = await this.anthropicService.sendMessage(userId, {
+        model: ACTIVE_MODEL,
+        maxTokens: 2048,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: normalizeImageMime(dto.mimeType),
+                  data: dto.imageBase64,
+                },
+              },
+              {
+                type: 'text',
+                text: buildPhotoRecipeImportPrompt(dto.mealType),
+              },
+            ],
+          },
+        ],
+        messageType: MessageType.PhotoImport,
+      });
+    } catch (error) {
+      this.logger.error('Claude API call failed for photo recipe import', error);
+      throw new BadGatewayException('Recipe import service unavailable');
+    }
+
+    const rawText = extractText(response);
+    this.checkForErrorResponse(rawText);
+
+    const parsed = this.parseRecipeFromAI(rawText);
+    if (!parsed) {
+      throw new BadGatewayException('Failed to parse recipe from photo');
+    }
+
+    return { parsed, source: RecipeSource.Photo };
+  }
+
+  private async addEntryFromUrl(
+    userId: string,
+    dto: AddMealPlanEntryDto,
+  ): Promise<{ parsed: ParsedRecipe; source: RecipeSource; sourceUrl: string }> {
+    let pageContent: string;
+    try {
+      const res = await fetch(dto.url);
+      const html = await res.text();
+      // Strip script/style tags, then all HTML tags
+      pageContent = html
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 15000);
+    } catch (error) {
+      this.logger.error('Failed to fetch recipe URL', error);
+      throw new BadGatewayException('Could not fetch the provided URL');
+    }
+
+    const prompt = buildUrlRecipeImportPrompt(pageContent, dto.mealType);
+
+    let response;
+    try {
+      response = await this.anthropicService.sendMessage(userId, {
+        model: ACTIVE_MODEL,
+        maxTokens: 2048,
+        messages: [{ role: 'user', content: prompt }],
+        messageType: MessageType.UrlImport,
+      });
+    } catch (error) {
+      this.logger.error('Claude API call failed for URL recipe import', error);
+      throw new BadGatewayException('Recipe import service unavailable');
+    }
+
+    const rawText = extractText(response);
+    this.checkForErrorResponse(rawText);
+
+    const parsed = this.parseRecipeFromAI(rawText);
+    if (!parsed) {
+      throw new BadGatewayException('Failed to parse recipe from URL');
+    }
+
+    return { parsed, source: RecipeSource.Website, sourceUrl: dto.url };
+  }
+
+  private async addEntryViaAI(
+    userId: string,
+    dto: AddMealPlanEntryDto,
+    pantryItems: { foodCacheId: string; displayName: string; quantity: number; unit: string }[],
+  ): Promise<{ parsed: ParsedRecipe; source: RecipeSource }> {
+    const ingredientList = formatPantryForPrompt(pantryItems);
+    const dayName = DAY_NAMES[dto.dayOfWeek] ?? `Day ${dto.dayOfWeek}`;
+    const prompt = buildMealSwapPrompt(
+      ingredientList,
+      dayName,
+      dto.mealType,
+      '(none — this is a new meal)',
+      '',
+    );
+
+    let response;
+    try {
+      response = await this.anthropicService.sendMessage(userId, {
+        model: ACTIVE_MODEL,
+        maxTokens: 2048,
+        messages: [{ role: 'user', content: prompt }],
+        messageType: MessageType.MealSwap,
+      });
+    } catch (error) {
+      this.logger.error('Claude API call failed for add entry', error);
+      throw new BadGatewayException('Meal generation service unavailable');
+    }
+
+    const rawText = extractText(response);
+    const parsed = this.parseRecipeFromAI(rawText);
+
+    if (!parsed) {
+      throw new BadGatewayException('Failed to parse generated recipe');
+    }
+
+    return { parsed, source: RecipeSource.AI };
+  }
+
+  private async createRecipeFromParsed(
+    userId: string,
+    parsed: ParsedRecipe,
+    pantryItems: { foodCacheId: string; displayName: string; quantity: number; unit: string }[],
+    overrides: {
+      source: RecipeSource;
+      mealType: string;
+      servings: number;
+      sourceUrl?: string | null;
+    },
+  ): Promise<Recipe> {
+    const ingredientNames = (parsed.ingredients ?? []).map(
+      (ing: any) => ing.name as string,
+    );
+    const resolvedMap = await this.foodCacheService.resolveIngredientNames(
+      ingredientNames,
+      buildPantryFoodItems(pantryItems),
+      userId,
+    );
+
+    const resolvedIngredients = mapResolvedIngredients(parsed.ingredients ?? [], resolvedMap);
+    const recipe = this.recipeRepo.create({
+      ...buildRecipeData(parsed, {
+        userId,
+        source: overrides.source,
+        mealType: overrides.mealType,
+        servings: overrides.servings,
+        sourceUrl: overrides.sourceUrl,
+      }),
+      ingredients: resolvedIngredients,
+    });
+    return this.recipeRepo.save(recipe);
   }
 
   async cookPreview(userId: string, entryId: string) {
@@ -743,37 +652,21 @@ export class MealPlansService {
     }
   }
 
-  private parseMealPlanResponse(raw: string): any[] {
-    let parsed: unknown;
-
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeBlockMatch) {
-        try {
-          parsed = JSON.parse(codeBlockMatch[1].trim());
-        } catch {
-          // fall through
-        }
-      }
-
-      if (!parsed) {
-        const objectMatch = raw.match(/\{[\s\S]*\}/);
-        if (objectMatch) {
-          try {
-            parsed = JSON.parse(objectMatch[0]);
-          } catch {
-            // fall through
-          }
-        }
-      }
+  /** Check for an AI error response (e.g. unreadable photo) before recipe validation. */
+  private checkForErrorResponse(rawText: string): void {
+    const parsed = parseJsonFromAI(rawText);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && (parsed as any).error) {
+      throw new BadRequestException((parsed as any).error);
     }
+  }
+
+  private parseMealPlanResponse(raw: string): ParsedRecipe[] {
+    const parsed = parseJsonFromAI(raw);
 
     // Extract meals array from parsed object
     let meals: unknown[];
-    if (parsed && typeof parsed === 'object' && 'meals' in (parsed as any)) {
-      meals = (parsed as any).meals;
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && 'meals' in parsed) {
+      meals = (parsed as Record<string, unknown>).meals as unknown[];
     } else if (Array.isArray(parsed)) {
       meals = parsed;
     } else {
@@ -787,50 +680,26 @@ export class MealPlansService {
     }
 
     return meals.filter(
-      (item: any) =>
-        item &&
-        typeof item.title === 'string' &&
-        item.title.trim().length > 0 &&
-        typeof item.dayOfWeek === 'number' &&
-        typeof item.mealType === 'string' &&
-        Array.isArray(item.ingredients) &&
-        Array.isArray(item.steps),
+      (item): item is ParsedRecipe =>
+        item != null &&
+        typeof item === 'object' &&
+        typeof (item as ParsedRecipe).title === 'string' &&
+        (item as ParsedRecipe).title.trim().length > 0 &&
+        typeof (item as ParsedRecipe).dayOfWeek === 'number' &&
+        typeof (item as ParsedRecipe).mealType === 'string' &&
+        Array.isArray((item as ParsedRecipe).ingredients) &&
+        Array.isArray((item as ParsedRecipe).steps),
     );
   }
 
-  private parseRecipeObject(raw: string): any | null {
-    let parsed: unknown;
-
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeBlockMatch) {
-        try {
-          parsed = JSON.parse(codeBlockMatch[1].trim());
-        } catch {
-          // fall through
-        }
-      }
-
-      if (!parsed) {
-        const objectMatch = raw.match(/\{[\s\S]*\}/);
-        if (objectMatch) {
-          try {
-            parsed = JSON.parse(objectMatch[0]);
-          } catch {
-            // fall through
-          }
-        }
-      }
-    }
+  private parseRecipeFromAI(raw: string): ParsedRecipe | null {
+    const parsed = parseObjectFromAI<ParsedRecipe>(raw);
 
     if (
       !parsed ||
-      typeof parsed !== 'object' ||
-      typeof (parsed as any).title !== 'string' ||
-      !Array.isArray((parsed as any).ingredients) ||
-      !Array.isArray((parsed as any).steps)
+      typeof parsed.title !== 'string' ||
+      !Array.isArray(parsed.ingredients) ||
+      !Array.isArray(parsed.steps)
     ) {
       this.logger.warn('Failed to parse replacement recipe response');
       return null;

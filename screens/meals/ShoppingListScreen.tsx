@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   SectionList,
   Text,
@@ -15,13 +14,16 @@ import type {
 import {
   AlertTriangle,
   Camera,
-  ChevronLeft,
   Share2,
   Square,
   SquareCheck,
   Plus,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
+import ScreenHeader from '../../components/ScreenHeader';
+import ErrorState from '../../components/ErrorState';
+import LoadingScreen from '../../components/LoadingScreen';
+import SectionHeader from '../../components/SectionHeader';
 import { PantryStatus, DEFAULT_FOOD_CATEGORY, FOOD_CATEGORIES } from '../../shared/enums';
 import type { ShoppingListItem } from '../../shared/enums';
 import type { MealsStackParamList } from '../../navigation/types';
@@ -115,19 +117,7 @@ export default function ShoppingListScreen() {
   // Loading
   if (isPending) {
     return (
-      <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-        <View className="flex-row items-center px-5 py-3">
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <ChevronLeft size={22} color={colors.navy.DEFAULT} />
-          </Pressable>
-          <Text className="ml-3 text-[18px] font-bold text-navy">
-            Shopping List
-          </Text>
-        </View>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={colors.orange.DEFAULT} />
-        </View>
-      </SafeAreaView>
+      <LoadingScreen header={<ScreenHeader title="Shopping List" />} />
     );
   }
 
@@ -135,50 +125,29 @@ export default function ShoppingListScreen() {
   if (isError || !shoppingList) {
     return (
       <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-        <View className="flex-row items-center px-5 py-3">
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <ChevronLeft size={22} color={colors.navy.DEFAULT} />
-          </Pressable>
-          <Text className="ml-3 text-[18px] font-bold text-navy">
-            Shopping List
-          </Text>
-        </View>
-        <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-center text-[14px] text-muted">
-            No shopping list available yet. Generate a meal plan first.
-          </Text>
-          <Pressable onPress={() => navigation.goBack()} className="mt-3">
-            <Text className="text-[14px] font-semibold text-orange">
-              Go Back
-            </Text>
-          </Pressable>
-        </View>
+        <ScreenHeader title="Shopping List" />
+        <ErrorState
+          message="No shopping list available yet. Generate a meal plan first."
+          onGoBack={() => navigation.goBack()}
+        />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-5 py-3">
-        <View className="flex-row items-center flex-1">
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <ChevronLeft size={22} color={colors.navy.DEFAULT} />
+      <ScreenHeader
+        title="Shopping List"
+        subtitle={weekLabel}
+        rightAction={
+          <Pressable
+            hitSlop={8}
+            className="h-8 w-8 items-center justify-center rounded-full bg-cream opacity-50"
+          >
+            <Share2 size={18} color={colors.navy.DEFAULT} />
           </Pressable>
-          <View className="ml-3 flex-1">
-            <Text className="text-[18px] font-bold text-navy">
-              Shopping List
-            </Text>
-            <Text className="text-[13px] text-muted">{weekLabel}</Text>
-          </View>
-        </View>
-        <Pressable
-          hitSlop={8}
-          className="h-8 w-8 items-center justify-center rounded-full bg-cream opacity-50"
-        >
-          <Share2 size={18} color={colors.navy.DEFAULT} />
-        </Pressable>
-      </View>
+        }
+      />
 
       {/* Summary Card */}
       {summary && (
@@ -220,18 +189,10 @@ export default function ShoppingListScreen() {
         contentContainerClassName="px-4 pb-4"
         stickySectionHeadersEnabled={false}
         renderSectionHeader={({ section }) => (
-          <View className="mt-3 mb-1.5 flex-row items-center justify-between">
-            <Text className="text-[13px] font-bold uppercase tracking-[0.5px] text-navy">
-              {section.title}
-            </Text>
-            {section.toBuyCount > 0 && (
-              <View className="rounded-full bg-orange-pale px-2 py-0.5">
-                <Text className="text-[10px] font-bold text-orange">
-                  {section.toBuyCount} to buy
-                </Text>
-              </View>
-            )}
-          </View>
+          <SectionHeader
+            title={section.title}
+            badge={section.toBuyCount > 0 ? `${section.toBuyCount} to buy` : undefined}
+          />
         )}
         renderItem={({ item }) => (
           <Pressable

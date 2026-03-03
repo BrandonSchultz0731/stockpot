@@ -6,10 +6,10 @@ import {
   Camera,
   ScanBarcode,
   PenLine,
-  ChevronLeft,
   Lightbulb,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
+import ScreenHeader from '../../components/ScreenHeader';
 import type { PantryStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<PantryStackParamList, 'AddItemPicker'>;
@@ -77,10 +77,8 @@ export default function AddItemPickerScreen() {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-      <View className="px-5 pt-4 pb-2">
-        <Pressable onPress={() => navigation.goBack()} className="mb-4">
-          <ChevronLeft size={24} color={colors.navy.DEFAULT} />
-        </Pressable>
+      <ScreenHeader />
+      <View className="px-5 pb-2">
         <Text
           className="text-[26px] text-navy mb-2 font-extrabold tracking-[-0.5px]">
           Add Items

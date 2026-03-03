@@ -10,6 +10,8 @@ import { StorageLocation, ShelfLife, FOOD_CATEGORIES, MessageType } from '@share
 import { calculateExpirationDate, formatISODate } from '@shared/dates';
 import { CLAUDE_MODELS } from '../ai-models';
 import { buildShelfLifePrompt, buildCategoryPrompt } from '../prompts';
+import { extractText, parseObjectFromAI } from '../utils/ai-response';
+import { parseShelfLife } from '../utils/shelf-life';
 
 @Injectable()
 export class PantryService {
@@ -271,41 +273,16 @@ export class PantryService {
         messageType: MessageType.ShelfLife,
       });
 
-      const rawText =
-        response.content[0]?.type === 'text' ? response.content[0].text : '';
+      const rawText = extractText(response);
+      const obj = parseObjectFromAI(rawText);
+      if (!obj) return null;
 
-      // Parse the JSON, trying a few strategies
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(rawText);
-      } catch {
-        const match = rawText.match(/\{[\s\S]*\}/);
-        if (match) {
-          try {
-            parsed = JSON.parse(match[0]);
-          } catch {
-            return null;
-          }
-        }
-      }
-
-      if (!parsed || typeof parsed !== 'object') return null;
-
-      const obj = parsed as Record<string, unknown>;
-
-      const shelfLife: ShelfLife = {};
-      for (const loc of Object.values(StorageLocation)) {
-        const val = Number(obj[loc]);
-        if (Number.isFinite(val) && val > 0) {
-          shelfLife[loc] = Math.round(val);
-        }
-      }
-
-      if (Object.keys(shelfLife).length === 0) return null;
+      const shelfLife = parseShelfLife(obj);
+      if (!shelfLife) return null;
 
       // Extract category if present and valid
       const rawCategory =
-        typeof obj.category === 'string' ? obj.category.trim() : null;
+        typeof obj.category === 'string' ? (obj.category as string).trim() : null;
       const category =
         rawCategory && FOOD_CATEGORIES.includes(rawCategory)
           ? rawCategory
@@ -341,10 +318,7 @@ export class PantryService {
       messageType: MessageType.FoodCategory,
     });
 
-    const rawText =
-      response.content[0]?.type === 'text'
-        ? response.content[0].text.trim()
-        : '';
+    const rawText = extractText(response).trim();
 
     if (rawText && FOOD_CATEGORIES.includes(rawText)) {
       await this.foodCacheService.updateCategory(foodCacheId, rawText);

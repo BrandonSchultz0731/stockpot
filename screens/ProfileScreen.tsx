@@ -1,5 +1,4 @@
 import {
-  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
@@ -30,6 +29,8 @@ import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import colors from '../theme/colors';
 import Button from '../components/Button';
+import LoadingScreen from '../components/LoadingScreen';
+import MacroProgressBar from '../components/MacroProgressBar';
 import type { ProfileStackParamList } from '../navigation/types';
 
 const FREE_TIER_RECIPE_LIMIT = 5;
@@ -183,40 +184,6 @@ function DietaryProfileCard({
   );
 }
 
-function NutritionRow({
-  label,
-  value,
-  color,
-  progress,
-  isLast,
-}: {
-  label: string;
-  value: string;
-  color: string;
-  progress: number;
-  isLast: boolean;
-}) {
-  return (
-    <View className={isLast ? '' : 'mb-3'}>
-      <View className="flex-row justify-between mb-1">
-        <Text className="text-[13px] text-body">{label}</Text>
-        <Text className="text-[13px] font-semibold text-dark">
-          {value}
-        </Text>
-      </View>
-      <View className="h-1.5 rounded-full bg-border overflow-hidden">
-        <View
-          className="h-1.5 rounded-full"
-          style={{
-            width: `${progress * 100}%`,
-            backgroundColor: color,
-          }}
-        />
-      </View>
-    </View>
-  );
-}
-
 interface NutritionTotals {
   calories: number;
   protein: number;
@@ -294,7 +261,7 @@ function NutritionGoalsCard({
           </Text>
         </Pressable>
       </View>
-      {rows.map((row, i) => {
+      {rows.map((row) => {
         const consumed = Math.round(todayTotals[row.key]);
         const progress = row.goal > 0 ? Math.min(consumed / row.goal, 1) : 0;
         const value =
@@ -303,13 +270,12 @@ function NutritionGoalsCard({
             : `${consumed} / ${row.goal}${row.unit}`;
 
         return (
-          <NutritionRow
+          <MacroProgressBar
             key={row.label}
             label={row.label}
-            value={value}
+            displayValue={value}
             color={row.color}
             progress={progress}
-            isLast={i === rows.length - 1}
           />
         );
       })}
@@ -430,13 +396,7 @@ export default function ProfileScreen() {
   };
 
   if (profileLoading) {
-    return (
-      <SafeAreaView
-        edges={['top']}
-        className="flex-1 items-center justify-center bg-cream">
-        <ActivityIndicator size="large" color={colors.navy.DEFAULT} />
-      </SafeAreaView>
-    );
+    return <LoadingScreen color={colors.navy.DEFAULT} />;
   }
 
   const tier = profile?.subscriptionTier ?? SubscriptionTier.Free;

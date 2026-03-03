@@ -1,55 +1,18 @@
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Info } from 'lucide-react-native';
 import OnboardingLayout from '../../components/onboarding/OnboardingLayout';
-import SelectableCard from '../../components/onboarding/SelectableCard';
+import InfoBanner from '../../components/InfoBanner';
+import GoalTypeSelector from '../../components/GoalTypeSelector';
+import MacroProgressBar from '../../components/MacroProgressBar';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useCompleteOnboardingMutation } from '../../hooks/useCompleteOnboardingMutation';
 import { GoalType, MACRO_PRESETS } from '../../shared/enums';
-import colors from '../../theme/colors';
 import type { OnboardingParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<OnboardingParamList, 'OBGoals'>;
 
-const GOAL_EMOJIS: Record<GoalType, string> = {
-  [GoalType.LoseWeight]: '📉',
-  [GoalType.Maintain]: '⚖️',
-  [GoalType.BuildMuscle]: '💪',
-};
-
 const MACRO_MAX = { calories: 3000, protein: 250, carbs: 400, fat: 100 };
-
-interface MacroRowProps {
-  label: string;
-  value: number;
-  max: number;
-  unit: string;
-}
-
-function MacroRow({ label, value, max, unit }: MacroRowProps) {
-  const pct = Math.min((value / max) * 100, 100);
-
-  return (
-    <View className="mb-4">
-      <View className="flex-row justify-between mb-1.5">
-        <Text className="text-sm font-medium text-dark">
-          {label}
-        </Text>
-        <Text className="text-sm text-muted">
-          {value}
-          {unit}
-        </Text>
-      </View>
-      <View className="h-2 rounded-full bg-border overflow-hidden">
-        <View
-          className="h-2 rounded-full bg-orange"
-          style={{ width: `${pct}%` }}
-        />
-      </View>
-    </View>
-  );
-}
 
 export default function OBGoalsScreen() {
   const navigation = useNavigation<Nav>();
@@ -85,54 +48,40 @@ export default function OBGoalsScreen() {
         Choose a goal and we'll set smart defaults for your daily targets.
       </Text>
 
-      {/* Goal type cards */}
-      {Object.values(GoalType).map(goal => (
-        <SelectableCard
-          key={goal}
-          title={`${GOAL_EMOJIS[goal]}  ${goal}`}
-          selected={data.goalType === goal}
-          onPress={() => selectGoal(goal)}
-        />
-      ))}
+      <GoalTypeSelector
+        selectedGoal={data.goalType}
+        onSelect={selectGoal}
+      />
 
       {/* Daily targets */}
       <Text className="text-lg font-semibold text-dark mb-4 mt-4">
         Daily Targets
       </Text>
 
-      <MacroRow
+      <MacroProgressBar
         label="Calories"
-        value={data.dailyCalories}
-        max={MACRO_MAX.calories}
-        unit=" cal"
+        displayValue={`${data.dailyCalories} cal`}
+        progress={data.dailyCalories / MACRO_MAX.calories}
       />
-      <MacroRow
+      <MacroProgressBar
         label="Protein"
-        value={data.dailyProteinGrams}
-        max={MACRO_MAX.protein}
-        unit="g"
+        displayValue={`${data.dailyProteinGrams}g`}
+        progress={data.dailyProteinGrams / MACRO_MAX.protein}
       />
-      <MacroRow
+      <MacroProgressBar
         label="Carbs"
-        value={data.dailyCarbsGrams}
-        max={MACRO_MAX.carbs}
-        unit="g"
+        displayValue={`${data.dailyCarbsGrams}g`}
+        progress={data.dailyCarbsGrams / MACRO_MAX.carbs}
       />
-      <MacroRow
+      <MacroProgressBar
         label="Fat"
-        value={data.dailyFatGrams}
-        max={MACRO_MAX.fat}
-        unit="g"
+        displayValue={`${data.dailyFatGrams}g`}
+        progress={data.dailyFatGrams / MACRO_MAX.fat}
       />
 
-      {/* Info note */}
-      <View className="flex-row items-start bg-orange-pale rounded-2xl p-4 mt-2">
-        <Info size={16} color={colors.orange.DEFAULT} className="mt-px" />
-        <Text
-          className="text-sm leading-5 text-dark flex-1 ml-2.5">
-          You can adjust these anytime in your profile.
-        </Text>
-      </View>
+      <InfoBanner className="mt-2">
+        You can adjust these anytime in your profile.
+      </InfoBanner>
 
       {/* Error state */}
       {mutation.isError && (

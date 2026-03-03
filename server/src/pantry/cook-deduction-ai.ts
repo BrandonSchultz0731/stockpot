@@ -3,6 +3,7 @@ import { AnthropicService } from '../anthropic/anthropic.service';
 import { CLAUDE_MODELS } from '../ai-models';
 import { MessageType } from '@shared/enums';
 import { buildUnitConversionPrompt } from '../prompts';
+import { extractText, parseArrayFromAI } from '../utils/ai-response';
 import type { CookDeductionResult } from './cook-deduction';
 
 const logger = new Logger('CookDeductionAI');
@@ -39,9 +40,8 @@ export async function resolveAiConversions(
       messageType: MessageType.CookDeduction,
     });
 
-    const rawText =
-      response.content[0]?.type === 'text' ? response.content[0].text : '';
-    const quantities = parseConversionResponse(rawText);
+    const rawText = extractText(response);
+    const quantities = parseArrayFromAI<number>(rawText);
 
     if (quantities && quantities.length === unresolved.length) {
       for (let i = 0; i < unresolved.length; i++) {
@@ -65,20 +65,3 @@ export async function resolveAiConversions(
   }
 }
 
-function parseConversionResponse(raw: string): number[] | null {
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-  } catch {
-    const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (codeBlockMatch) {
-      try {
-        const parsed = JSON.parse(codeBlockMatch[1].trim());
-        if (Array.isArray(parsed)) return parsed;
-      } catch {
-        // fall through
-      }
-    }
-  }
-  return null;
-}

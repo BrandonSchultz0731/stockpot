@@ -1,5 +1,4 @@
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   Text,
@@ -9,83 +8,29 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
-  AlertTriangle,
-  Check,
   ChefHat,
-  ChevronLeft,
   Clock,
   CookingPot,
   Flame,
   Heart,
-  X,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
+import ScreenHeader from '../../components/ScreenHeader';
+import PantryStatusIcon from '../../components/PantryStatusIcon';
+import ErrorState from '../../components/ErrorState';
+import LoadingScreen from '../../components/LoadingScreen';
 import { useRecipeDetailQuery } from '../../hooks/useRecipeDetailQuery';
 import { useSavedRecipes } from '../../hooks/useSavedRecipes';
 import type { MealsStackParamList } from '../../navigation/types';
-import { PantryStatus } from '../../shared/enums';
 import { countByPantryStatus } from '../../shared/pantryStatusCounts';
 import type { RecipeIngredient, RecipeStep } from '../../shared/enums';
+import { formatQuantity } from '../../utils/formatQuantity';
 
 type ScreenProps = NativeStackScreenProps<MealsStackParamList, 'RecipeDetail'>;
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function formatQuantity(quantity: number): string {
-  if (quantity === 0) return '';
-  if (Number.isInteger(quantity)) return String(quantity);
-  // Common fractions
-  const fractions: Record<string, string> = {
-    '0.25': '\u00BC',
-    '0.33': '\u2153',
-    '0.5': '\u00BD',
-    '0.67': '\u2154',
-    '0.75': '\u00BE',
-  };
-  const whole = Math.floor(quantity);
-  const frac = quantity - whole;
-  const fracKey = frac.toFixed(2);
-  const fracStr = fractions[fracKey];
-  if (fracStr) {
-    return whole > 0 ? `${whole}${fracStr}` : fracStr;
-  }
-  return quantity % 1 === 0 ? String(quantity) : quantity.toFixed(2);
-}
-
-// ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
-
-function Header({
-  isSaved,
-  onToggleSave,
-  showHeart,
-}: {
-  isSaved: boolean;
-  onToggleSave: () => void;
-  showHeart: boolean;
-}) {
-  const navigation = useNavigation<NativeStackNavigationProp<MealsStackParamList>>();
-
-  return (
-    <View className="flex-row items-center justify-between px-5 py-3">
-      <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-        <ChevronLeft size={22} color={colors.navy.DEFAULT} />
-      </Pressable>
-      {showHeart && (
-        <Pressable onPress={onToggleSave} hitSlop={8}>
-          <Heart
-            size={22}
-            color={isSaved ? colors.orange.DEFAULT : colors.muted}
-            fill={isSaved ? colors.orange.DEFAULT : 'none'}
-          />
-        </Pressable>
-      )}
-    </View>
-  );
-}
 
 function HeroBanner({
   totalTimeMinutes,
@@ -188,21 +133,7 @@ function IngredientRow({
     >
       <Text className="flex-1 text-[13px] text-dark">{ingredient.name}</Text>
       <Text className="mr-2 text-[12px] text-muted">{qtyLabel}</Text>
-      {ingredient.pantryStatus === PantryStatus.Enough && (
-        <View className="h-5 w-5 items-center justify-center rounded-full bg-success-pale">
-          <Check size={12} color={colors.success.DEFAULT} />
-        </View>
-      )}
-      {ingredient.pantryStatus === PantryStatus.Low && (
-        <View className="h-5 w-5 items-center justify-center rounded-full bg-warning-pale">
-          <AlertTriangle size={12} color={colors.warning.icon} />
-        </View>
-      )}
-      {(!ingredient.pantryStatus || ingredient.pantryStatus === PantryStatus.None) && (
-        <View className="h-5 w-5 items-center justify-center rounded-full bg-danger-pale">
-          <X size={12} color={colors.danger.DEFAULT} />
-        </View>
-      )}
+      <PantryStatusIcon status={ingredient.pantryStatus} />
     </View>
   );
 }
@@ -284,17 +215,18 @@ export default function RecipeDetailScreen() {
   // Loading state
   if (isLoading || !recipe) {
     return (
-      <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-        <Header isSaved={false} onToggleSave={() => {}} showHeart={false} />
-        {routeTitle ? (
-          <Text className="px-5 pt-4 text-[22px] font-extrabold tracking-[-0.3px] text-navy">
-            {routeTitle}
-          </Text>
-        ) : null}
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={colors.orange.DEFAULT} />
-        </View>
-      </SafeAreaView>
+      <LoadingScreen
+        header={
+          <>
+            <ScreenHeader />
+            {routeTitle ? (
+              <Text className="px-5 pt-4 text-[22px] font-extrabold tracking-[-0.3px] text-navy">
+                {routeTitle}
+              </Text>
+            ) : null}
+          </>
+        }
+      />
     );
   }
 
@@ -302,27 +234,27 @@ export default function RecipeDetailScreen() {
   if (isError) {
     return (
       <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-        <Header isSaved={false} onToggleSave={() => {}} showHeart={false} />
-        <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-center text-[14px] text-muted">
-            Failed to load recipe.
-          </Text>
-          <Pressable onPress={() => navigation.goBack()} className="mt-3">
-            <Text className="text-[14px] font-semibold text-orange">
-              Go Back
-            </Text>
-          </Pressable>
-        </View>
+        <ScreenHeader />
+        <ErrorState
+          message="Failed to load recipe."
+          onGoBack={() => navigation.goBack()}
+        />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-      <Header
-        isSaved={saved}
-        onToggleSave={() => toggleSave(recipeId)}
-        showHeart
+      <ScreenHeader
+        rightAction={
+          <Pressable onPress={() => toggleSave(recipeId)} hitSlop={8}>
+            <Heart
+              size={22}
+              color={saved ? colors.orange.DEFAULT : colors.muted}
+              fill={saved ? colors.orange.DEFAULT : 'none'}
+            />
+          </Pressable>
+        }
       />
       <ScrollView className="flex-1" contentContainerClassName="pb-8">
         <HeroBanner

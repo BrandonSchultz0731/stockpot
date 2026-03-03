@@ -1,11 +1,12 @@
-import { Text, TextInput, View } from 'react-native';
+import { Text, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Zap } from 'lucide-react-native';
 import OnboardingLayout from '../../components/onboarding/OnboardingLayout';
-import PillButton from '../../components/onboarding/PillButton';
+import InfoBanner from '../../components/InfoBanner';
+import ExcludedIngredientsSelector from '../../components/ExcludedIngredientsSelector';
 import { useOnboarding } from '../../contexts/OnboardingContext';
-import { EXCLUDED_INGREDIENT_SUGGESTIONS } from '../../shared/enums';
+import { useToggleItem } from '../../hooks/useToggleList';
 import colors from '../../theme/colors';
 import type { OnboardingParamList } from '../../navigation/types';
 
@@ -15,19 +16,9 @@ export default function OBExcludeScreen() {
   const navigation = useNavigation<Nav>();
   const { data, updateData } = useOnboarding();
 
-  const toggleIngredient = (ingredient: string) => {
-    if (data.excludedIngredients.includes(ingredient)) {
-      updateData({
-        excludedIngredients: data.excludedIngredients.filter(
-          i => i !== ingredient,
-        ),
-      });
-    } else {
-      updateData({
-        excludedIngredients: [...data.excludedIngredients, ingredient],
-      });
-    }
-  };
+  const setExcluded = (next: string[]) =>
+    updateData({ excludedIngredients: next });
+  const toggleIngredient = useToggleItem(data.excludedIngredients, setExcluded);
 
   return (
     <OnboardingLayout
@@ -53,27 +44,19 @@ export default function OBExcludeScreen() {
         Common allergens & dislikes
       </Text>
 
-      <View className="flex-row flex-wrap">
-        {EXCLUDED_INGREDIENT_SUGGESTIONS.map(ingredient => (
-          <PillButton
-            key={ingredient}
-            label={ingredient}
-            selected={data.excludedIngredients.includes(ingredient)}
-            onPress={() => toggleIngredient(ingredient)}
-            variant="exclude"
-          />
-        ))}
-      </View>
+      <ExcludedIngredientsSelector
+        selectedIngredients={data.excludedIngredients}
+        onToggle={toggleIngredient}
+      />
 
       {data.excludedIngredients.length > 0 && (
-        <View className="bg-orange-pale rounded-2xl p-4 mt-5 flex-row items-start">
-          <Zap size={18} color={colors.orange.DEFAULT} className="mt-px" />
-          <Text
-            className="text-sm leading-5 text-dark flex-1 ml-2.5">
-            We'll automatically filter out recipes containing{' '}
-            {data.excludedIngredients.join(', ')}.
-          </Text>
-        </View>
+        <InfoBanner
+          icon={<Zap size={18} color={colors.orange.DEFAULT} className="mt-px" />}
+          className="mt-5"
+        >
+          We'll automatically filter out recipes containing{' '}
+          {data.excludedIngredients.join(', ')}.
+        </InfoBanner>
       )}
     </OnboardingLayout>
   );

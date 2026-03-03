@@ -14,8 +14,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, X } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import Button from '../../components/Button';
+import ScreenHeader from '../../components/ScreenHeader';
 import QuantityUnitInput from '../../components/pantry/QuantityUnitInput';
 import StorageLocationPills from '../../components/pantry/StorageLocationPills';
 import ExpirationDateInput from '../../components/pantry/ExpirationDateInput';
@@ -190,10 +191,8 @@ export default function ReceiptReviewScreen() {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-      <View className="px-5 pt-4 pb-2">
-        <Pressable onPress={() => navigation.goBack()} className="mb-4">
-          <ChevronLeft size={24} color={colors.navy.DEFAULT} />
-        </Pressable>
+      <ScreenHeader />
+      <View className="px-5 pb-2">
         <Text
           className="text-[26px] text-navy mb-1 font-extrabold tracking-[-0.5px]">
           Review Items

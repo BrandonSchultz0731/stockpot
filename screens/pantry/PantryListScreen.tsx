@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
@@ -12,6 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronRight, MapPin, Plus, Search, Package } from 'lucide-react-native';
+import EmptyState from '../../components/EmptyState';
+import LoadingScreen from '../../components/LoadingScreen';
 import TextInputRow from '../../components/TextInputRow';
 import CategoryFilterPills from '../../components/pantry/CategoryFilterPills';
 import CategorySectionHeader from '../../components/pantry/CategorySectionHeader';
@@ -191,13 +192,7 @@ export default function PantryListScreen() {
   }, []);
 
   if (isLoading) {
-    return (
-      <SafeAreaView
-        edges={['top']}
-        className="flex-1 items-center justify-center bg-cream">
-        <ActivityIndicator color={colors.navy.DEFAULT} />
-      </SafeAreaView>
-    );
+    return <LoadingScreen color={colors.navy.DEFAULT} />;
   }
 
   const hasItems = (items?.length ?? 0) > 0;
@@ -212,27 +207,18 @@ export default function PantryListScreen() {
   );
 
   const emptyComponent = showNoMatchEmpty ? (
-    <View className="items-center justify-center pt-20">
-      <Search size={48} color={colors.muted} />
-      <Text className="text-[17px] text-navy mt-4 mb-2 font-bold">
-        No matching items
-      </Text>
-      <Pressable onPress={clearFilters}>
-        <Text className="text-[14px] text-orange font-semibold">
-          Clear filters
-        </Text>
-      </Pressable>
-    </View>
+    <EmptyState
+      icon={<Search size={48} color={colors.muted} />}
+      title="No matching items"
+      actionLabel="Clear filters"
+      onAction={clearFilters}
+    />
   ) : (
-    <View className="items-center justify-center pt-20">
-      <Package size={48} color={colors.muted} />
-      <Text className="text-[17px] text-navy mt-4 mb-2 font-bold">
-        Your pantry is empty
-      </Text>
-      <Text className="text-[14px] text-muted text-center px-8">
-        Tap the + button to start adding items to your pantry.
-      </Text>
-    </View>
+    <EmptyState
+      icon={<Package size={48} color={colors.muted} />}
+      title="Your pantry is empty"
+      description="Tap the + button to start adding items to your pantry."
+    />
   );
 
   return (

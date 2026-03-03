@@ -119,6 +119,23 @@ export function resolveBaseQuantity(
   return convertToBase(item.quantity, item.unit);
 }
 
+/**
+ * Build a Map from foodCacheId to array of {quantity, unit} entries.
+ * Shared by enrich-pantry.ts and shopping-lists.service.ts.
+ */
+export function buildPantryMap(
+  pantryItems: { foodCacheId: string; quantity: number; unit: string }[],
+): Map<string, { quantity: number; unit: string }[]> {
+  const map = new Map<string, { quantity: number; unit: string }[]>();
+  for (const item of pantryItems) {
+    if (!item.foodCacheId) continue;
+    const existing = map.get(item.foodCacheId) ?? [];
+    existing.push({ quantity: Number(item.quantity), unit: item.unit });
+    map.set(item.foodCacheId, existing);
+  }
+  return map;
+}
+
 export function convertToBase(
   qty: number,
   unit: string,

@@ -1,5 +1,5 @@
 import { PantryStatus, RecipeIngredient } from '@shared/enums';
-import { convertToBase, resolveBaseQuantity } from './unit-conversion';
+import { convertToBase, resolveBaseQuantity, buildPantryMap } from './unit-conversion';
 
 interface PantryEntry {
   foodCacheId: string;
@@ -11,12 +11,7 @@ export function enrichPantryStatus(
   ingredients: RecipeIngredient[],
   pantryItems: PantryEntry[],
 ): RecipeIngredient[] {
-  const pantryMap = new Map<string, { quantity: number; unit: string }[]>();
-  for (const item of pantryItems) {
-    const existing = pantryMap.get(item.foodCacheId) ?? [];
-    existing.push({ quantity: Number(item.quantity), unit: item.unit });
-    pantryMap.set(item.foodCacheId, existing);
-  }
+  const pantryMap = buildPantryMap(pantryItems);
 
   return ingredients.map((ing) => {
     if (!pantryMap.has(ing.foodCacheId)) {
