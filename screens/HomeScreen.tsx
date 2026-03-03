@@ -33,6 +33,7 @@ import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
 import type { TabParamList, HomeStackParamList } from '../navigation/types';
 import colors from '../theme/colors';
+import LoadingScreen from '../components/LoadingScreen';
 
 type TabNav = BottomTabNavigationProp<TabParamList, 'Home'>;
 
@@ -327,11 +328,7 @@ export default function HomeScreen() {
   });
 
   if (profileLoading || pantryLoading) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-cream">
-        <ActivityIndicator size="large" color={colors.navy.DEFAULT} />
-      </SafeAreaView>
-    );
+    return <LoadingScreen color={colors.navy.DEFAULT} />;
   }
 
   const expiringItems = (pantryItems ?? []).filter(item => {

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft } from 'lucide-react-native';
-import SelectableCard from '../../components/onboarding/SelectableCard';
+import ScreenHeader from '../../components/ScreenHeader';
+import GoalTypeSelector from '../../components/GoalTypeSelector';
 import { useUserProfileQuery } from '../../hooks/useUserProfileQuery';
 import { useUpdateProfileMutation } from '../../hooks/useUpdateProfileMutation';
 import { GoalType, MACRO_PRESETS } from '../../shared/enums';
@@ -12,12 +12,6 @@ import colors from '../../theme/colors';
 import type { ProfileStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'EditNutritionGoals'>;
-
-const GOAL_EMOJIS: Record<GoalType, string> = {
-  [GoalType.LoseWeight]: '📉',
-  [GoalType.Maintain]: '⚖️',
-  [GoalType.BuildMuscle]: '💪',
-};
 
 export default function EditNutritionGoalsScreen() {
   const navigation = useNavigation<Nav>();
@@ -58,20 +52,12 @@ export default function EditNutritionGoalsScreen() {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-5 py-3">
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <ArrowLeft size={24} color={colors.navy.DEFAULT} />
-        </Pressable>
-        <Text className="text-lg font-bold text-navy">Nutrition Goals</Text>
-        <Pressable onPress={handleSave} disabled={mutation.isPending} hitSlop={12}>
-          {mutation.isPending ? (
-            <ActivityIndicator size="small" color={colors.orange.DEFAULT} />
-          ) : (
-            <Text className="text-[15px] font-semibold text-orange">Save</Text>
-          )}
-        </Pressable>
-      </View>
+      <ScreenHeader
+        title="Nutrition Goals"
+        centerTitle
+        onSave={handleSave}
+        isSaving={mutation.isPending}
+      />
 
       <ScrollView contentContainerClassName="px-5 pb-10">
         {/* Goal Type */}
@@ -81,14 +67,10 @@ export default function EditNutritionGoalsScreen() {
         <Text className="text-sm text-muted mb-4">
           Choose a goal and we'll set smart defaults for your daily targets.
         </Text>
-        {Object.values(GoalType).map(goal => (
-          <SelectableCard
-            key={goal}
-            title={`${GOAL_EMOJIS[goal]}  ${goal}`}
-            selected={goalType === goal}
-            onPress={() => selectGoal(goal)}
-          />
-        ))}
+        <GoalTypeSelector
+          selectedGoal={goalType}
+          onSelect={selectGoal}
+        />
 
         {/* Macro Targets */}
         <Text className="text-lg font-bold text-dark mb-4 mt-4">

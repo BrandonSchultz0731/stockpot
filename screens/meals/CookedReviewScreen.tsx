@@ -13,8 +13,11 @@ import type {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Info, Minus, Plus, Square, SquareCheck } from 'lucide-react-native';
+import { Info, Minus, Plus, Square, SquareCheck } from 'lucide-react-native';
 import colors from '../../theme/colors';
+import ScreenHeader from '../../components/ScreenHeader';
+import ErrorState from '../../components/ErrorState';
+import LoadingScreen from '../../components/LoadingScreen';
 import { api } from '../../services/api';
 import { ROUTES } from '../../services/routes';
 import { QUERY_KEYS } from '../../services/queryKeys';
@@ -24,18 +27,13 @@ import {
   type CookDeductionSuggestion,
 } from '../../hooks/useMealPlanMutations';
 import type { MealsStackParamList } from '../../navigation/types';
+import { formatQuantity } from '../../utils/formatQuantity';
 
 type ScreenProps = NativeStackScreenProps<MealsStackParamList, 'CookedReview'>;
 
 interface DeductionRow extends CookDeductionSuggestion {
   checked: boolean;
   adjustedQuantity: number;
-}
-
-function formatQuantity(qty: number): string {
-  if (qty === 0) return '0';
-  if (Number.isInteger(qty)) return String(qty);
-  return qty % 1 === 0 ? String(qty) : qty.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
 }
 
 export default function CookedReviewScreen() {
@@ -118,22 +116,10 @@ export default function CookedReviewScreen() {
   // Loading state
   if (isPreviewLoading) {
     return (
-      <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-        <View className="flex-row items-center px-5 py-3">
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <ChevronLeft size={22} color={colors.navy.DEFAULT} />
-          </Pressable>
-          <Text className="ml-3 text-[18px] font-bold text-navy">
-            Update Pantry
-          </Text>
-        </View>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={colors.orange.DEFAULT} />
-          <Text className="mt-4 text-[14px] text-muted">
-            Calculating deductions...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <LoadingScreen
+        header={<ScreenHeader title="Update Pantry" />}
+        message="Calculating deductions..."
+      />
     );
   }
 
@@ -141,46 +127,18 @@ export default function CookedReviewScreen() {
   if (isPreviewError) {
     return (
       <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-        <View className="flex-row items-center px-5 py-3">
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <ChevronLeft size={22} color={colors.navy.DEFAULT} />
-          </Pressable>
-          <Text className="ml-3 text-[18px] font-bold text-navy">
-            Update Pantry
-          </Text>
-        </View>
-        <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-center text-[14px] text-muted">
-            Failed to load deduction suggestions.
-          </Text>
-          <Pressable onPress={() => navigation.goBack()} className="mt-3">
-            <Text className="text-[14px] font-semibold text-orange">
-              Go Back
-            </Text>
-          </Pressable>
-        </View>
+        <ScreenHeader title="Update Pantry" />
+        <ErrorState
+          message="Failed to load deduction suggestions."
+          onGoBack={() => navigation.goBack()}
+        />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-      {/* Header */}
-      <View className="flex-row items-center px-5 py-3">
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-          <ChevronLeft size={22} color={colors.navy.DEFAULT} />
-        </Pressable>
-        <View className="ml-3 flex-1">
-          <Text className="text-[18px] font-bold text-navy">
-            Update Pantry
-          </Text>
-          {recipeTitle ? (
-            <Text className="text-[13px] text-muted" numberOfLines={1}>
-              {recipeTitle}
-            </Text>
-          ) : null}
-        </View>
-      </View>
+      <ScreenHeader title="Update Pantry" subtitle={recipeTitle || undefined} />
 
       {/* Info banner */}
       <View className="mx-4 mb-3 flex-row items-start rounded-[14px] bg-orange-pale px-4 py-3">

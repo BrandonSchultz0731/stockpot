@@ -9,8 +9,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, Trash2 } from 'lucide-react-native';
+import { Trash2 } from 'lucide-react-native';
 import PantryItemForm from '../../components/pantry/PantryItemForm';
+import ScreenHeader from '../../components/ScreenHeader';
 import {
   useUpdatePantryItemMutation,
   useDeletePantryItemMutation,
@@ -55,18 +56,15 @@ export default function EditItemScreen() {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View className="px-5 pt-4 pb-2 flex-row items-center justify-between">
-          <Pressable onPress={() => navigation.goBack()}>
-            <ChevronLeft size={24} color={colors.navy.DEFAULT} />
-          </Pressable>
-          <Text
-            className="text-[18px] text-navy font-bold">
-            Edit Item
-          </Text>
-          <Pressable onPress={handleDelete}>
-            <Trash2 size={22} color={colors.danger.DEFAULT} />
-          </Pressable>
-        </View>
+        <ScreenHeader
+          title="Edit Item"
+          centerTitle
+          rightAction={
+            <Pressable onPress={handleDelete}>
+              <Trash2 size={22} color={colors.danger.DEFAULT} />
+            </Pressable>
+          }
+        />
 
         <PantryItemForm
           initialValues={{

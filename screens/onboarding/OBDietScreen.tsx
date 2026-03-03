@@ -1,34 +1,21 @@
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import OnboardingLayout from '../../components/onboarding/OnboardingLayout';
-import PillButton from '../../components/onboarding/PillButton';
+import DietSelector from '../../components/DietSelector';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { DietaryPreference } from '../../shared/enums';
+import { useToggleDiet } from '../../hooks/useToggleList';
 import type { OnboardingParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<OnboardingParamList, 'OBDiet'>;
-
-const ALL_DIETS = Object.values(DietaryPreference);
 
 export default function OBDietScreen() {
   const navigation = useNavigation<Nav>();
   const { data, updateData } = useOnboarding();
 
-  const toggleDiet = (diet: DietaryPreference) => {
-    if (diet === DietaryPreference.None) {
-      // "None" clears all others
-      updateData({ diets: [DietaryPreference.None] });
-      return;
-    }
-    // Any other diet clears "None"
-    const withoutNone = data.diets.filter(d => d !== DietaryPreference.None);
-    if (withoutNone.includes(diet)) {
-      updateData({ diets: withoutNone.filter(d => d !== diet) });
-    } else {
-      updateData({ diets: [...withoutNone, diet] });
-    }
-  };
+  const setDiets = (next: DietaryPreference[]) => updateData({ diets: next });
+  const toggleDiet = useToggleDiet(data.diets, setDiets);
 
   return (
     <OnboardingLayout
@@ -43,17 +30,7 @@ export default function OBDietScreen() {
         suggestions.
       </Text>
 
-      <View className="flex-row flex-wrap">
-        {ALL_DIETS.map(diet => (
-          <PillButton
-            key={diet}
-            label={diet}
-            selected={data.diets.includes(diet)}
-            onPress={() => toggleDiet(diet)}
-            variant="diet"
-          />
-        ))}
-      </View>
+      <DietSelector selectedDiets={data.diets} onToggle={toggleDiet} />
     </OnboardingLayout>
   );
 }

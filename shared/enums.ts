@@ -85,6 +85,12 @@ export interface NutritionalGoals {
   dailyFatGrams: number;
 }
 
+export const GOAL_EMOJIS: Record<GoalType, string> = {
+  [GoalType.LoseWeight]: '📉',
+  [GoalType.Maintain]: '⚖️',
+  [GoalType.BuildMuscle]: '💪',
+};
+
 export const COOKING_SKILL_DESCRIPTIONS: Record<CookingSkill, string> = {
   [CookingSkill.Beginner]: "I'm new to cooking and prefer simple recipes",
   [CookingSkill.Intermediate]: 'I can follow most recipes comfortably',
