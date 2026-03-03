@@ -3,8 +3,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  Text,
-  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';

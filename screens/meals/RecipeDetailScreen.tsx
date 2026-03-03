@@ -22,7 +22,6 @@ import LoadingScreen from '../../components/LoadingScreen';
 import { useRecipeDetailQuery } from '../../hooks/useRecipeDetailQuery';
 import { useSavedRecipes } from '../../hooks/useSavedRecipes';
 import type { MealsStackParamList } from '../../navigation/types';
-import { PantryStatus } from '../../shared/enums';
 import { countByPantryStatus } from '../../shared/pantryStatusCounts';
 import type { RecipeIngredient, RecipeStep } from '../../shared/enums';
 import { formatQuantity } from '../../utils/formatQuantity';
