@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { UserSession } from './entities/user-session.entity';
 import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -141,5 +142,17 @@ export class UsersService {
       onboardingComplete: true,
     });
     return { success: true };
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const update: Record<string, any> = {};
+    if (dto.dietaryProfile) {
+      update.dietaryProfile = dto.dietaryProfile;
+    }
+    if (dto.nutritionalGoals) {
+      update.nutritionalGoals = dto.nutritionalGoals;
+    }
+    await this.usersRepo.update(userId, update);
+    return this.getProfile(userId);
   }
 }

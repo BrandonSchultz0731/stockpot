@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, Pencil, X } from 'lucide-react-native';
+import { ChevronLeft, X } from 'lucide-react-native';
 import Button from '../../components/Button';
 import QuantityUnitInput from '../../components/pantry/QuantityUnitInput';
 import StorageLocationPills from '../../components/pantry/StorageLocationPills';
@@ -209,7 +209,9 @@ export default function ReceiptReviewScreen() {
         keyExtractor={item => item._key}
         contentContainerClassName="px-5 pb-[100px]"
         renderItem={({ item, index }) => (
-          <View className="bg-white rounded-card border border-border p-3.5 mb-2 flex-row items-center">
+          <Pressable
+            onPress={() => openEdit(index)}
+            className="bg-white rounded-card border border-border p-3.5 mb-2 flex-row items-center">
             <View className="flex-1 mr-2">
               <Text
                 className="text-[14px] text-dark font-semibold"
@@ -227,13 +229,13 @@ export default function ReceiptReviewScreen() {
                 </Text>
               )}
             </View>
-            <Pressable onPress={() => openEdit(index)} className="p-2">
-              <Pencil size={16} color={colors.muted} />
+            <Pressable
+              onPress={() => removeItem(index)}
+              hitSlop={8}
+              className="w-7 h-7 items-center justify-center rounded-full bg-danger-pale">
+              <X size={14} color={colors.danger.DEFAULT} />
             </Pressable>
-            <Pressable onPress={() => removeItem(index)} className="p-2">
-              <X size={16} color={colors.danger.DEFAULT} />
-            </Pressable>
-          </View>
+          </Pressable>
         )}
         ListEmptyComponent={
           <View className="items-center pt-12">
@@ -253,7 +255,7 @@ export default function ReceiptReviewScreen() {
       </View>
 
       {/* Inline edit modal */}
-      <Modal visible={editIndex !== null} transparent animationType="slide">
+      <Modal visible={editIndex !== null} transparent animationType="fade">
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1">

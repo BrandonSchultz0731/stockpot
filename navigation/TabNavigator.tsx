@@ -4,7 +4,7 @@ import HomeStackNavigator from './HomeStackNavigator';
 import PantryStackNavigator from './PantryStackNavigator';
 import MealsStackNavigator from './MealsStackNavigator';
 import AIChefStackNavigator from './AIChefStackNavigator';
-import ProfileScreen from '../screens/ProfileScreen';
+import ProfileStackNavigator from './ProfileStackNavigator';
 import colors from '../theme/colors';
 import type { TabParamList } from './types';
 
@@ -67,9 +67,11 @@ export default function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="ProfileStack"
+        component={ProfileStackNavigator}
         options={{
+          popToTopOnBlur: true,
+          title: 'Profile',
           tabBarIcon: ({ color }) => <User size={22} color={color} />,
         }}
       />
