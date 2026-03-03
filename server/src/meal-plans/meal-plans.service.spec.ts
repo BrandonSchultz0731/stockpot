@@ -25,9 +25,11 @@ const mockMealPlanRepo = {
 };
 
 const mockEntryRepo = {
+  find: jest.fn(),
   findOne: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
+  delete: jest.fn(),
 };
 
 const mockRecipeRepo = {
@@ -606,6 +608,49 @@ describe('MealPlansService', () => {
       );
     });
 
+    it('should store servingsToCook and servingsToEat when provided', async () => {
+      mockEntryRepo.findOne.mockResolvedValue({ ...mockEntry });
+      mockPantryService.deductItems.mockResolvedValue({
+        updatedPantryIds: [],
+        removedPantryIds: [],
+      });
+      mockEntryRepo.save.mockImplementation((e) => Promise.resolve(e));
+
+      const result = await service.confirmCook('u1', 'entry-1', {
+        deductions: [],
+        servingsToCook: 4,
+        servingsToEat: 2,
+      });
+
+      expect(result.isCooked).toBe(true);
+      expect(mockEntryRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isCooked: true,
+          servingsToCook: 4,
+          servings: 2,
+        }),
+      );
+    });
+
+    it('should not overwrite servings when servingsToCook/servingsToEat not provided', async () => {
+      const entry = { ...mockEntry, servings: 3, servingsToCook: null };
+      mockEntryRepo.findOne.mockResolvedValue(entry);
+      mockPantryService.deductItems.mockResolvedValue({
+        updatedPantryIds: [],
+        removedPantryIds: [],
+      });
+      mockEntryRepo.save.mockImplementation((e) => Promise.resolve(e));
+
+      await service.confirmCook('u1', 'entry-1', { deductions: [] });
+
+      expect(mockEntryRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          servings: 3,
+          servingsToCook: null,
+        }),
+      );
+    });
+
     it('should work with empty deductions array', async () => {
       mockEntryRepo.findOne.mockResolvedValue({ ...mockEntry });
       mockPantryService.deductItems.mockResolvedValue({
@@ -639,6 +684,305 @@ describe('MealPlansService', () => {
 
       await expect(
         service.confirmCook('u1', 'entry-1', { deductions: [] }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('cookPreview with scaling', () => {
+    const mockPantryItems = [
+      { id: 'pi-1', displayName: 'Chicken Breast', quantity: 10, unit: 'lb', foodCacheId: 'fc-1' },
+    ];
+
+    it('should scale ingredient quantities when servingsToCook is provided', async () => {
+      const mockEntry = {
+        id: 'entry-1',
+        servingsToCook: null,
+        mealPlan: { userId: 'u1' },
+        recipe: {
+          title: 'Chicken',
+          servings: 2,
+          ingredients: [
+            { name: 'Chicken breast', quantity: 1, unit: 'lb', baseQuantity: 453.592, baseUnit: 'g', foodCacheId: 'fc-1' },
+          ],
+        },
+      };
+      mockEntryRepo.findOne.mockResolvedValue(mockEntry);
+      mockPantryService.findAllForUser.mockResolvedValue(mockPantryItems);
+
+      // Cook 4 servings of a recipe that serves 2 → scale = 2x
+      const result = await service.cookPreview('u1', 'entry-1', 4);
+
+      expect(result.deductions).toHaveLength(1);
+      expect(result.deductions[0].deductQuantity).toBe(2); // 1 lb * 2 = 2 lb
+    });
+
+    it('should use entry.servingsToCook when no explicit param given', async () => {
+      const mockEntry = {
+        id: 'entry-1',
+        servingsToCook: 6,
+        mealPlan: { userId: 'u1' },
+        recipe: {
+          title: 'Chicken',
+          servings: 2,
+          ingredients: [
+            { name: 'Chicken breast', quantity: 1, unit: 'lb', baseQuantity: 453.592, baseUnit: 'g', foodCacheId: 'fc-1' },
+          ],
+        },
+      };
+      mockEntryRepo.findOne.mockResolvedValue(mockEntry);
+      mockPantryService.findAllForUser.mockResolvedValue(mockPantryItems);
+
+      // entry.servingsToCook=6, recipe.servings=2 → scale = 3x
+      const result = await service.cookPreview('u1', 'entry-1');
+
+      expect(result.deductions[0].deductQuantity).toBe(3); // 1 lb * 3 = 3 lb
+    });
+
+    it('should default to scale=1 when no servingsToCook is set anywhere', async () => {
+      const mockEntry = {
+        id: 'entry-1',
+        servingsToCook: null,
+        mealPlan: { userId: 'u1' },
+        recipe: {
+          title: 'Chicken',
+          servings: 2,
+          ingredients: [
+            { name: 'Chicken breast', quantity: 1, unit: 'lb', baseQuantity: 453.592, baseUnit: 'g', foodCacheId: 'fc-1' },
+          ],
+        },
+      };
+      mockEntryRepo.findOne.mockResolvedValue(mockEntry);
+      mockPantryService.findAllForUser.mockResolvedValue(mockPantryItems);
+
+      const result = await service.cookPreview('u1', 'entry-1');
+
+      expect(result.deductions[0].deductQuantity).toBe(1); // no scaling
+    });
+  });
+
+  describe('getAvailableLeftovers', () => {
+    it('should return entries with available leftover servings', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue({ id: 'plan-1', userId: 'u1' });
+      mockEntryRepo.find.mockResolvedValue([
+        {
+          id: 'entry-1',
+          recipeId: 'recipe-1',
+          servings: 2,
+          servingsToCook: 4,
+          leftoverSourceEntryId: null,
+          recipe: { title: 'Chicken', imageUrl: null },
+          leftoverEntries: [],
+        },
+      ]);
+
+      const result = await service.getAvailableLeftovers('u1', 'plan-1');
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        sourceEntryId: 'entry-1',
+        recipeId: 'recipe-1',
+        recipeTitle: 'Chicken',
+        recipeImageUrl: null,
+        availableServings: 2, // 4 cook - 2 eat = 2 available
+      });
+    });
+
+    it('should subtract already-assigned leftover servings', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue({ id: 'plan-1', userId: 'u1' });
+      mockEntryRepo.find.mockResolvedValue([
+        {
+          id: 'entry-1',
+          recipeId: 'recipe-1',
+          servings: 2,
+          servingsToCook: 6,
+          leftoverSourceEntryId: null,
+          recipe: { title: 'Chicken', imageUrl: null },
+          leftoverEntries: [
+            { servings: 1 },
+            { servings: 1 },
+          ],
+        },
+      ]);
+
+      const result = await service.getAvailableLeftovers('u1', 'plan-1');
+
+      expect(result).toHaveLength(1);
+      // 6 cook - 2 eat - 2 assigned = 2 available
+      expect(result[0].availableServings).toBe(2);
+    });
+
+    it('should exclude entries with no leftover capacity', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue({ id: 'plan-1', userId: 'u1' });
+      mockEntryRepo.find.mockResolvedValue([
+        {
+          id: 'entry-1',
+          recipeId: 'recipe-1',
+          servings: 2,
+          servingsToCook: 2, // cook = eat, no leftovers
+          leftoverSourceEntryId: null,
+          recipe: { title: 'Chicken', imageUrl: null },
+          leftoverEntries: [],
+        },
+        {
+          id: 'entry-2',
+          recipeId: 'recipe-2',
+          servings: 2,
+          servingsToCook: null, // no servingsToCook set
+          leftoverSourceEntryId: null,
+          recipe: { title: 'Pasta', imageUrl: null },
+          leftoverEntries: [],
+        },
+      ]);
+
+      const result = await service.getAvailableLeftovers('u1', 'plan-1');
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('should exclude fully-assigned leftovers', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue({ id: 'plan-1', userId: 'u1' });
+      mockEntryRepo.find.mockResolvedValue([
+        {
+          id: 'entry-1',
+          recipeId: 'recipe-1',
+          servings: 2,
+          servingsToCook: 4,
+          leftoverSourceEntryId: null,
+          recipe: { title: 'Chicken', imageUrl: null },
+          leftoverEntries: [{ servings: 2 }], // all leftovers assigned
+        },
+      ]);
+
+      const result = await service.getAvailableLeftovers('u1', 'plan-1');
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('should throw NotFoundException when plan not found', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.getAvailableLeftovers('u1', 'bad-plan'),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('addLeftoverEntry', () => {
+    it('should create a leftover entry', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue({ id: 'plan-1', userId: 'u1' });
+      mockEntryRepo.findOne
+        .mockResolvedValueOnce({
+          id: 'source-1',
+          mealPlanId: 'plan-1',
+          recipeId: 'recipe-1',
+          servings: 2,
+          servingsToCook: 4,
+          leftoverEntries: [],
+        })
+        .mockResolvedValueOnce({
+          id: 'leftover-1',
+          recipeId: 'recipe-1',
+          dayOfWeek: 2,
+          mealType: 'Dinner',
+          servings: 1,
+          leftoverSourceEntryId: 'source-1',
+          isLocked: true,
+          recipe: { title: 'Chicken' },
+        });
+      mockEntryRepo.create.mockImplementation((data) => data);
+      mockEntryRepo.save.mockImplementation((data) =>
+        Promise.resolve({ ...data, id: 'leftover-1' }),
+      );
+
+      const result = await service.addLeftoverEntry('u1', {
+        mealPlanId: 'plan-1',
+        sourceEntryId: 'source-1',
+        dayOfWeek: 2,
+        mealType: 'Dinner' as any,
+        servings: 1,
+      });
+
+      expect(result.id).toBe('leftover-1');
+      expect(mockEntryRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          mealPlanId: 'plan-1',
+          recipeId: 'recipe-1',
+          leftoverSourceEntryId: 'source-1',
+          isLocked: true,
+          servings: 1,
+        }),
+      );
+    });
+
+    it('should throw BadRequestException when requesting more servings than available', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue({ id: 'plan-1', userId: 'u1' });
+      mockEntryRepo.findOne.mockResolvedValueOnce({
+        id: 'source-1',
+        mealPlanId: 'plan-1',
+        recipeId: 'recipe-1',
+        servings: 2,
+        servingsToCook: 4,
+        leftoverEntries: [{ servings: 1 }], // 1 already assigned
+      });
+
+      // Available = 4 - 2 - 1 = 1, requesting 2
+      await expect(
+        service.addLeftoverEntry('u1', {
+          mealPlanId: 'plan-1',
+          sourceEntryId: 'source-1',
+          dayOfWeek: 2,
+          mealType: 'Dinner' as any,
+          servings: 2,
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when source has no servingsToCook', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue({ id: 'plan-1', userId: 'u1' });
+      mockEntryRepo.findOne.mockResolvedValueOnce({
+        id: 'source-1',
+        mealPlanId: 'plan-1',
+        servingsToCook: null,
+        leftoverEntries: [],
+      });
+
+      await expect(
+        service.addLeftoverEntry('u1', {
+          mealPlanId: 'plan-1',
+          sourceEntryId: 'source-1',
+          dayOfWeek: 2,
+          mealType: 'Dinner' as any,
+          servings: 1,
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException when source entry not found', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue({ id: 'plan-1', userId: 'u1' });
+      mockEntryRepo.findOne.mockResolvedValueOnce(null);
+
+      await expect(
+        service.addLeftoverEntry('u1', {
+          mealPlanId: 'plan-1',
+          sourceEntryId: 'bad-id',
+          dayOfWeek: 2,
+          mealType: 'Dinner' as any,
+          servings: 1,
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException when plan not found', async () => {
+      mockMealPlanRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.addLeftoverEntry('u1', {
+          mealPlanId: 'bad-plan',
+          sourceEntryId: 'source-1',
+          dayOfWeek: 2,
+          mealType: 'Dinner' as any,
+          servings: 1,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
   });
