@@ -46,7 +46,7 @@ const UNIT_ALIASES: Record<string, string> = {
   bunches: UnitOfMeasure.Bunch,
 };
 
-function normalizeUnit(unit: string): string {
+export function normalizeUnit(unit: string): string {
   const lower = unit.toLowerCase();
   return UNIT_ALIASES[lower] ?? lower;
 }
@@ -70,7 +70,7 @@ const VOLUME_TO_ML: Record<string, number> = {
   [UnitOfMeasure.Gallon]: 3785.41,
 };
 
-const COUNT_UNITS: Set<string> = new Set([
+export const COUNT_UNITS: Set<string> = new Set([
   UnitOfMeasure.Count,
   UnitOfMeasure.Bunch,
   UnitOfMeasure.Clove,

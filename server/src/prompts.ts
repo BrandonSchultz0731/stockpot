@@ -179,43 +179,21 @@ Return ONLY a JSON object mapping each ingredient name to the matched candidate 
 No markdown fences, no explanation — only the JSON object.`;
 }
 
-export function buildCookDeductionPrompt(
-  recipeIngredients: { name: string; quantity: number; unit: string; foodCacheId?: string }[],
-  pantryItems: { id: string; displayName: string; quantity: number; unit: string; foodCacheId: string }[],
+export function buildUnitConversionPrompt(
+  pairs: { ingredientName: string; ingredientQty: number; ingredientUnit: string; pantryUnit: string }[],
 ): string {
-  const ingredientLines = recipeIngredients
-    .map((i) => `- "${i.name}" qty=${i.quantity} unit="${i.unit}" foodCacheId="${i.foodCacheId ?? 'NONE'}"`)
+  const lines = pairs
+    .map((p, i) => `${i + 1}. "${p.ingredientName}": ${p.ingredientQty} ${p.ingredientUnit} → ? ${p.pantryUnit}`)
     .join('\n');
 
-  const pantryLines = pantryItems
-    .map((p) => `- id="${p.id}" name="${p.displayName}" qty=${p.quantity} unit="${p.unit}" foodCacheId="${p.foodCacheId}"`)
-    .join('\n');
+  return `Convert each recipe ingredient quantity into the pantry unit. These are domain-specific conversions that cannot be done with standard unit math (e.g. cloves to heads, cups of flour to pounds).
 
-  return `You are a kitchen inventory assistant. A user just cooked a recipe. Determine how much of each recipe ingredient should be deducted from their pantry.
+Conversions needed:
+${lines}
 
-Recipe ingredients:
-${ingredientLines}
+Return ONLY a JSON array where each element is the converted numeric quantity (in the same order as above). Example for 2 items: [0.25, 1.5]
 
-Pantry items:
-${pantryLines}
-
-Matching rules:
-1. Match by foodCacheId first (recipe ingredient foodCacheId === pantry item foodCacheId).
-2. If no foodCacheId match, try matching by name similarity.
-3. Convert the deduction quantity into the pantry item's unit (e.g. recipe says "3 cloves garlic" but pantry has "1 head garlic" → deduct 0.25 head).
-4. If a recipe ingredient has no matching pantry item, still include it with pantryItemId: null.
-
-Return ONLY a JSON object with a "deductions" array where each item has:
-- "recipeIngredientName": string (the recipe ingredient name)
-- "pantryItemId": string | null (the pantry item id, or null if not in pantry)
-- "pantryItemName": string (the pantry item display name, or the recipe ingredient name if not in pantry)
-- "currentQuantity": number (current pantry quantity, 0 if not in pantry)
-- "currentUnit": string (pantry item unit, or recipe unit if not in pantry)
-- "deductQuantity": number (amount to deduct, in pantry item's unit)
-- "deductUnit": string (the unit for the deduction, same as pantry item's unit)
-- "notes": string (brief explanation of conversion, if any)
-
-No markdown fences, no explanation — only the JSON object.`;
+No markdown fences, no explanation — only the JSON array.`;
 }
 
 export function buildReceiptScanPrompt(): string {

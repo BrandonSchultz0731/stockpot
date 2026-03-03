@@ -17,11 +17,13 @@ import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
 import { MealType, UnitOfMeasure, RecipeIngredient, RecipeSource, MealScheduleSlot, DAY_NAMES, MessageType } from '@shared/enums';
-import { ACTIVE_MODEL, CLAUDE_MODELS } from '../ai-models';
+import { ACTIVE_MODEL } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
-import { buildMealPlanPrompt, buildMealSwapPrompt, buildCookDeductionPrompt, buildUrlRecipeImportPrompt, buildPhotoRecipeImportPrompt } from '../prompts';
+import { buildMealPlanPrompt, buildMealSwapPrompt, buildUrlRecipeImportPrompt, buildPhotoRecipeImportPrompt } from '../prompts';
 import { enrichPantryStatus } from '../pantry/enrich-pantry';
+import { computeCookDeductions } from '../pantry/cook-deduction';
+import { resolveAiConversions } from '../pantry/cook-deduction-ai';
 import { ConfirmCookDto } from './dto/confirm-cook.dto';
 import { AddMealPlanEntryDto } from './dto/add-meal-plan-entry.dto';
 
@@ -661,43 +663,35 @@ export class MealPlansService {
 
     const pantryItems = await this.pantryService.findAllForUser(userId);
 
-    const recipeIngredients = (entry.recipe.ingredients ?? []).map((ing: any) => ({
-      name: ing.name,
-      quantity: ing.quantity,
-      unit: ing.unit,
-      foodCacheId: ing.foodCacheId,
-    }));
-
     const pantryData = pantryItems.map((item) => ({
       id: item.id,
       displayName: item.displayName,
-      quantity: item.quantity,
+      quantity: Number(item.quantity),
       unit: item.unit,
       foodCacheId: item.foodCacheId,
     }));
 
-    const prompt = buildCookDeductionPrompt(recipeIngredients, pantryData);
+    // 1. Deterministic deductions
+    const deductions = computeCookDeductions(
+      entry.recipe.ingredients ?? [],
+      pantryData,
+    );
 
-    let response;
-    try {
-      response = await this.anthropicService.sendMessage(userId, {
-        model: CLAUDE_MODELS['haiku-4.5'],
-        maxTokens: 4096,
-        messages: [{ role: 'user', content: prompt }],
-        messageType: MessageType.CookDeduction,
-      });
-    } catch (error) {
-      this.logger.error('Claude API call failed for cook deduction preview', error);
-      throw new BadGatewayException('Cook deduction preview service unavailable');
+    // 2. AI fallback for incompatible unit conversions
+    const needsAi = deductions.some((d) => d.needsAiConversion);
+    if (needsAi) {
+      await resolveAiConversions(deductions, userId, this.anthropicService);
     }
 
-    const rawText = response.content[0]?.type === 'text' ? response.content[0].text : '';
-    const deductions = this.parseCookDeductionResponse(rawText);
+    // 3. Strip internal fields before returning
+    const cleaned = deductions.map(
+      ({ needsAiConversion, recipeQuantity, recipeUnit, ...rest }) => rest,
+    );
 
     return {
       entryId: entry.id,
       recipeTitle: entry.recipe.title,
-      deductions,
+      deductions: cleaned,
     };
   }
 
@@ -722,44 +716,6 @@ export class MealPlansService {
       pantryUpdated: result.updatedPantryIds.length,
       pantryRemoved: result.removedPantryIds.length,
     };
-  }
-
-  private parseCookDeductionResponse(raw: string): any[] {
-    let parsed: unknown;
-
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeBlockMatch) {
-        try {
-          parsed = JSON.parse(codeBlockMatch[1].trim());
-        } catch {
-          // fall through
-        }
-      }
-
-      if (!parsed) {
-        const objectMatch = raw.match(/\{[\s\S]*\}/);
-        if (objectMatch) {
-          try {
-            parsed = JSON.parse(objectMatch[0]);
-          } catch {
-            // fall through
-          }
-        }
-      }
-    }
-
-    if (parsed && typeof parsed === 'object' && 'deductions' in (parsed as any)) {
-      const deductions = (parsed as any).deductions;
-      if (Array.isArray(deductions)) {
-        return deductions;
-      }
-    }
-
-    this.logger.warn('Failed to parse cook deduction response');
-    return [];
   }
 
   async deletePlan(userId: string, planId: string): Promise<void> {

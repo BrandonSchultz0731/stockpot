@@ -133,7 +133,7 @@ export function useCookPreviewQuery(entryId: string) {
     queryKey: QUERY_KEYS.MEAL_PLANS.COOK_PREVIEW(entryId),
     queryFn: () =>
       api.post<CookPreviewResponse>(ROUTES.MEAL_PLANS.COOK_PREVIEW(entryId)),
-    staleTime: 5 * 60 * 1000, // 5 minutes — avoid repeat AI calls
+    staleTime: 30 * 1000, // 30 seconds — most deductions are instant
   });
 }
 

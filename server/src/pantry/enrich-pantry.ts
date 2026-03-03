@@ -19,7 +19,7 @@ export function enrichPantryStatus(
   }
 
   return ingredients.map((ing) => {
-    if (!ing.foodCacheId || !pantryMap.has(ing.foodCacheId)) {
+    if (!pantryMap.has(ing.foodCacheId)) {
       return { ...ing, pantryStatus: PantryStatus.None };
     }
 

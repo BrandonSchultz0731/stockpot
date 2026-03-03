@@ -154,7 +154,7 @@ export interface RecipeIngredient {
   baseQuantity: number;
   baseUnit: string;
   notes?: string;
-  foodCacheId?: string;
+  foodCacheId: string;
   pantryStatus?: PantryStatus;
 }
 
