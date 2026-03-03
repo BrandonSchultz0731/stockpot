@@ -350,4 +350,101 @@ describe('UsersService', () => {
       expect(result).toEqual({ success: true });
     });
   });
+
+  describe('updateProfile', () => {
+    const dietaryProfile = {
+      diets: [DietaryPreference.Keto],
+      excludedIngredients: ['Shellfish'],
+      householdSize: 3,
+      cookingSkill: CookingSkill.Advanced,
+    };
+
+    const nutritionalGoals = {
+      goalType: GoalType.BuildMuscle,
+      dailyCalories: 2500,
+      dailyProteinGrams: 200,
+      dailyCarbsGrams: 300,
+      dailyFatGrams: 75,
+    };
+
+    it('should update only dietaryProfile when only that is provided', async () => {
+      mockUsersRepo.update.mockResolvedValue({ affected: 1 });
+      mockUsersRepo.findOne.mockResolvedValue({
+        id: 'u1',
+        email: 'a@b.com',
+        passwordHash: 'h',
+        firstName: 'Test',
+        dietaryProfile,
+      });
+
+      const result = await service.updateProfile('u1', { dietaryProfile });
+
+      expect(mockUsersRepo.update).toHaveBeenCalledWith('u1', { dietaryProfile });
+      expect(result).not.toHaveProperty('passwordHash');
+    });
+
+    it('should update only nutritionalGoals when only that is provided', async () => {
+      mockUsersRepo.update.mockResolvedValue({ affected: 1 });
+      mockUsersRepo.findOne.mockResolvedValue({
+        id: 'u1',
+        email: 'a@b.com',
+        passwordHash: 'h',
+        firstName: 'Test',
+        nutritionalGoals,
+      });
+
+      const result = await service.updateProfile('u1', { nutritionalGoals });
+
+      expect(mockUsersRepo.update).toHaveBeenCalledWith('u1', { nutritionalGoals });
+      expect(result).not.toHaveProperty('passwordHash');
+    });
+
+    it('should update both fields when both are provided', async () => {
+      mockUsersRepo.update.mockResolvedValue({ affected: 1 });
+      mockUsersRepo.findOne.mockResolvedValue({
+        id: 'u1',
+        email: 'a@b.com',
+        passwordHash: 'h',
+        firstName: 'Test',
+        dietaryProfile,
+        nutritionalGoals,
+      });
+
+      const result = await service.updateProfile('u1', {
+        dietaryProfile,
+        nutritionalGoals,
+      });
+
+      expect(mockUsersRepo.update).toHaveBeenCalledWith('u1', {
+        dietaryProfile,
+        nutritionalGoals,
+      });
+      expect(result).toHaveProperty('email', 'a@b.com');
+    });
+
+    it('should not touch onboardingComplete', async () => {
+      mockUsersRepo.update.mockResolvedValue({ affected: 1 });
+      mockUsersRepo.findOne.mockResolvedValue({
+        id: 'u1',
+        email: 'a@b.com',
+        passwordHash: 'h',
+        firstName: 'Test',
+        dietaryProfile,
+      });
+
+      await service.updateProfile('u1', { dietaryProfile });
+
+      const updateArg = mockUsersRepo.update.mock.calls[0][1];
+      expect(updateArg).not.toHaveProperty('onboardingComplete');
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      mockUsersRepo.update.mockResolvedValue({ affected: 1 });
+      mockUsersRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.updateProfile('nope', { dietaryProfile }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
 });

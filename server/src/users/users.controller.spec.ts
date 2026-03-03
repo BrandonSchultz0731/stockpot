@@ -5,6 +5,7 @@ import { UsersService } from './users.service';
 const mockUsersService = {
   getProfile: jest.fn(),
   completeOnboarding: jest.fn(),
+  updateProfile: jest.fn(),
 };
 
 describe('UsersController', () => {
@@ -49,6 +50,21 @@ describe('UsersController', () => {
 
       expect(mockUsersService.completeOnboarding).toHaveBeenCalledWith('u1', dto);
       expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('should delegate to UsersService.updateProfile', async () => {
+      const dto = {
+        dietaryProfile: { diets: ['Keto'], excludedIngredients: [], householdSize: 1, cookingSkill: 'Beginner' },
+      };
+      const updatedProfile = { id: 'u1', email: 'a@b.com', firstName: 'Test', dietaryProfile: dto.dietaryProfile };
+      mockUsersService.updateProfile.mockResolvedValue(updatedProfile);
+
+      const result = await controller.updateProfile('u1', dto as any);
+
+      expect(mockUsersService.updateProfile).toHaveBeenCalledWith('u1', dto);
+      expect(result).toEqual(updatedProfile);
     });
   });
 });
