@@ -43,7 +43,7 @@ export default function ConversationListSheet({
   onClose,
 }: ConversationListSheetProps) {
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="fade" transparent>
       <Pressable
         className="flex-1 bg-black/40"
         onPress={onClose}
@@ -84,16 +84,14 @@ export default function ConversationListSheet({
                 return (
                   <Pressable
                     onPress={() => { onSelect(item.id); onClose(); }}
-                    className={`mb-2 flex-row items-center rounded-xl px-4 py-3 ${
-                      isActive ? 'bg-orange-pale' : 'bg-white'
-                    }`}
+                    className={`mb-2 flex-row items-center rounded-xl px-4 py-3 ${isActive ? 'bg-orange-pale' : 'bg-white'
+                      }`}
                     style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                   >
                     <View className="flex-1">
                       <Text
-                        className={`text-[15px] font-semibold ${
-                          isActive ? 'text-orange' : 'text-navy'
-                        }`}
+                        className={`text-[15px] font-semibold ${isActive ? 'text-orange' : 'text-navy'
+                          }`}
                         numberOfLines={1}
                       >
                         {item.title ?? 'New conversation'}

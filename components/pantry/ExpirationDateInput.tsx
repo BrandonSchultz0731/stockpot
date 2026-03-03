@@ -83,7 +83,7 @@ export default function ExpirationDateInput({
         </Text>
       </Pressable>
 
-      <Modal visible={showPicker} transparent animationType="slide">
+      <Modal visible={showPicker} transparent animationType="fade">
         <View className="flex-1 justify-end">
           <Pressable
             className="flex-1"
