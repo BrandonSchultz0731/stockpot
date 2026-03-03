@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   Switch,
@@ -23,10 +24,13 @@ import { useCurrentMealPlanQuery } from '../hooks/useCurrentMealPlanQuery';
 import { getTodayDayOfWeek } from '../utils/dayOfWeek';
 import { SubscriptionTier, MessageType } from '../shared/enums';
 import type { DietaryProfile, NutritionalGoals } from '../shared/enums';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import colors from '../theme/colors';
 import Button from '../components/Button';
+import type { ProfileStackParamList } from '../navigation/types';
 
 const FREE_TIER_RECIPE_LIMIT = 5;
 
@@ -40,11 +44,13 @@ function formatMemberSince(dateStr: string): string {
 function UserCard({
   firstName,
   lastName,
+  avatarUrl,
   createdAt,
   tier,
 }: {
   firstName: string;
   lastName: string | null;
+  avatarUrl: string | null;
   createdAt: string;
   tier: SubscriptionTier;
 }) {
@@ -53,11 +59,18 @@ function UserCard({
 
   return (
     <View className="mx-4 mb-3 flex-row items-center rounded-card border border-border bg-white p-5">
-      <View className="w-14 h-14 items-center justify-center rounded-[18px] bg-navy">
-        <Text className="text-2xl font-bold text-white">
-          {initial}
-        </Text>
-      </View>
+      {avatarUrl ? (
+        <Image
+          source={{ uri: avatarUrl }}
+          className="w-14 h-14 rounded-[18px]"
+        />
+      ) : (
+        <View className="w-14 h-14 items-center justify-center rounded-[18px] bg-navy">
+          <Text className="text-2xl font-bold text-white">
+            {initial}
+          </Text>
+        </View>
+      )}
       <View className="flex-1 ml-4">
         <Text className="text-lg font-bold text-dark">
           {fullName}
@@ -124,8 +137,10 @@ function SubscriptionCard({ recipesUsed }: { recipesUsed: number }) {
 
 function DietaryProfileCard({
   dietaryProfile,
+  onEdit,
 }: {
   dietaryProfile: DietaryProfile | null;
+  onEdit?: () => void;
 }) {
   const pills: string[] = [];
   if (dietaryProfile) {
@@ -145,9 +160,11 @@ function DietaryProfileCard({
         <Text className="text-[15px] font-bold text-navy">
           Dietary Profile
         </Text>
-        <Text className="text-xs font-semibold text-orange">
-          Edit
-        </Text>
+        <Pressable onPress={onEdit} hitSlop={8}>
+          <Text className="text-xs font-semibold text-orange">
+            Edit
+          </Text>
+        </Pressable>
       </View>
       {pills.length > 0 ? (
         <View className="flex-row flex-wrap gap-2">
@@ -210,9 +227,11 @@ interface NutritionTotals {
 function NutritionGoalsCard({
   nutritionalGoals,
   todayTotals,
+  onEdit,
 }: {
   nutritionalGoals: NutritionalGoals | null;
   todayTotals: NutritionTotals;
+  onEdit?: () => void;
 }) {
   if (!nutritionalGoals) {
     return (
@@ -221,9 +240,11 @@ function NutritionGoalsCard({
           <Text className="text-[15px] font-bold text-navy">
             Daily Nutrition Goals
           </Text>
-          <Text className="text-xs font-semibold text-orange">
-            Edit
-          </Text>
+          <Pressable onPress={onEdit} hitSlop={8}>
+            <Text className="text-xs font-semibold text-orange">
+              Edit
+            </Text>
+          </Pressable>
         </View>
         <Text className="text-sm text-muted">No nutrition goals set.</Text>
       </View>
@@ -267,9 +288,11 @@ function NutritionGoalsCard({
         <Text className="text-[15px] font-bold text-navy">
           Daily Nutrition Goals
         </Text>
-        <Text className="text-xs font-semibold text-orange">
-          Edit
-        </Text>
+        <Pressable onPress={onEdit} hitSlop={8}>
+          <Text className="text-xs font-semibold text-orange">
+            Edit
+          </Text>
+        </Pressable>
       </View>
       {rows.map((row, i) => {
         const consumed = Math.round(todayTotals[row.key]);
@@ -371,7 +394,10 @@ function SettingsCard() {
   );
 }
 
+type Nav = NativeStackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
+
 export default function ProfileScreen() {
+  const navigation = useNavigation<Nav>();
   const { clearTokens, refreshToken } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfileQuery();
   const { data: usage } = useUsageQuery();
@@ -430,6 +456,7 @@ export default function ProfileScreen() {
           <UserCard
             firstName={profile?.firstName ?? ''}
             lastName={profile?.lastName ?? null}
+            avatarUrl={profile?.avatarUrl ?? null}
             createdAt={profile?.createdAt ?? new Date().toISOString()}
             tier={tier}
           />
@@ -445,6 +472,7 @@ export default function ProfileScreen() {
           dietaryProfile={
             profile?.dietaryProfile as DietaryProfile | null
           }
+          onEdit={() => navigation.navigate('EditDietaryProfile')}
         />
 
         {/* Section 5: Nutrition Goals */}
@@ -453,6 +481,7 @@ export default function ProfileScreen() {
             profile?.nutritionalGoals as NutritionalGoals | null
           }
           todayTotals={todayTotals}
+          onEdit={() => navigation.navigate('EditNutritionGoals')}
         />
 
         {/* Section 6: Settings */}

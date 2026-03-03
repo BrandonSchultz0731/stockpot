@@ -10,6 +10,7 @@ export const ROUTES = {
   USERS: {
     ME: '/users/me',
     COMPLETE_ONBOARDING: '/users/me/onboarding',
+    UPDATE_PROFILE: '/users/me/profile',
   },
   USAGE: {
     CURRENT: '/usage/current',

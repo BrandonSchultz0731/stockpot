@@ -31,7 +31,13 @@ export type TabParamList = {
   PantryStack: undefined;
   MealsStack: undefined;
   AIChefStack: undefined;
-  Profile: undefined;
+  ProfileStack: undefined;
+};
+
+export type ProfileStackParamList = {
+  ProfileHome: undefined;
+  EditDietaryProfile: undefined;
+  EditNutritionGoals: undefined;
 };
 
 export type AIChefStackParamList = {

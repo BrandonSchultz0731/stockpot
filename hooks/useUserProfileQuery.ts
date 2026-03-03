@@ -10,6 +10,7 @@ export interface UserProfile {
   email: string;
   firstName: string;
   lastName: string | null;
+  avatarUrl: string | null;
   onboardingComplete: boolean;
   subscriptionTier: SubscriptionTier;
   dietaryProfile: DietaryProfile | null;
