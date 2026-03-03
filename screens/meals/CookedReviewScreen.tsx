@@ -130,7 +130,7 @@ export default function CookedReviewScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={colors.orange.DEFAULT} />
           <Text className="mt-4 text-[14px] text-muted">
-            Analyzing recipe ingredients...
+            Calculating deductions...
           </Text>
         </View>
       </SafeAreaView>

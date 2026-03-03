@@ -8,6 +8,7 @@ function makeIngredient(overrides: Partial<RecipeIngredient> = {}): RecipeIngred
     unit: 'cup',
     baseQuantity: 250,
     baseUnit: 'g',
+    foodCacheId: 'default-id',
     ...overrides,
   };
 }
@@ -21,8 +22,8 @@ describe('enrichPantryStatus', () => {
     expect(result[0].pantryStatus).toBe(PantryStatus.None);
   });
 
-  it('marks ingredient as None when it has no foodCacheId', () => {
-    const ingredients = [makeIngredient({ foodCacheId: undefined })];
+  it('marks ingredient as None when foodCacheId has no pantry match', () => {
+    const ingredients = [makeIngredient({ foodCacheId: 'no-match-id' })];
     const pantryItems = [{ foodCacheId: 'flour-id', quantity: 1000, unit: 'g' }];
 
     const result = enrichPantryStatus(ingredients, pantryItems);

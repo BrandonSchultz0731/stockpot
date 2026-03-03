@@ -34,6 +34,8 @@ function invalidatePantryDependents(queryClient: ReturnType<typeof useQueryClien
   queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PANTRY_ITEMS });
   queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SHOPPING_LISTS.ALL });
   queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.ALL });
+  // Remove cook preview cache entirely so stale deductions aren't shown
+  queryClient.removeQueries({ queryKey: QUERY_KEYS.MEAL_PLANS.COOK_PREVIEW_ALL });
 }
 
 export function useCreatePantryItemMutation() {

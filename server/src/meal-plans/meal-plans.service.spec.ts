@@ -456,44 +456,70 @@ describe('MealPlansService', () => {
       recipe: {
         title: 'Chicken Stir-Fry',
         ingredients: [
-          { name: 'Chicken breast', quantity: 1, unit: 'lb', foodCacheId: 'fc-1' },
-          { name: 'Soy sauce', quantity: 3, unit: 'tbsp', foodCacheId: 'fc-2' },
+          { name: 'Chicken breast', quantity: 1, unit: 'lb', baseQuantity: 453.592, baseUnit: 'g', foodCacheId: 'fc-1' },
+          { name: 'Soy sauce', quantity: 3, unit: 'tbsp', baseQuantity: 44.361, baseUnit: 'ml', foodCacheId: 'fc-2' },
         ],
       },
     };
 
     const mockPantryItems = [
       { id: 'pi-1', displayName: 'Chicken Breast', quantity: 2, unit: 'lb', foodCacheId: 'fc-1' },
-      { id: 'pi-2', displayName: 'Soy Sauce', quantity: 1, unit: 'bottle', foodCacheId: 'fc-2' },
+      { id: 'pi-2', displayName: 'Soy Sauce', quantity: 500, unit: 'ml', foodCacheId: 'fc-2' },
     ];
 
-    const aiDeductions = {
-      deductions: [
-        {
-          recipeIngredientName: 'Chicken breast',
-          pantryItemId: 'pi-1',
-          pantryItemName: 'Chicken Breast',
-          currentQuantity: 2,
-          currentUnit: 'lb',
-          deductQuantity: 1,
-          deductUnit: 'lb',
-          notes: 'Direct match',
-        },
-      ],
-    };
-
-    it('should return deduction suggestions from AI', async () => {
+    it('should resolve all deductions deterministically without calling AI', async () => {
       mockEntryRepo.findOne.mockResolvedValue(mockEntry);
       mockPantryService.findAllForUser.mockResolvedValue(mockPantryItems);
-      mockAnthropicService.sendMessage.mockResolvedValue({
-        content: [{ type: 'text', text: JSON.stringify(aiDeductions) }],
-      });
 
       const result = await service.cookPreview('u1', 'entry-1');
 
       expect(result.entryId).toBe('entry-1');
       expect(result.recipeTitle).toBe('Chicken Stir-Fry');
-      expect(result.deductions).toEqual(aiDeductions.deductions);
+      expect(result.deductions).toHaveLength(2);
+      // Chicken: same unit, direct deduction
+      expect(result.deductions[0].pantryItemId).toBe('pi-1');
+      expect(result.deductions[0].deductQuantity).toBe(1);
+      // Soy sauce: tbsp → ml (same volume category)
+      expect(result.deductions[1].pantryItemId).toBe('pi-2');
+      expect(result.deductions[1].deductQuantity).toBeGreaterThan(0);
+      // No AI call made
+      expect(mockAnthropicService.sendMessage).not.toHaveBeenCalled();
+      // needsAiConversion should be stripped from response
+      expect(result.deductions[0]).not.toHaveProperty('needsAiConversion');
+    });
+
+    it('should call AI only for ingredients that need conversion', async () => {
+      const entryWithGarlic = {
+        ...mockEntry,
+        recipe: {
+          ...mockEntry.recipe,
+          ingredients: [
+            { name: 'Chicken breast', quantity: 1, unit: 'lb', baseQuantity: 453.592, baseUnit: 'g', foodCacheId: 'fc-1' },
+            { name: 'Garlic', quantity: 3, unit: 'clove', baseQuantity: 3, baseUnit: 'count', foodCacheId: 'fc-3' },
+          ],
+        },
+      };
+      const pantryWithGarlic = [
+        ...mockPantryItems,
+        { id: 'pi-3', displayName: 'Garlic', quantity: 2, unit: 'head', foodCacheId: 'fc-3' },
+      ];
+      mockEntryRepo.findOne.mockResolvedValue(entryWithGarlic);
+      mockPantryService.findAllForUser.mockResolvedValue(pantryWithGarlic);
+      mockAnthropicService.sendMessage.mockResolvedValue({
+        content: [{ type: 'text', text: '[0.25]' }],
+      });
+
+      const result = await service.cookPreview('u1', 'entry-1');
+
+      expect(result.deductions).toHaveLength(2);
+      // Chicken resolved deterministically
+      expect(result.deductions[0].pantryItemId).toBe('pi-1');
+      expect(result.deductions[0].deductQuantity).toBe(1);
+      // Garlic resolved via AI
+      expect(result.deductions[1].pantryItemId).toBe('pi-3');
+      expect(result.deductions[1].deductQuantity).toBe(0.25);
+      // AI was called exactly once
+      expect(mockAnthropicService.sendMessage).toHaveBeenCalledTimes(1);
       expect(mockAnthropicService.sendMessage).toHaveBeenCalledWith(
         'u1',
         expect.objectContaining({ messageType: MessageType.CookDeduction }),
@@ -519,43 +545,27 @@ describe('MealPlansService', () => {
       );
     });
 
-    it('should throw BadGatewayException when AI call fails', async () => {
-      mockEntryRepo.findOne.mockResolvedValue(mockEntry);
-      mockPantryService.findAllForUser.mockResolvedValue(mockPantryItems);
+    it('should still return deductions when AI fallback fails', async () => {
+      const entryWithGarlic = {
+        ...mockEntry,
+        recipe: {
+          ...mockEntry.recipe,
+          ingredients: [
+            { name: 'Garlic', quantity: 3, unit: 'clove', baseQuantity: 3, baseUnit: 'count', foodCacheId: 'fc-3' },
+          ],
+        },
+      };
+      mockEntryRepo.findOne.mockResolvedValue(entryWithGarlic);
+      mockPantryService.findAllForUser.mockResolvedValue([
+        { id: 'pi-3', displayName: 'Garlic', quantity: 2, unit: 'head', foodCacheId: 'fc-3' },
+      ]);
       mockAnthropicService.sendMessage.mockRejectedValue(new Error('API down'));
 
-      await expect(service.cookPreview('u1', 'entry-1')).rejects.toThrow(
-        BadGatewayException,
-      );
-    });
-
-    it('should return empty deductions when AI returns unparseable response', async () => {
-      mockEntryRepo.findOne.mockResolvedValue(mockEntry);
-      mockPantryService.findAllForUser.mockResolvedValue(mockPantryItems);
-      mockAnthropicService.sendMessage.mockResolvedValue({
-        content: [{ type: 'text', text: 'not valid json' }],
-      });
-
       const result = await service.cookPreview('u1', 'entry-1');
 
-      expect(result.deductions).toEqual([]);
-    });
-
-    it('should parse AI response wrapped in code block', async () => {
-      mockEntryRepo.findOne.mockResolvedValue(mockEntry);
-      mockPantryService.findAllForUser.mockResolvedValue(mockPantryItems);
-      mockAnthropicService.sendMessage.mockResolvedValue({
-        content: [
-          {
-            type: 'text',
-            text: '```json\n' + JSON.stringify(aiDeductions) + '\n```',
-          },
-        ],
-      });
-
-      const result = await service.cookPreview('u1', 'entry-1');
-
-      expect(result.deductions).toEqual(aiDeductions.deductions);
+      // Should still return results with deductQuantity 0 for unresolved items
+      expect(result.deductions).toHaveLength(1);
+      expect(result.deductions[0].deductQuantity).toBe(0);
     });
   });
 
