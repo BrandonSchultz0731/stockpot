@@ -229,17 +229,29 @@ export interface ShoppingListItem {
 }
 
 export enum MessageType {
+  /** Generate a full weekly meal plan */
   MealPlan = 'meal-plan',
+  /** Swap a single meal plan entry for a new recipe */
   MealSwap = 'meal-swap',
+  /** Generate standalone recipes from pantry ingredients */
   RecipeGeneration = 'recipe-generation',
+  /** Estimate shelf life and category for a pantry item */
   ShelfLife = 'shelf-life',
+  /** Parse a grocery receipt photo into pantry items */
   ReceiptScan = 'receipt-scan',
+  /** Match ingredient names to food_cache entries */
   IngredientResolution = 'ingredient-resolution',
+  /** Categorize food items (e.g. "Dairy & Eggs", "Meat & Poultry") */
   FoodCategory = 'food-category',
+  /** AI unit conversion fallback for cook deductions (e.g. cloves → heads) */
   CookDeduction = 'cook-deduction',
+  /** Interactive Chef StockPot chat conversation */
   AiChat = 'ai-chat',
+  /** Deduplicate pantry items by matching similar food names */
   FoodMatch = 'food-match',
+  /** Import a recipe from a website URL */
   UrlImport = 'url-import',
+  /** Import a recipe from a photo of a cookbook/recipe card */
   PhotoImport = 'photo-import',
 }
 
