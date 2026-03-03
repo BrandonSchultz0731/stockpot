@@ -227,7 +227,7 @@ export class FoodCacheService {
         });
 
         const rawText = extractText(response);
-        const parsed = (parseObjectFromAI(rawText) ?? {}) as Record<string, string>;
+        const parsed = parseObjectFromAI<Record<string, string>>(rawText) ?? {};
 
         for (const [name, id] of Object.entries(parsed)) {
           if (id && id !== 'NONE') {
@@ -245,7 +245,7 @@ export class FoodCacheService {
       // Persist alias so this name resolves instantly next time
       const originalName = uniqueNames.get(lower);
       if (originalName) {
-        this.addAlias(id, originalName).catch(() => {});
+        this.addAlias(id, originalName).catch(() => { });
       }
     }
 
@@ -438,7 +438,7 @@ export class FoodCacheService {
       });
 
       const rawText = extractText(response);
-      const parsed = (parseObjectFromAI(rawText) ?? {}) as Record<string, string>;
+      const parsed = parseObjectFromAI<Record<string, string>>(rawText) ?? {};
 
       for (const [name, category] of Object.entries(parsed)) {
         if (!category || !FOOD_CATEGORIES.includes(category)) continue;
@@ -569,7 +569,7 @@ export class FoodCacheService {
       });
 
       const rawText = extractText(response);
-      const parsed = (parseObjectFromAI(rawText) ?? {}) as Record<string, string | null>;
+      const parsed = parseObjectFromAI<Record<string, string | null>>(rawText) ?? {};
 
       const matchedId = parsed[name];
       if (matchedId) {
@@ -634,7 +634,7 @@ export class FoodCacheService {
         });
 
         const rawText = extractText(response);
-        const parsed = (parseObjectFromAI(rawText) ?? {}) as Record<string, string | null>;
+        const parsed = parseObjectFromAI<Record<string, string | null>>(rawText) ?? {};
 
         for (const item of needsAi) {
           const matchedId = parsed[item.name];
