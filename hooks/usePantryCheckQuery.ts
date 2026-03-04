@@ -34,7 +34,7 @@ export function usePantryCheckQuery(
   const { data: pantryCheckData } = useQuery({
     queryKey: QUERY_KEYS.RECIPES.PANTRY_CHECK(recipeId, debouncedScale),
     queryFn: () =>
-      api.post<Record<string, string>>(ROUTES.RECIPES.PANTRY_CHECK(recipeId), {
+      api.post<Record<string, PantryStatus>>(ROUTES.RECIPES.PANTRY_CHECK(recipeId), {
         scale: debouncedScale,
       }),
     enabled: isAuthenticated && !!ingredients && debouncedScale !== 1,
@@ -45,7 +45,7 @@ export function usePantryCheckQuery(
   if (debouncedScale !== 1 && pantryCheckData) {
     return ingredients.map((ing, i) => ({
       ...ing,
-      pantryStatus: (pantryCheckData[i] ?? ing.pantryStatus) as PantryStatus,
+      pantryStatus: pantryCheckData[i] ?? ing.pantryStatus,
     }));
   }
 

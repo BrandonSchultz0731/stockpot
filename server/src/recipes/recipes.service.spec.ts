@@ -7,6 +7,7 @@ import { SavedRecipe } from './entities/saved-recipe.entity';
 import { PantryService } from '../pantry/pantry.service';
 import { AnthropicService } from '../anthropic/anthropic.service';
 import { FoodCacheService } from '../food-cache/food-cache.service';
+import { PantryStatus } from '@shared/enums';
 
 const mockRecipeRepo = {
   findOne: jest.fn(),
@@ -69,8 +70,8 @@ describe('RecipesService', () => {
 
       expect(result).toHaveProperty('0');
       expect(result).toHaveProperty('1');
-      expect(result['0']).toBe('enough');
-      expect(result['1']).toBe('enough');
+      expect(result['0']).toBe(PantryStatus.Enough);
+      expect(result['1']).toBe(PantryStatus.Enough);
     });
 
     it('scales ingredient quantities before checking pantry', async () => {
@@ -84,9 +85,9 @@ describe('RecipesService', () => {
       const result = await service.checkPantryStatus('recipe-1', 'user-1', 3);
 
       // Flour: needs 750g, have 500g → low
-      expect(result['0']).toBe('low');
+      expect(result['0']).toBe(PantryStatus.Low);
       // Sugar: needs 600g, have 1000g → enough
-      expect(result['1']).toBe('enough');
+      expect(result['1']).toBe(PantryStatus.Enough);
     });
 
     it('returns none for ingredients not in pantry', async () => {
@@ -95,8 +96,8 @@ describe('RecipesService', () => {
 
       const result = await service.checkPantryStatus('recipe-1', 'user-1', 1);
 
-      expect(result['0']).toBe('none');
-      expect(result['1']).toBe('none');
+      expect(result['0']).toBe(PantryStatus.None);
+      expect(result['1']).toBe(PantryStatus.None);
     });
 
     it('handles recipe with no ingredients', async () => {

@@ -15,7 +15,7 @@ import { GenerateRecipeDto } from './dto/generate-recipe.dto';
 import { SaveRecipeDto } from './dto/save-recipe.dto';
 import { UpdateSavedRecipeDto } from './dto/update-saved-recipe.dto';
 import { ACTIVE_MODEL } from '../ai-models';
-import { RecipeSource, MessageType } from '@shared/enums';
+import { PantryStatus, RecipeSource, MessageType } from '@shared/enums';
 import { buildRecipeGenerationPrompt } from '../prompts';
 import { enrichPantryStatus } from '../pantry/enrich-pantry';
 import { extractText, parseArrayFromAI } from '../utils/ai-response';
@@ -51,7 +51,7 @@ export class RecipesService {
     recipeId: string,
     userId: string,
     scale: number,
-  ): Promise<Record<string, string>> {
+  ): Promise<Record<string, PantryStatus>> {
     const recipe = await this.recipeRepo.findOne({ where: { id: recipeId } });
     if (!recipe) {
       throw new NotFoundException('Recipe not found');
@@ -66,9 +66,9 @@ export class RecipesService {
     const pantryItems = await this.pantryService.findAllForUser(userId);
     const enriched = enrichPantryStatus(scaledIngredients, pantryItems);
 
-    const result: Record<string, string> = {};
+    const result: Record<string, PantryStatus> = {};
     for (let i = 0; i < enriched.length; i++) {
-      result[i] = enriched[i].pantryStatus ?? 'none';
+      result[i] = enriched[i].pantryStatus ?? PantryStatus.None;
     }
     return result;
   }

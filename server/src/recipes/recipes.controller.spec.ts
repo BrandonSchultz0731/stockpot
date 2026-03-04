@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RecipesController } from './recipes.controller';
 import { RecipesService } from './recipes.service';
+import { PantryStatus } from '@shared/enums';
 
 const mockRecipesService = {
   generateRecipes: jest.fn(),
@@ -34,7 +35,7 @@ describe('RecipesController', () => {
 
   describe('checkPantryStatus', () => {
     it('delegates to RecipesService.checkPantryStatus', async () => {
-      const expected = { '0': 'enough', '1': 'low' };
+      const expected = { '0': PantryStatus.Enough, '1': PantryStatus.Low };
       mockRecipesService.checkPantryStatus.mockResolvedValue(expected);
 
       const result = await controller.checkPantryStatus('user-1', 'recipe-1', { scale: 3 });
