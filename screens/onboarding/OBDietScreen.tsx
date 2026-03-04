@@ -1,4 +1,4 @@
-import { Text } from 'react-native';
+import AppText from '../../components/AppText';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import OnboardingLayout from '../../components/onboarding/OnboardingLayout';
@@ -6,6 +6,7 @@ import DietSelector from '../../components/DietSelector';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { DietaryPreference } from '../../shared/enums';
 import { useToggleDiet } from '../../hooks/useToggleList';
+import { fonts } from '../../theme/typography';
 import type { OnboardingParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<OnboardingParamList, 'OBDiet'>;
@@ -22,13 +23,15 @@ export default function OBDietScreen() {
       step={2}
       onBack={() => navigation.goBack()}
       onNext={() => navigation.navigate('OBExclude')}>
-      <Text className="text-2xl font-bold text-dark mb-2 mt-2">
+      <AppText
+        className="text-2xl text-espresso mb-2 mt-2"
+        style={{ fontFamily: fonts.serif }}>
         Dietary Preferences
-      </Text>
-      <Text className="text-base leading-[22px] text-muted mb-6">
+      </AppText>
+      <AppText className="text-base leading-[22px] text-stone mb-6">
         Select any that apply. Our AI will use these to tailor recipe
         suggestions.
-      </Text>
+      </AppText>
 
       <DietSelector selectedDiets={data.diets} onToggle={toggleDiet} />
     </OnboardingLayout>

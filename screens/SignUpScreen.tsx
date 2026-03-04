@@ -12,7 +12,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Mail, Lock, Eye, EyeOff, User, Check } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import colors from '../theme/colors';
+import { fonts } from '../theme/typography';
 import Button from '../components/Button';
 import TextInputRow from '../components/TextInputRow';
 import Divider from '../components/Divider';
@@ -26,7 +28,7 @@ function getStrengthColors(password: string) {
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
   return Array.from({ length: 4 }, (_, i) =>
-    i < score ? colors.orange.DEFAULT : colors.border,
+    i < score ? colors.terra.DEFAULT : colors.line.DEFAULT,
   );
 }
 
@@ -85,7 +87,7 @@ export default function SignUpScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-cream">
+    <SafeAreaView className="flex-1 bg-ivory">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -94,47 +96,62 @@ export default function SignUpScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerClassName="flex-grow">
           {/* Header */}
-          <View className="items-center pt-10 pb-5 px-6">
-            <Image
-              source={require('../assets/app-icon.png')}
-              className="w-[52px] h-[52px] rounded-[15px] mb-3.5"
-            />
-            <Text className="text-[24px] font-extrabold tracking-[-0.3px] text-navy mb-1">
-              Create Account
-            </Text>
-            <Text className="text-xs text-muted">
-              Start your smarter kitchen journey
-            </Text>
-          </View>
+          <LinearGradient colors={colors.gradient.warmHeader}>
+            <View className="items-center pt-10 pb-5 px-6">
+              <View
+                className="mb-3.5"
+                style={{
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 6,
+                }}
+              >
+                <Image
+                  source={require('../assets/app-icon.png')}
+                  className="w-[52px] h-[52px]"
+                  style={{ borderRadius: 20 }}
+                />
+              </View>
+              <Text
+                className="text-[24px] tracking-[-0.3px] text-espresso mb-1"
+                style={{ fontFamily: fonts.serif }}>
+                Create Account
+              </Text>
+              <Text className="text-xs text-stone">
+                Start your smarter kitchen journey
+              </Text>
+            </View>
+          </LinearGradient>
 
           {/* Form */}
           <View className="px-6 flex-1">
             {displayError && (
-              <View className="bg-danger-pale rounded-input px-4 py-3 mb-3">
-                <Text className="text-sm text-danger">
+              <View className="bg-berry-pale rounded-input px-4 py-3 mb-3">
+                <Text className="text-sm text-berry">
                   {displayError}
                 </Text>
               </View>
             )}
 
-            {/* Name row — stays inline (unique side-by-side layout) */}
+            {/* Name row -- side-by-side with updated tokens */}
             <View className="flex-row gap-2.5 mb-3">
-              <View className="flex-1 flex-row items-center bg-white rounded-input border border-border px-3.5 py-3 gap-2.5">
-                <User size={18} color={colors.muted} />
+              <View className="flex-1 flex-row items-center border-b border-line bg-transparent px-1 py-3 gap-2.5">
+                <User size={18} color={colors.stone} />
                 <TextInput
-                  className="flex-1 text-sm text-dark p-0"
+                  className="flex-1 text-sm text-espresso p-0"
                   placeholder="First name"
-                  placeholderTextColor={colors.muted}
+                  placeholderTextColor={colors.stone}
                   value={firstName}
                   onChangeText={setFirstName}
                   autoCorrect={false}
                 />
               </View>
-              <View className="flex-1 flex-row items-center bg-white rounded-input border border-border px-3.5 py-3">
+              <View className="flex-1 flex-row items-center border-b border-line bg-transparent px-1 py-3">
                 <TextInput
-                  className="flex-1 text-sm text-dark p-0"
+                  className="flex-1 text-sm text-espresso p-0"
                   placeholder="Last name"
-                  placeholderTextColor={colors.muted}
+                  placeholderTextColor={colors.stone}
                   value={lastName}
                   onChangeText={setLastName}
                   autoCorrect={false}
@@ -150,6 +167,7 @@ export default function SignUpScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              variant="underline"
               className="mb-3"
             />
 
@@ -161,14 +179,15 @@ export default function SignUpScreen() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
+                variant="underline"
                 right={
                   <Pressable
                     onPress={() => setShowPassword(!showPassword)}
                     hitSlop={8}>
                     {showPassword ? (
-                      <EyeOff size={18} color={colors.muted} />
+                      <EyeOff size={18} color={colors.stone} />
                     ) : (
-                      <Eye size={18} color={colors.muted} />
+                      <Eye size={18} color={colors.stone} />
                     )}
                   </Pressable>
                 }
@@ -183,7 +202,7 @@ export default function SignUpScreen() {
                   />
                 ))}
               </View>
-              <Text className="text-[10px] text-muted mt-1 ml-0.5">
+              <Text className="text-[10px] text-stone mt-1 ml-0.5">
                 Must be at least 8 characters
               </Text>
             </View>
@@ -194,6 +213,7 @@ export default function SignUpScreen() {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry={!showPassword}
+              variant="underline"
               className="mb-4.5"
             />
 
@@ -202,16 +222,16 @@ export default function SignUpScreen() {
               className="flex-row items-start gap-2.5 mb-4.5"
               onPress={() => setAgreedToTerms(!agreedToTerms)}>
               <View
-                className={`w-5 h-5 rounded-[6px] items-center justify-center mt-0.5 border-[1.5px] border-orange ${agreedToTerms ? 'bg-orange-pale' : 'bg-transparent'}`}>
-                {agreedToTerms && <Check size={12} color={colors.orange.DEFAULT} />}
+                className={`w-5 h-5 rounded-[6px] items-center justify-center mt-0.5 border-[1.5px] border-terra ${agreedToTerms ? 'bg-terra-pale' : 'bg-transparent'}`}>
+                {agreedToTerms && <Check size={12} color={colors.terra.DEFAULT} />}
               </View>
-              <Text className="text-[11px] text-muted flex-1 leading-4">
+              <Text className="text-[11px] text-stone flex-1 leading-4">
                 I agree to the{' '}
-                <Text className="font-semibold text-orange">
+                <Text className="font-semibold text-terra">
                   Terms of Service
                 </Text>{' '}
                 and{' '}
-                <Text className="font-semibold text-orange">
+                <Text className="font-semibold text-terra">
                   Privacy Policy
                 </Text>
               </Text>
@@ -249,10 +269,10 @@ export default function SignUpScreen() {
 
           {/* Footer */}
           <View className="py-3 px-6 pb-7 items-center">
-            <Text className="text-[13px] text-muted">
+            <Text className="text-[13px] text-stone">
               Already have an account?{' '}
               <Text
-                className="font-bold text-orange"
+                className="font-bold text-terra"
                 onPress={() => navigation.goBack()}>
                 Log In
               </Text>

@@ -1,4 +1,5 @@
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
+import AppText from '../../components/AppText';
 import { Package, AlertTriangle } from 'lucide-react-native';
 import colors from '../../theme/colors';
 
@@ -12,37 +13,37 @@ interface RichPantrySummaryProps {
 
 export default function RichPantrySummary({ data }: RichPantrySummaryProps) {
   return (
-    <View className="my-2 rounded-2xl border border-border bg-white p-4">
+    <View className="my-2 rounded-2xl border border-line bg-cream p-4">
       <View className="flex-row items-center">
-        <Package size={18} color={colors.navy.DEFAULT} />
-        <Text className="ml-2 text-[15px] font-bold text-navy">Pantry Overview</Text>
+        <Package size={18} color={colors.espresso} />
+        <AppText className="ml-2 text-[15px] font-bold text-espresso">Pantry Overview</AppText>
       </View>
       <View className="mt-3 flex-row">
         <View className="mr-6">
-          <Text className="text-2xl font-bold text-navy">{data.totalItems ?? 0}</Text>
-          <Text className="text-xs text-muted">Total Items</Text>
+          <AppText className="text-2xl font-bold text-espresso">{data.totalItems ?? 0}</AppText>
+          <AppText className="text-xs text-stone">Total Items</AppText>
         </View>
         {(data.expiringCount ?? 0) > 0 && (
           <View>
-            <Text className="text-2xl font-bold" style={{ color: colors.warning.DEFAULT }}>
+            <AppText className="text-2xl font-bold" style={{ color: colors.honey.DEFAULT }}>
               {data.expiringCount}
-            </Text>
-            <Text className="text-xs text-muted">Expiring Soon</Text>
+            </AppText>
+            <AppText className="text-xs text-stone">Expiring Soon</AppText>
           </View>
         )}
       </View>
       {data.topExpiring && data.topExpiring.length > 0 && (
-        <View className="mt-3 rounded-xl bg-warning-pale p-3">
+        <View className="mt-3 rounded-xl bg-honey-pale p-3">
           <View className="flex-row items-center">
-            <AlertTriangle size={14} color={colors.warning.icon} />
-            <Text className="ml-1.5 text-xs font-semibold" style={{ color: colors.warning.dark }}>
+            <AlertTriangle size={14} color={colors.honey.DEFAULT} />
+            <AppText className="ml-1.5 text-xs font-semibold" style={{ color: colors.honey.DEFAULT }}>
               Expiring soon
-            </Text>
+            </AppText>
           </View>
           {data.topExpiring.map((item, idx) => (
-            <Text key={idx} className="mt-1 text-xs" style={{ color: colors.warning.text }}>
+            <AppText key={idx} className="mt-1 text-xs" style={{ color: colors.honey.DEFAULT }}>
               {item}
-            </Text>
+            </AppText>
           ))}
         </View>
       )}

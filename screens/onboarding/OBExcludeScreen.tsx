@@ -1,4 +1,5 @@
-import { Text, TextInput } from 'react-native';
+import { TextInput } from 'react-native';
+import AppText from '../../components/AppText';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Zap } from 'lucide-react-native';
@@ -8,6 +9,7 @@ import ExcludedIngredientsSelector from '../../components/ExcludedIngredientsSel
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useToggleItem } from '../../hooks/useToggleList';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 import type { OnboardingParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<OnboardingParamList, 'OBExclude'>;
@@ -25,24 +27,26 @@ export default function OBExcludeScreen() {
       step={3}
       onBack={() => navigation.goBack()}
       onNext={() => navigation.navigate('OBHousehold')}>
-      <Text className="text-2xl font-bold text-dark mb-2 mt-2">
+      <AppText
+        className="text-2xl text-espresso mb-2 mt-2"
+        style={{ fontFamily: fonts.serif }}>
         Ingredients to Avoid
-      </Text>
-      <Text className="text-base leading-[22px] text-muted mb-5">
+      </AppText>
+      <AppText className="text-base leading-[22px] text-stone mb-5">
         We'll make sure these never show up in your recipes.
-      </Text>
+      </AppText>
 
       {/* Search input (placeholder, no filtering) */}
       <TextInput
-        className="bg-white border border-border rounded-2xl px-4 py-3 text-base text-dark mb-5"
+        className="bg-cream border border-line rounded-2xl px-4 py-3 text-base text-espresso mb-5"
         placeholder="Search ingredients..."
-        placeholderTextColor={colors.muted}
+        placeholderTextColor={colors.stone}
         editable={false}
       />
 
-      <Text className="text-xs font-semibold tracking-[1px] text-muted mb-3 uppercase">
+      <AppText className="text-xs font-semibold tracking-[1px] text-stone mb-3 uppercase">
         Common allergens & dislikes
-      </Text>
+      </AppText>
 
       <ExcludedIngredientsSelector
         selectedIngredients={data.excludedIngredients}
@@ -51,7 +55,7 @@ export default function OBExcludeScreen() {
 
       {data.excludedIngredients.length > 0 && (
         <InfoBanner
-          icon={<Zap size={18} color={colors.orange.DEFAULT} className="mt-px" />}
+          icon={<Zap size={18} color={colors.terra.DEFAULT} className="mt-px" />}
           className="mt-5"
         >
           We'll automatically filter out recipes containing{' '}

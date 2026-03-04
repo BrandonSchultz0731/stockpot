@@ -1,28 +1,43 @@
-import { Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import AppText from './AppText';
+import { fonts } from '../theme/typography';
 
 interface SectionHeaderProps {
   title: string;
-  /** Optional badge text rendered in an orange pill */
+  /** Optional badge text rendered in a terra pill */
   badge?: string;
+  /** Optional right-side action link (e.g. "View all") */
+  rightAction?: { label: string; onPress: () => void };
   className?: string;
 }
 
 export default function SectionHeader({
   title,
   badge,
+  rightAction,
   className,
 }: SectionHeaderProps) {
   return (
     <View
       className={`mt-3 mb-1.5 flex-row items-center justify-between ${className ?? ''}`}
     >
-      <Text className="text-[13px] font-bold uppercase tracking-[0.5px] text-navy">
+      <AppText
+        className="text-[18px] font-bold text-espresso"
+        style={{ fontFamily: fonts.serif }}
+      >
         {title}
-      </Text>
+      </AppText>
       {badge ? (
-        <View className="rounded-full bg-orange-pale px-2 py-0.5">
-          <Text className="text-[10px] font-bold text-orange">{badge}</Text>
+        <View className="rounded-full bg-terra-pale px-2 py-0.5">
+          <AppText className="text-[10px] font-bold text-terra">{badge}</AppText>
         </View>
+      ) : null}
+      {rightAction ? (
+        <Pressable onPress={rightAction.onPress} hitSlop={8}>
+          <AppText className="text-xs font-semibold text-terra">
+            {rightAction.label}
+          </AppText>
+        </Pressable>
       ) : null}
     </View>
   );

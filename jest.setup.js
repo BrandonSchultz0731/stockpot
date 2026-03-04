@@ -1,4 +1,23 @@
 /* global jest */
+// Mock react-native-reanimated (native worklets not available in Jest)
+jest.mock('react-native-reanimated', () => {
+  const View = require('react-native').View;
+  const Text = require('react-native').Text;
+  return {
+    __esModule: true,
+    default: {
+      View,
+      Text,
+      createAnimatedComponent: (comp) => comp,
+    },
+    useSharedValue: (v) => ({ value: v }),
+    useAnimatedStyle: (fn) => fn(),
+    withSpring: (v) => v,
+    withTiming: (v) => v,
+    interpolateColor: (_progress, _range, colors) => colors[0],
+  };
+});
+
 // Mock react-native-vision-camera (native module not available in Jest)
 jest.mock('react-native-vision-camera', () => ({
   Camera: 'Camera',

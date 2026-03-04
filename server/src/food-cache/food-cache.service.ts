@@ -56,6 +56,7 @@ export interface FoodSearchResult {
   packageQuantity?: number;
   packageUnit?: string;
   shelfLife?: ShelfLife;
+  emoji?: string;
   source: 'cache' | 'usda' | 'openfoodfacts';
 }
 
@@ -291,6 +292,7 @@ export class FoodCacheService {
       brand: r.brand,
       barcode: r.barcode,
       nutritionPer100g: r.nutritionPer100g,
+      emoji: r.emoji ?? undefined,
       source: 'cache' as const,
     }));
   }
@@ -381,6 +383,15 @@ export class FoodCacheService {
       // Cache the result for future lookups
       if (foodCacheId) {
         await this.updateShelfLife(foodCacheId, shelfLife);
+
+        // Also cache emoji if returned
+        const emoji =
+          typeof obj.emoji === 'string' && obj.emoji.trim().length > 0
+            ? obj.emoji.trim()
+            : null;
+        if (emoji) {
+          await this.updateEmoji(foodCacheId, emoji);
+        }
       }
 
       return shelfLife;
@@ -438,14 +449,21 @@ export class FoodCacheService {
       });
 
       const rawText = extractText(response);
-      const parsed = parseObjectFromAI<Record<string, string>>(rawText) ?? {};
+      const parsed = parseObjectFromAI<Record<string, { category: string; emoji?: string } | string>>(rawText) ?? {};
 
-      for (const [name, category] of Object.entries(parsed)) {
+      for (const [name, value] of Object.entries(parsed)) {
+        // Support both new format { category, emoji } and legacy string format
+        const category = typeof value === 'string' ? value : value?.category;
+        const emoji = typeof value === 'object' && value?.emoji ? value.emoji : null;
+
         if (!category || !FOOD_CATEGORIES.includes(category)) continue;
         const foodCacheId = nameToId.get(name);
         if (foodCacheId) {
           await this.updateCategory(foodCacheId, category);
           result.set(foodCacheId, category);
+          if (emoji) {
+            await this.updateEmoji(foodCacheId, emoji);
+          }
         }
       }
     } catch (error) {
@@ -470,6 +488,24 @@ export class FoodCacheService {
       .update(FoodCache)
       .set({ category })
       .where('id = :id AND category IS NULL', { id: foodCacheId })
+      .execute();
+  }
+
+  async getEmoji(foodCacheId: string): Promise<string | null> {
+    const entry = await this.foodCacheRepo.findOne({
+      where: { id: foodCacheId },
+      select: ['id', 'emoji'],
+    });
+    return entry?.emoji ?? null;
+  }
+
+  async updateEmoji(foodCacheId: string, emoji: string): Promise<void> {
+    // Only write if currently null to avoid overwriting user-corrected data
+    await this.foodCacheRepo
+      .createQueryBuilder()
+      .update(FoodCache)
+      .set({ emoji })
+      .where('id = :id AND emoji IS NULL', { id: foodCacheId })
       .execute();
   }
 
@@ -669,6 +705,7 @@ export class FoodCacheService {
         brand: cached.brand,
         barcode: cached.barcode,
         nutritionPer100g: cached.nutritionPer100g,
+        emoji: cached.emoji ?? undefined,
         source: 'cache',
       };
 

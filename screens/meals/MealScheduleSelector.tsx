@@ -3,9 +3,9 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
+import AppText from '../../components/AppText';
 import { Check, X } from 'lucide-react-native';
 import clsx from 'clsx';
 import colors from '../../theme/colors';
@@ -170,26 +170,26 @@ export default function MealScheduleSelector({
       <View className="rounded-t-2xl bg-white px-5 pb-8 pt-3">
         {/* Handle bar */}
         <View className="mb-3 items-center">
-          <View className="h-1 w-10 rounded-full bg-border" />
+          <View className="h-1 w-10 rounded-full bg-line" />
         </View>
 
         {/* Header */}
         <View className="mb-4 flex-row items-center justify-between">
-          <Text className="text-[20px] font-bold text-dark">Plan Your Week</Text>
+          <AppText className="text-[20px] font-bold text-espresso">Plan Your Week</AppText>
           <Pressable
             onPress={onClose}
             hitSlop={10}
             className="h-8 w-8 items-center justify-center rounded-full bg-cream"
           >
-            <X size={16} color={colors.muted} />
+            <X size={16} color={colors.stone} />
           </Pressable>
         </View>
 
         {/* Start day picker */}
         <View className="mb-4">
-          <Text className="mb-2 text-[13px] font-semibold text-muted">
+          <AppText className="mb-2 text-[13px] font-semibold text-stone">
             Starts on
-          </Text>
+          </AppText>
           <View className="flex-row justify-between">
             {Array.from({ length: 7 }, (_, i) => {
               const active = startDay === i;
@@ -199,17 +199,17 @@ export default function MealScheduleSelector({
                   onPress={() => setStartDay(i)}
                   className={clsx(
                     'h-9 w-9 items-center justify-center rounded-full',
-                    active ? 'bg-navy' : 'border border-border bg-white',
+                    active ? 'bg-espresso' : 'border border-line bg-white',
                   )}
                 >
-                  <Text
+                  <AppText
                     className={clsx(
                       'text-[13px] font-semibold',
-                      active ? 'text-white' : 'text-dark',
+                      active ? 'text-white' : 'text-espresso',
                     )}
                   >
                     {DAY_LABELS[i]}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
@@ -231,17 +231,17 @@ export default function MealScheduleSelector({
                 onPress={() => applyPreset(preset)}
                 className={clsx(
                   'rounded-full px-4 py-2',
-                  active ? 'bg-navy' : 'border border-border bg-white',
+                  active ? 'bg-espresso' : 'border border-line bg-white',
                 )}
               >
-                <Text
+                <AppText
                   className={clsx(
                     'text-[13px] font-semibold',
-                    active ? 'text-white' : 'text-dark',
+                    active ? 'text-white' : 'text-espresso',
                   )}
                 >
                   {preset.label}
-                </Text>
+                </AppText>
               </Pressable>
             );
           })}
@@ -262,14 +262,14 @@ export default function MealScheduleSelector({
                   onPress={() => toggleColumn(type)}
                   className="flex-1 items-center"
                 >
-                  <Text
+                  <AppText
                     className={clsx(
                       'text-[11px] font-bold uppercase tracking-[0.5px]',
-                      allSelected ? 'text-orange' : 'text-muted',
+                      allSelected ? 'text-terra' : 'text-stone',
                     )}
                   >
                     {type}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
@@ -282,14 +282,14 @@ export default function MealScheduleSelector({
             return (
               <View key={dayIndex} className="mb-2 flex-row items-center">
                 <Pressable onPress={() => toggleRow(dayIndex)} className="w-12">
-                  <Text
+                  <AppText
                     className={clsx(
                       'text-[13px] font-semibold',
-                      allRowSelected ? 'text-orange' : 'text-muted',
+                      allRowSelected ? 'text-terra' : 'text-stone',
                     )}
                   >
                     {SHORT_DAY_NAMES[dayIndex]}
-                  </Text>
+                  </AppText>
                 </Pressable>
                 {MEAL_TYPES.map((type) => {
                   const key = makeKey(dayIndex, type);
@@ -301,8 +301,8 @@ export default function MealScheduleSelector({
                       className={clsx(
                         'mx-1.5 flex-1 items-center justify-center rounded-xl py-3',
                         isSelected
-                          ? 'bg-orange'
-                          : 'border border-border bg-cream',
+                          ? 'bg-terra'
+                          : 'border border-line bg-cream',
                       )}
                     >
                       {isSelected && <Check size={16} color="#fff" />}

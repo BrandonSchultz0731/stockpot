@@ -1,6 +1,9 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Pressable } from 'react-native';
+import AppText from '../../components/AppText';
 import { Clock, ChefHat } from 'lucide-react-native';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
+import { cardShadow } from '../../theme/shadows';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -12,42 +15,58 @@ interface RichRecipeCardProps {
     totalTimeMinutes?: number;
     difficulty?: string;
     cuisine?: string;
+    pantryMatch?: number;
   };
   onPress?: (recipeId: string) => void;
 }
 
 export default function RichRecipeCard({ data, onPress }: RichRecipeCardProps) {
-  const { id, title, description, totalTimeMinutes, difficulty, cuisine } = data;
+  const { id, title, description, totalTimeMinutes, difficulty, cuisine, pantryMatch } = data;
   const isTappable = !!(id && UUID_REGEX.test(id) && onPress);
 
   return (
     <Pressable
       onPress={() => isTappable && onPress!(id!)}
       disabled={!isTappable}
-      className="my-2 rounded-2xl border border-border bg-white p-4"
-      style={({ pressed }) => ({ opacity: pressed && isTappable ? 0.7 : 1 })}
+      className="my-2 rounded-card bg-cream p-4"
+      style={({ pressed }) => ({
+        ...cardShadow,
+        opacity: pressed && isTappable ? 0.7 : 1,
+      })}
     >
-      <Text className="text-[15px] font-bold text-navy">{title}</Text>
+      <View className="flex-row items-start justify-between">
+        <AppText
+          className="flex-1 text-[15px] text-espresso"
+          style={{ fontFamily: fonts.serif }}
+        >
+          {title}
+        </AppText>
+        {pantryMatch != null && (
+          <View className="ml-2 rounded-full bg-sage-pale px-2 py-0.5">
+            <AppText className="text-[11px] font-semibold text-sage">{pantryMatch}% match</AppText>
+          </View>
+        )}
+      </View>
       {description ? (
-        <Text className="mt-1 text-[13px] text-body" numberOfLines={2}>
+        <AppText className="mt-1 text-[13px] text-ink" numberOfLines={2}>
           {description}
-        </Text>
+        </AppText>
       ) : null}
       <View className="mt-2 flex-row items-center">
         {totalTimeMinutes ? (
           <View className="mr-3 flex-row items-center">
-            <Clock size={13} color={colors.muted} />
-            <Text className="ml-1 text-xs text-muted">{totalTimeMinutes} min</Text>
+            <Clock size={13} color={colors.stone} />
+            <AppText className="ml-1 text-xs text-stone">{totalTimeMinutes} min</AppText>
           </View>
         ) : null}
         {difficulty ? (
           <View className="mr-3 flex-row items-center">
-            <ChefHat size={13} color={colors.muted} />
-            <Text className="ml-1 text-xs text-muted">{difficulty}</Text>
+            <ChefHat size={13} color={colors.stone} />
+            <AppText className="ml-1 text-xs text-stone">{difficulty}</AppText>
           </View>
         ) : null}
         {cuisine ? (
-          <Text className="text-xs text-muted">{cuisine}</Text>
+          <AppText className="text-xs text-stone">{cuisine}</AppText>
         ) : null}
       </View>
     </Pressable>

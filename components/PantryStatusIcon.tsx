@@ -17,10 +17,10 @@ export default function PantryStatusIcon({
   if (status === PantryStatus.Enough) {
     return (
       <View
-        className="items-center justify-center rounded-full bg-success-pale"
+        className="items-center justify-center rounded-full bg-sage-pale"
         style={{ width: size, height: size }}
       >
-        <Check size={iconSize} color={colors.success.DEFAULT} />
+        <Check size={iconSize} color={colors.sage.DEFAULT} />
       </View>
     );
   }
@@ -28,10 +28,10 @@ export default function PantryStatusIcon({
   if (status === PantryStatus.Low) {
     return (
       <View
-        className="items-center justify-center rounded-full bg-warning-pale"
+        className="items-center justify-center rounded-full bg-honey-pale"
         style={{ width: size, height: size }}
       >
-        <AlertTriangle size={iconSize} color={colors.warning.icon} />
+        <AlertTriangle size={iconSize} color={colors.honey.DEFAULT} />
       </View>
     );
   }
@@ -39,10 +39,10 @@ export default function PantryStatusIcon({
   // None or undefined
   return (
     <View
-      className="items-center justify-center rounded-full bg-danger-pale"
+      className="items-center justify-center rounded-full bg-berry-pale"
       style={{ width: size, height: size }}
     >
-      <X size={iconSize} color={colors.danger.DEFAULT} />
+      <X size={iconSize} color={colors.berry.DEFAULT} />
     </View>
   );
 }

@@ -46,6 +46,9 @@ export class FoodCache {
   @Column({ type: 'text', name: 'image_url', nullable: true })
   imageUrl: string;
 
+  @Column({ type: 'varchar', length: 4, nullable: true })
+  emoji: string | null;
+
   @Column({ type: 'jsonb', nullable: true })
   aliases: string[];
 

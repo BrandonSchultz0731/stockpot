@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import AppText from '../AppText';
 import { StorageLocation } from '../../shared/enums';
 
 interface StorageLocationPillsProps {
@@ -20,17 +21,17 @@ export default function StorageLocationPills({
           <Pressable
             key={loc}
             onPress={() => onSelect(loc)}
-            className={`px-4 py-2 rounded-full border ${
+            className={`px-4 py-2 rounded-full ${
               isSelected
-                ? 'bg-orange-pale border-orange'
-                : 'bg-white border-border'
+                ? 'bg-espresso'
+                : 'bg-cream border border-line'
             }`}>
-            <Text
+            <AppText
               className={`text-[13px] ${
-                isSelected ? 'text-orange font-semibold' : 'text-dark'
+                isSelected ? 'text-white font-semibold' : 'text-espresso'
               }`}>
               {loc}
-            </Text>
+            </AppText>
           </Pressable>
         );
       })}

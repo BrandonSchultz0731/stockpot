@@ -121,15 +121,13 @@ describe('AddCustomItemSheet', () => {
   });
 
   it('should call onClose when backdrop is pressed', () => {
-    const { getByText } = render(
+    const { getByTestId } = render(
       <AddCustomItemSheet {...defaultProps} />,
     );
 
-    // The close button (X) is always available
-    fireEvent.press(getByText('Add Custom Item').parent!.parent!.children[1] as any);
+    fireEvent.press(getByTestId('backdrop'));
 
-    // onClose should be called via the X button press
-    // (backdrop press is harder to test; test the X button instead)
+    expect(defaultProps.onClose).toHaveBeenCalled();
   });
 
   it('should call onClose when X button is pressed', () => {

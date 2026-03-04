@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import AppText from '../AppText';
 import { Check } from 'lucide-react-native';
 import clsx from 'clsx';
 
@@ -19,19 +20,19 @@ export default function SelectableCard({
     <Pressable
       className={clsx(
         'flex-row items-center rounded-2xl px-4 py-4 mb-3 border',
-        selected ? 'bg-orange-pale border-orange' : 'bg-white border-border',
+        selected ? 'bg-terra-pale border-terra' : 'bg-white border-line',
       )}
       onPress={onPress}>
       <View className="flex-1">
-        <Text className="text-[15px] font-semibold text-dark">
+        <AppText className="text-[15px] font-semibold text-espresso">
           {title}
-        </Text>
+        </AppText>
         {description ? (
-          <Text className="text-sm text-muted mt-0.5">{description}</Text>
+          <AppText className="text-sm text-stone mt-0.5">{description}</AppText>
         ) : null}
       </View>
       {selected && (
-        <View className="w-6 h-6 rounded-full bg-orange items-center justify-center ml-3">
+        <View className="w-6 h-6 rounded-full bg-terra items-center justify-center ml-3">
           <Check size={14} color="#fff" />
         </View>
       )}

@@ -1,4 +1,5 @@
-import { Pressable, Text } from 'react-native';
+import { Pressable } from 'react-native';
+import AppText from '../../components/AppText';
 import colors from '../../theme/colors';
 
 interface RichActionButtonProps {
@@ -16,12 +17,12 @@ export default function RichActionButton({ data, onAction }: RichActionButtonPro
   return (
     <Pressable
       onPress={() => action && onAction?.(action, params)}
-      className="my-1 self-start rounded-full bg-orange-pale px-4 py-2"
+      className="my-1 self-start rounded-full bg-terra-pale px-4 py-2"
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >
-      <Text className="text-sm font-semibold" style={{ color: colors.orange.DEFAULT }}>
+      <AppText className="text-sm font-semibold" style={{ color: colors.terra.DEFAULT }}>
         {label ?? 'Action'}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }

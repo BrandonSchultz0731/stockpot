@@ -17,6 +17,7 @@ export interface ScannedItem {
   displayName: string;
   quantity: number;
   unit: string;
+  emoji?: string;
   estimatedShelfLife?: ShelfLife;
   suggestedStorageLocation?: string;
 }
@@ -89,6 +90,9 @@ export class ReceiptScanService {
             ? item.quantity
             : 1,
         unit: VALID_UNITS.has(item.unit) ? item.unit : UnitOfMeasure.Count,
+        ...(typeof item.emoji === 'string' && item.emoji.trim().length > 0 && {
+          emoji: item.emoji.trim(),
+        }),
         ...(item.estimatedShelfLife && {
           estimatedShelfLife: parseShelfLife(item.estimatedShelfLife),
         }),

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Modal, Platform, Pressable, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, View } from 'react-native';
+import AppText from '../AppText';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Calendar } from 'lucide-react-native';
 import colors from '../../theme/colors';
@@ -51,12 +52,12 @@ export default function ExpirationDateInput({
       <View>
         <Pressable
           onPress={() => setShowPicker(true)}
-          className="flex-row items-center bg-white rounded-input border border-border px-3.5 py-3 gap-2.5">
-          <Calendar size={18} color={colors.muted} />
-          <Text
-            className={`text-[14px] ${date ? 'text-dark' : 'text-muted'}`}>
+          className="flex-row items-center bg-white rounded-input border border-line px-3.5 py-3 gap-2.5">
+          <Calendar size={18} color={colors.stone} />
+          <AppText
+            className={`text-[14px] ${date ? 'text-espresso' : 'text-stone'}`}>
             {date ? formatDate(date) : 'Expiration date (optional)'}
-          </Text>
+          </AppText>
         </Pressable>
 
         {showPicker && (
@@ -75,12 +76,12 @@ export default function ExpirationDateInput({
     <View>
       <Pressable
         onPress={handleOpen}
-        className="flex-row items-center bg-white rounded-input border border-border px-3.5 py-3 gap-2.5">
-        <Calendar size={18} color={colors.muted} />
-        <Text
-          className={`text-[14px] ${date ? 'text-dark' : 'text-muted'}`}>
+        className="flex-row items-center bg-white rounded-input border border-line px-3.5 py-3 gap-2.5">
+        <Calendar size={18} color={colors.stone} />
+        <AppText
+          className={`text-[14px] ${date ? 'text-espresso' : 'text-stone'}`}>
           {date ? formatDate(date) : 'Expiration date (optional)'}
-        </Text>
+        </AppText>
       </Pressable>
 
       <Modal visible={showPicker} transparent animationType="fade">
@@ -90,19 +91,19 @@ export default function ExpirationDateInput({
             onPress={() => setShowPicker(false)}
           />
           <View className="bg-white rounded-t-2xl pb-[34px]">
-            <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
+            <View className="flex-row items-center justify-between px-4 py-3 border-b border-line">
               <Pressable onPress={handleClear}>
-                <Text className="text-[14px] text-muted font-semibold">
+                <AppText className="text-[14px] text-stone font-semibold">
                   Clear
-                </Text>
+                </AppText>
               </Pressable>
-              <Text className="text-[16px] text-navy font-bold">
+              <AppText className="text-[16px] text-espresso font-bold">
                 Expiration Date
-              </Text>
+              </AppText>
               <Pressable onPress={handleConfirm}>
-                <Text className="text-[14px] text-orange font-semibold">
+                <AppText className="text-[14px] text-terra font-semibold">
                   Done
-                </Text>
+                </AppText>
               </Pressable>
             </View>
             <DateTimePicker

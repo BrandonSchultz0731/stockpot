@@ -2,8 +2,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Text,
-  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -35,17 +33,12 @@ export default function ManualEntryScreen() {
   const estimatedShelfLife = parseShelfLife(shelfLifeRaw);
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScreenHeader />
-        <View className="px-5">
-          <Text
-            className="text-[26px] text-navy mb-4 font-extrabold tracking-[-0.5px]">
-            Add Item
-          </Text>
-        </View>
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScreenHeader title="Add Manually" centerTitle />
 
         <PantryItemForm
           initialValues={{

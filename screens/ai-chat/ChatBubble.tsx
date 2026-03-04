@@ -1,6 +1,9 @@
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
+import AppText from '../../components/AppText';
+import { Zap } from 'lucide-react-native';
 import type { ChatMessage } from '../../hooks/useAiChat';
 import { RICH_BLOCK_PATTERN, RichBlockType } from '../../shared/richBlocks';
+import colors from '../../theme/colors';
 import ToolUseIndicator from './ToolUseIndicator';
 import RichRecipeCard from './RichRecipeCard';
 import RichActionButton from './RichActionButton';
@@ -41,10 +44,10 @@ function renderAssistantContent(
 ) {
   if (message.isStreaming) {
     return (
-      <Text className="text-[15px] leading-[22px] text-navy">
+      <AppText className="text-[15px] leading-[22px] text-ink">
         {message.content}
-        <Text className="text-orange">|</Text>
-      </Text>
+        <AppText className="text-terra">|</AppText>
+      </AppText>
     );
   }
 
@@ -61,9 +64,9 @@ function renderAssistantContent(
     const textBefore = content.slice(lastIndex, match.index).trim();
     if (textBefore) {
       parts.push(
-        <Text key={`text-${matchIndex}`} className="text-[15px] leading-[22px] text-navy">
+        <AppText key={`text-${matchIndex}`} className="text-[15px] leading-[22px] text-ink">
           {textBefore}
-        </Text>,
+        </AppText>,
       );
     }
 
@@ -85,18 +88,18 @@ function renderAssistantContent(
   const remaining = content.slice(lastIndex).trim();
   if (remaining) {
     parts.push(
-      <Text key="text-end" className="text-[15px] leading-[22px] text-navy">
+      <AppText key="text-end" className="text-[15px] leading-[22px] text-ink">
         {remaining}
-      </Text>,
+      </AppText>,
     );
   }
 
   // If no parts were generated (no rich blocks found), render as plain text
   if (parts.length === 0) {
     return (
-      <Text className="text-[15px] leading-[22px] text-navy">
+      <AppText className="text-[15px] leading-[22px] text-ink">
         {message.content}
-      </Text>
+      </AppText>
     );
   }
 
@@ -108,24 +111,30 @@ export default function ChatBubble({ message, onRecipePress, onAction }: ChatBub
 
   if (isUser) {
     return (
-      <View className="mb-3 ml-12 self-end rounded-2xl rounded-br-md bg-navy px-4 py-3">
-        <Text className="text-[15px] leading-[22px] text-white">{message.content}</Text>
+      <View className="mb-3 ml-12 self-end rounded-[20px] bg-terra px-4 py-3">
+        <AppText className="text-[15px] leading-[22px] text-white">{message.content}</AppText>
       </View>
     );
   }
 
   return (
-    <View className="mb-3 mr-12 self-start">
-      {/* Tool use indicators */}
-      {message.toolUses && message.toolUses.length > 0 && (
-        <View className="mb-1">
-          {message.toolUses.map((tu) => (
-            <ToolUseIndicator key={tu.id} name={tu.name} done={tu.done} />
-          ))}
+    <View className="mb-3 mr-12 flex-row self-start">
+      {/* AI avatar */}
+      <View className="mr-2 mt-1 h-7 w-7 items-center justify-center rounded-full bg-espresso">
+        <Zap size={14} color={colors.terra.DEFAULT} />
+      </View>
+      <View className="flex-1">
+        {/* Tool use indicators */}
+        {message.toolUses && message.toolUses.length > 0 && (
+          <View className="mb-1">
+            {message.toolUses.map((tu) => (
+              <ToolUseIndicator key={tu.id} name={tu.name} done={tu.done} />
+            ))}
+          </View>
+        )}
+        <View className="rounded-[20px] rounded-tl-md bg-cream px-4 py-3">
+          {renderAssistantContent(message, onRecipePress, onAction)}
         </View>
-      )}
-      <View className="rounded-2xl rounded-bl-md bg-white px-4 py-3">
-        {renderAssistantContent(message, onRecipePress, onAction)}
       </View>
     </View>
   );

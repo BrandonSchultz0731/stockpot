@@ -53,4 +53,8 @@ export class CreatePantryItemDto {
   @IsOptional()
   @IsObject()
   estimatedShelfLife?: ShelfLife;
+
+  @IsOptional()
+  @IsString()
+  emoji?: string;
 }

@@ -30,22 +30,22 @@ export default function QuantityUnitInput({
 
   return (
     <View className="flex-row gap-2">
-      <View className="flex-1 bg-white rounded-input border border-border px-3.5 py-3">
+      <View className="flex-1 bg-white rounded-input border border-line px-3.5 py-3">
         <TextInput
-          className="text-[14px] leading-[18px] text-dark"
+          className="text-[14px] leading-[18px] text-espresso"
           value={quantity}
           onChangeText={onQuantityChange}
           placeholder="Qty"
-          placeholderTextColor={colors.muted}
+          placeholderTextColor={colors.stone}
           keyboardType="decimal-pad"
         />
       </View>
 
       <Pressable
         onPress={() => setShowPicker(true)}
-        className="flex-1 flex-row items-center justify-between bg-white rounded-input border border-border px-3.5 py-3">
-        <Text className="text-[14px] text-dark">{unit}</Text>
-        <ChevronDown size={16} color={colors.muted} />
+        className="flex-1 flex-row items-center justify-between bg-white rounded-input border border-line px-3.5 py-3">
+        <Text className="text-[14px] text-espresso">{unit}</Text>
+        <ChevronDown size={16} color={colors.stone} />
       </Pressable>
 
       <Modal visible={showPicker} transparent animationType="fade">
@@ -54,13 +54,13 @@ export default function QuantityUnitInput({
           onPress={() => setShowPicker(false)}
         />
         <View className="bg-white rounded-t-2xl pb-8 max-h-[50%]">
-          <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
+          <View className="flex-row items-center justify-between px-4 py-3 border-b border-line">
             <Text
-              className="text-[16px] text-navy font-bold">
+              className="text-[16px] text-espresso font-bold">
               Select Unit
             </Text>
             <Pressable onPress={() => setShowPicker(false)}>
-              <Text className="text-[14px] text-orange font-semibold">
+              <Text className="text-[14px] text-terra font-semibold">
                 Done
               </Text>
             </Pressable>
@@ -74,14 +74,14 @@ export default function QuantityUnitInput({
                   onUnitChange(item);
                   setShowPicker(false);
                 }}
-                className={`px-4 py-3 border-b border-border ${
-                  item === unit ? 'bg-orange-pale' : ''
+                className={`px-4 py-3 border-b border-line ${
+                  item === unit ? 'bg-terra-pale' : ''
                 }`}>
                 <Text
                   className={`text-[14px] ${
                     item === unit
-                      ? 'text-orange font-semibold'
-                      : 'text-dark'
+                      ? 'text-terra font-semibold'
+                      : 'text-espresso'
                   }`}>
                   {item}
                 </Text>

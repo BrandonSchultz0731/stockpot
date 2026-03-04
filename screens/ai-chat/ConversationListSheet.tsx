@@ -1,4 +1,5 @@
-import { View, Text, Pressable, FlatList, Modal, ActivityIndicator } from 'react-native';
+import { View, Pressable, FlatList, Modal, ActivityIndicator } from 'react-native';
+import AppText from '../../components/AppText';
 import { X, Trash2, Plus } from 'lucide-react-native';
 import colors from '../../theme/colors';
 
@@ -48,19 +49,19 @@ export default function ConversationListSheet({
         className="flex-1 bg-black/40"
         onPress={onClose}
       >
-        <View className="mt-auto h-3/4 rounded-t-3xl bg-cream">
+        <View className="mt-auto h-3/4 rounded-t-3xl bg-ivory">
           {/* Header */}
-          <View className="flex-row items-center justify-between border-b border-border px-5 py-4">
-            <Text className="text-lg font-bold text-navy">Conversations</Text>
+          <View className="flex-row items-center justify-between border-b border-line px-5 py-4">
+            <AppText className="text-lg font-bold text-espresso">Conversations</AppText>
             <View className="flex-row items-center">
               <Pressable
                 onPress={() => { onNewChat(); onClose(); }}
-                className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-orange-pale"
+                className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-terra-pale"
               >
-                <Plus size={18} color={colors.orange.DEFAULT} />
+                <Plus size={18} color={colors.terra.DEFAULT} />
               </Pressable>
               <Pressable onPress={onClose} className="h-8 w-8 items-center justify-center">
-                <X size={20} color={colors.muted} />
+                <X size={20} color={colors.stone} />
               </Pressable>
             </View>
           </View>
@@ -68,11 +69,11 @@ export default function ConversationListSheet({
           {/* Content */}
           {isLoading ? (
             <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" color={colors.orange.DEFAULT} />
+              <ActivityIndicator size="large" color={colors.terra.DEFAULT} />
             </View>
           ) : conversations.length === 0 ? (
             <View className="flex-1 items-center justify-center px-8">
-              <Text className="text-center text-body">No conversations yet. Start chatting with Chef StockPot!</Text>
+              <AppText className="text-center text-ink">No conversations yet. Start chatting with Chef StockPot!</AppText>
             </View>
           ) : (
             <FlatList
@@ -84,28 +85,28 @@ export default function ConversationListSheet({
                 return (
                   <Pressable
                     onPress={() => { onSelect(item.id); onClose(); }}
-                    className={`mb-2 flex-row items-center rounded-xl px-4 py-3 ${isActive ? 'bg-orange-pale' : 'bg-white'
+                    className={`mb-2 flex-row items-center rounded-xl px-4 py-3 ${isActive ? 'bg-terra-pale' : 'bg-cream'
                       }`}
                     style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                   >
                     <View className="flex-1">
-                      <Text
-                        className={`text-[15px] font-semibold ${isActive ? 'text-orange' : 'text-navy'
+                      <AppText
+                        className={`text-[15px] font-semibold ${isActive ? 'text-terra' : 'text-espresso'
                           }`}
                         numberOfLines={1}
                       >
                         {item.title ?? 'New conversation'}
-                      </Text>
-                      <Text className="mt-0.5 text-xs text-muted">
+                      </AppText>
+                      <AppText className="mt-0.5 text-xs text-stone">
                         {formatDate(item.updatedAt)}
-                      </Text>
+                      </AppText>
                     </View>
                     <Pressable
                       onPress={() => onDelete(item.id)}
                       hitSlop={8}
                       className="ml-2 p-1"
                     >
-                      <Trash2 size={16} color={colors.muted} />
+                      <Trash2 size={16} color={colors.stone} />
                     </Pressable>
                   </Pressable>
                 );

@@ -18,11 +18,11 @@ export default function ChatInputBar({ onSend, disabled }: ChatInputBarProps) {
   };
 
   return (
-    <View className="flex-row items-end border-t border-border bg-white px-4 pb-2 pt-2">
+    <View className="flex-row items-end border-t border-line bg-ivory px-4 pb-10 pt-2">
       <TextInput
-        className="mr-2 max-h-[100px] min-h-[40px] flex-1 rounded-2xl bg-cream px-4 py-2.5 text-[15px] text-navy"
+        className="mr-2 max-h-[100px] min-h-[40px] flex-1 rounded-full bg-cream px-4 py-2.5 text-[15px] text-espresso"
         placeholder="Ask Chef StockPot..."
-        placeholderTextColor={colors.muted}
+        placeholderTextColor={colors.stone}
         value={text}
         onChangeText={setText}
         multiline
@@ -35,7 +35,7 @@ export default function ChatInputBar({ onSend, disabled }: ChatInputBarProps) {
         className="mb-0.5 h-10 w-10 items-center justify-center rounded-full"
         style={{
           backgroundColor:
-            disabled || !text.trim() ? colors.border : colors.orange.DEFAULT,
+            disabled || !text.trim() ? colors.dust : colors.terra.DEFAULT,
         }}
       >
         <Send size={18} color="#FFFFFF" />

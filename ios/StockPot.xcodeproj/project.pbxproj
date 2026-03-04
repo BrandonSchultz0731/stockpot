@@ -8,12 +8,18 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		197BC00468EF4505A01A4D3F /* PlusJakartaSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3338D4FC1E094E97B7181DA1 /* PlusJakartaSans-Bold.ttf */; };
 		2DEA43195E7848F1A9796C4D /* BootSplash.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B26917951AF04C1A83C3CB8A /* BootSplash.storyboard */; };
 		36C3492EAA6ED3B11FAA816E /* libPods-StockPot.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A2DF04E8F2FE548FB0AF5AF /* libPods-StockPot.a */; };
 		3BCEE23D1D004AA79A42AB00 /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 77C2A1C7A6B64BABA776EEC4 /* Colors.xcassets */; };
+		4F7BF65F9316440D85B9B850 /* Fraunces-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 30790F3F53334DA58F2F5811 /* Fraunces-ExtraBold.ttf */; };
+		6E291F9C42E54548B7A38960 /* Fraunces-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 934B4509F2BC4119A4378D76 /* Fraunces-Bold.ttf */; };
 		746868E401139640E6B6C34B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		A07EE5B989C247F3B1167717 /* PlusJakartaSans-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C86CD33D1F0840C98A905C20 /* PlusJakartaSans-SemiBold.ttf */; };
+		A16DC84C7E9443B59FBF2439 /* PlusJakartaSans-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F98BB8D7FF264E2E9C5B31F4 /* PlusJakartaSans-Medium.ttf */; };
+		F317300D094F429BA97F3279 /* PlusJakartaSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4A6B714426104C9D9427A882 /* PlusJakartaSans-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,14 +28,20 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = StockPot/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = StockPot/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		25F707CC1374FD34EB8725B6 /* Pods-StockPot.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StockPot.debug.xcconfig"; path = "Target Support Files/Pods-StockPot/Pods-StockPot.debug.xcconfig"; sourceTree = "<group>"; };
+		30790F3F53334DA58F2F5811 /* Fraunces-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Fraunces-ExtraBold.ttf"; path = "../assets/fonts/Fraunces-ExtraBold.ttf"; sourceTree = "<group>"; };
+		3338D4FC1E094E97B7181DA1 /* PlusJakartaSans-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "PlusJakartaSans-Bold.ttf"; path = "../assets/fonts/PlusJakartaSans-Bold.ttf"; sourceTree = "<group>"; };
+		4A6B714426104C9D9427A882 /* PlusJakartaSans-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "PlusJakartaSans-Regular.ttf"; path = "../assets/fonts/PlusJakartaSans-Regular.ttf"; sourceTree = "<group>"; };
 		6E12516A2F549E3600644168 /* StockPot.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = StockPot.entitlements; path = StockPot/StockPot.entitlements; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = StockPot/AppDelegate.swift; sourceTree = "<group>"; };
 		77C2A1C7A6B64BABA776EEC4 /* Colors.xcassets */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = folder.assetcatalog; name = Colors.xcassets; path = StockPot/Colors.xcassets; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = StockPot/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		934B4509F2BC4119A4378D76 /* Fraunces-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Fraunces-Bold.ttf"; path = "../assets/fonts/Fraunces-Bold.ttf"; sourceTree = "<group>"; };
 		95ADB13EF04613A29267BBE7 /* Pods-StockPot.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StockPot.release.xcconfig"; path = "Target Support Files/Pods-StockPot/Pods-StockPot.release.xcconfig"; sourceTree = "<group>"; };
 		9A2DF04E8F2FE548FB0AF5AF /* libPods-StockPot.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-StockPot.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B26917951AF04C1A83C3CB8A /* BootSplash.storyboard */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = BootSplash.storyboard; path = StockPot/BootSplash.storyboard; sourceTree = "<group>"; };
+		C86CD33D1F0840C98A905C20 /* PlusJakartaSans-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "PlusJakartaSans-SemiBold.ttf"; path = "../assets/fonts/PlusJakartaSans-SemiBold.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F98BB8D7FF264E2E9C5B31F4 /* PlusJakartaSans-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "PlusJakartaSans-Medium.ttf"; path = "../assets/fonts/PlusJakartaSans-Medium.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +95,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				83D672B477834719A0230DA2 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -95,6 +108,20 @@
 				13B07F961A680F5B00A75B9A /* StockPot.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		83D672B477834719A0230DA2 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F98BB8D7FF264E2E9C5B31F4 /* PlusJakartaSans-Medium.ttf */,
+				C86CD33D1F0840C98A905C20 /* PlusJakartaSans-SemiBold.ttf */,
+				4A6B714426104C9D9427A882 /* PlusJakartaSans-Regular.ttf */,
+				30790F3F53334DA58F2F5811 /* Fraunces-ExtraBold.ttf */,
+				3338D4FC1E094E97B7181DA1 /* PlusJakartaSans-Bold.ttf */,
+				934B4509F2BC4119A4378D76 /* Fraunces-Bold.ttf */,
+			);
+			name = Resources;
+			path = "";
 			sourceTree = "<group>";
 		};
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
@@ -172,6 +199,12 @@
 				746868E401139640E6B6C34B /* PrivacyInfo.xcprivacy in Resources */,
 				2DEA43195E7848F1A9796C4D /* BootSplash.storyboard in Resources */,
 				3BCEE23D1D004AA79A42AB00 /* Colors.xcassets in Resources */,
+				A16DC84C7E9443B59FBF2439 /* PlusJakartaSans-Medium.ttf in Resources */,
+				A07EE5B989C247F3B1167717 /* PlusJakartaSans-SemiBold.ttf in Resources */,
+				F317300D094F429BA97F3279 /* PlusJakartaSans-Regular.ttf in Resources */,
+				4F7BF65F9316440D85B9B850 /* Fraunces-ExtraBold.ttf in Resources */,
+				197BC00468EF4505A01A4D3F /* PlusJakartaSans-Bold.ttf in Resources */,
+				6E291F9C42E54548B7A38960 /* Fraunces-Bold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -202,13 +235,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StockPot/Pods-StockPot-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StockPot/Pods-StockPot-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -223,13 +252,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StockPot/Pods-StockPot-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StockPot/Pods-StockPot-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

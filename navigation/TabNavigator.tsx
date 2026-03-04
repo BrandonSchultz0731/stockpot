@@ -1,11 +1,10 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { House, LayoutGrid, CookingPot, ChefHat, User } from 'lucide-react-native';
 import HomeStackNavigator from './HomeStackNavigator';
 import PantryStackNavigator from './PantryStackNavigator';
 import MealsStackNavigator from './MealsStackNavigator';
 import AIChefStackNavigator from './AIChefStackNavigator';
 import ProfileStackNavigator from './ProfileStackNavigator';
-import colors from '../theme/colors';
+import FloatingTabBar from '../components/FloatingTabBar';
 import type { TabParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -13,67 +12,36 @@ const Tab = createBottomTabNavigator<TabParamList>();
 export default function TabNavigator() {
   return (
     <Tab.Navigator
+      tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{
         lazy: false,
         headerShown: false,
-        tabBarActiveTintColor: colors.orange.DEFAULT,
-        tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '600',
-        },
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          paddingTop: 8,
-          paddingBottom: 20,
-        },
       }}
     >
       <Tab.Screen
         name="Home"
         component={HomeStackNavigator}
-        options={{
-          popToTopOnBlur: true,
-          tabBarIcon: ({ color }) => <House size={22} color={color} />,
-        }}
+        options={{ popToTopOnBlur: true }}
       />
       <Tab.Screen
         name="PantryStack"
         component={PantryStackNavigator}
-        options={{
-          popToTopOnBlur: true,
-          title: 'Pantry',
-          tabBarIcon: ({ color }) => <LayoutGrid size={22} color={color} />,
-        }}
+        options={{ popToTopOnBlur: true, title: 'Pantry' }}
       />
       <Tab.Screen
         name="MealsStack"
         component={MealsStackNavigator}
-        options={{
-          popToTopOnBlur: true,
-          title: 'Meals',
-          tabBarIcon: ({ color }) => <CookingPot size={22} color={color} />,
-        }}
+        options={{ popToTopOnBlur: true, title: 'Plan' }}
       />
       <Tab.Screen
         name="AIChefStack"
         component={AIChefStackNavigator}
-        options={{
-          popToTopOnBlur: true,
-          title: 'AI Chef',
-          tabBarIcon: ({ color }) => <ChefHat size={22} color={color} />,
-        }}
+        options={{ popToTopOnBlur: true, title: 'Chef' }}
       />
       <Tab.Screen
         name="ProfileStack"
         component={ProfileStackNavigator}
-        options={{
-          popToTopOnBlur: true,
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <User size={22} color={color} />,
-        }}
+        options={{ popToTopOnBlur: true, title: 'You' }}
       />
     </Tab.Navigator>
   );

@@ -1,4 +1,5 @@
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import AppText from './AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import colors from '../theme/colors';
 
@@ -7,22 +8,22 @@ interface LoadingScreenProps {
   header?: React.ReactNode;
   /** Optional message shown below the spinner */
   message?: string;
-  /** Spinner colour — defaults to orange */
+  /** Spinner colour — defaults to terra */
   color?: string;
 }
 
 export default function LoadingScreen({
   header,
   message,
-  color = colors.orange.DEFAULT,
+  color = colors.terra.DEFAULT,
 }: LoadingScreenProps) {
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       {header}
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color={color} />
         {message ? (
-          <Text className="mt-4 text-[14px] text-muted">{message}</Text>
+          <AppText className="mt-4 text-[14px] text-stone">{message}</AppText>
         ) : null}
       </View>
     </SafeAreaView>

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { View, Text, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import AppText from '../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,6 +12,7 @@ import WelcomeView from './ai-chat/WelcomeView';
 import ConversationListSheet from './ai-chat/ConversationListSheet';
 import type { AIChefStackParamList } from '../navigation/types';
 import colors from '../theme/colors';
+import { fonts } from '../theme/typography';
 
 type Nav = NativeStackNavigationProp<AIChefStackParamList, 'AIChefChat'>;
 
@@ -60,28 +62,33 @@ export default function AIChefScreen() {
   const hasMessages = messages.length > 0;
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
         keyboardVerticalOffset={0}
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between border-b border-border bg-white px-4 py-3">
+        <View className="flex-row items-center justify-between border-b border-line bg-ivory px-4 py-3">
           <Pressable
             onPress={handleShowHistory}
             className="h-9 w-9 items-center justify-center rounded-full"
             hitSlop={8}
           >
-            <MessageSquare size={20} color={colors.navy.DEFAULT} />
+            <MessageSquare size={20} color={colors.espresso} />
           </Pressable>
-          <Text className="text-[17px] font-bold text-navy">AI Chef</Text>
+          <AppText
+            className="text-[17px] text-espresso"
+            style={{ fontFamily: fonts.serif }}
+          >
+            AI Chef
+          </AppText>
           <Pressable
             onPress={startNewConversation}
             className="h-9 w-9 items-center justify-center rounded-full"
             hitSlop={8}
           >
-            <SquarePen size={20} color={colors.navy.DEFAULT} />
+            <SquarePen size={20} color={colors.espresso} />
           </Pressable>
         </View>
 
@@ -97,7 +104,9 @@ export default function AIChefScreen() {
         )}
 
         {/* Input */}
-        <ChatInputBar onSend={sendMessage} disabled={isStreaming} />
+        <View className="pb-24">
+          <ChatInputBar onSend={sendMessage} disabled={isStreaming} />
+        </View>
 
         {/* Conversation History */}
         <ConversationListSheet

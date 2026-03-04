@@ -758,6 +758,33 @@ describe('MealPlansService', () => {
 
       expect(result.deductions[0].deductQuantity).toBe(1); // no scaling
     });
+
+    it('should scale baseQuantity for cross-unit conversion (cup recipe → g pantry)', async () => {
+      const mockEntry = {
+        id: 'entry-1',
+        servingsToCook: null,
+        mealPlan: { userId: 'u1' },
+        recipe: {
+          title: 'Lentil Soup',
+          servings: 2,
+          ingredients: [
+            { name: 'Green Lentils', quantity: 1, unit: 'cup', baseQuantity: 236.588, baseUnit: 'ml', foodCacheId: 'fc-10' },
+          ],
+        },
+      };
+      mockEntryRepo.findOne.mockResolvedValue(mockEntry);
+      mockPantryService.findAllForUser.mockResolvedValue([
+        { id: 'pi-10', displayName: 'Green Lentils', quantity: 1000, unit: 'ml', foodCacheId: 'fc-10' },
+      ]);
+
+      // 2 servings (scale=1): 1 cup = 236.588 ml
+      const result1 = await service.cookPreview('u1', 'entry-1', 2);
+      expect(result1.deductions[0].deductQuantity).toBeCloseTo(236.59, 0);
+
+      // 4 servings (scale=2): 2 cups = 473.176 ml
+      const result2 = await service.cookPreview('u1', 'entry-1', 4);
+      expect(result2.deductions[0].deductQuantity).toBeCloseTo(473.18, 0);
+    });
   });
 
   describe('getAvailableLeftovers', () => {

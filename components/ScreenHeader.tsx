@@ -1,7 +1,9 @@
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
+import AppText from './AppText';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft } from 'lucide-react-native';
 import colors from '../theme/colors';
+import { fonts } from '../theme/typography';
 
 interface ScreenHeaderProps {
   /** Primary title displayed beside the back button */
@@ -12,7 +14,7 @@ interface ScreenHeaderProps {
   onBack?: () => void;
   /** Arbitrary element rendered on the trailing side (icon, save button, etc.) */
   rightAction?: React.ReactNode;
-  /** Shorthand: renders an orange "Save" text button on the right */
+  /** Shorthand: renders a terra "Save" text button on the right */
   onSave?: () => void;
   /** When true, replaces the Save text with a spinner */
   isSaving?: boolean;
@@ -36,9 +38,9 @@ export default function ScreenHeader({
   const saveElement = onSave ? (
     <Pressable onPress={onSave} disabled={isSaving} hitSlop={12}>
       {isSaving ? (
-        <ActivityIndicator size="small" color={colors.orange.DEFAULT} />
+        <ActivityIndicator size="small" color={colors.terra.DEFAULT} />
       ) : (
-        <Text className="text-[15px] font-semibold text-orange">Save</Text>
+        <AppText className="text-[15px] font-semibold text-terra">Save</AppText>
       )}
     </Pressable>
   ) : null;
@@ -49,10 +51,15 @@ export default function ScreenHeader({
     return (
       <View className="flex-row items-center justify-between px-5 py-3">
         <Pressable onPress={handleBack} hitSlop={12}>
-          <ChevronLeft size={24} color={colors.navy.DEFAULT} />
+          <ChevronLeft size={24} color={colors.espresso} />
         </Pressable>
         {title ? (
-          <Text className="text-[18px] font-bold text-navy">{title}</Text>
+          <AppText
+            className="text-[18px] font-bold text-espresso"
+            style={{ fontFamily: fonts.serif }}
+          >
+            {title}
+          </AppText>
         ) : (
           <View />
         )}
@@ -65,15 +72,20 @@ export default function ScreenHeader({
     <View className="flex-row items-center justify-between px-5 py-3">
       <View className="flex-row items-center flex-1">
         <Pressable onPress={handleBack} hitSlop={8}>
-          <ChevronLeft size={22} color={colors.navy.DEFAULT} />
+          <ChevronLeft size={22} color={colors.espresso} />
         </Pressable>
         {title ? (
           <View className="ml-3 flex-1">
-            <Text className="text-[18px] font-bold text-navy">{title}</Text>
+            <AppText
+              className="text-[18px] font-bold text-espresso"
+              style={{ fontFamily: fonts.serif }}
+            >
+              {title}
+            </AppText>
             {subtitle ? (
-              <Text className="text-[13px] text-muted" numberOfLines={1}>
+              <AppText className="text-[13px] text-stone" numberOfLines={1}>
                 {subtitle}
-              </Text>
+              </AppText>
             ) : null}
           </View>
         ) : null}

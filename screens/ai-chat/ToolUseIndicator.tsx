@@ -1,4 +1,5 @@
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
+import AppText from '../../components/AppText';
 import { Check } from 'lucide-react-native';
 import colors from '../../theme/colors';
 import { AI_CHAT_TOOL_LABELS } from '../../shared/aiChatTools';
@@ -12,13 +13,13 @@ export default function ToolUseIndicator({ name, done }: ToolUseIndicatorProps) 
   const label = AI_CHAT_TOOL_LABELS[name as keyof typeof AI_CHAT_TOOL_LABELS] ?? 'Working';
 
   return (
-    <View className="mb-1.5 flex-row items-center rounded-full bg-navy-pale px-3 py-1.5">
+    <View className="mb-1.5 flex-row items-center rounded-full bg-terra-pale px-3 py-1.5">
       {done ? (
-        <Check size={14} color={colors.success.DEFAULT} />
+        <Check size={14} color={colors.sage.DEFAULT} />
       ) : (
-        <ActivityIndicator size="small" color={colors.orange.DEFAULT} />
+        <ActivityIndicator size="small" color={colors.terra.DEFAULT} />
       )}
-      <Text className="ml-1.5 text-xs text-body">{label}...</Text>
+      <AppText className="ml-1.5 text-xs text-ink">{label}...</AppText>
     </View>
   );
 }

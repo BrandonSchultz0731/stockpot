@@ -50,7 +50,7 @@ export default function EditItemScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -59,7 +59,7 @@ export default function EditItemScreen() {
           centerTitle
           rightAction={
             <Pressable onPress={handleDelete}>
-              <Trash2 size={22} color={colors.danger.DEFAULT} />
+              <Trash2 size={22} color={colors.berry.DEFAULT} />
             </Pressable>
           }
         />

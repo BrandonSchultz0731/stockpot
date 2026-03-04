@@ -91,7 +91,7 @@ export default function BarcodeScanScreen() {
   // Permission denied
   if (hasPermission === false) {
     return (
-      <View className="flex-1 bg-dark items-center justify-center px-8">
+      <View className="flex-1 bg-espresso items-center justify-center px-8">
         <SafeAreaView className="items-center">
           <ScanBarcode size={48} color="rgba(255,255,255,0.3)" />
           <Text
@@ -103,7 +103,7 @@ export default function BarcodeScanScreen() {
           </Text>
           <Pressable
             onPress={() => Linking.openSettings()}
-            className="mt-6 bg-orange px-6 py-3 rounded-full">
+            className="mt-6 bg-terra px-6 py-3 rounded-full">
             <Text className="text-white text-[14px] font-semibold">
               Open Settings
             </Text>
@@ -119,7 +119,7 @@ export default function BarcodeScanScreen() {
   // No camera device (simulator)
   if (!device) {
     return (
-      <View className="flex-1 bg-dark items-center justify-center px-8">
+      <View className="flex-1 bg-espresso items-center justify-center px-8">
         <SafeAreaView className="items-center">
           <ScanBarcode size={48} color="rgba(255,255,255,0.3)" />
           <Text
@@ -138,7 +138,7 @@ export default function BarcodeScanScreen() {
   }
 
   return (
-    <View className="flex-1 bg-dark">
+    <View className="flex-1 bg-espresso">
       <Camera
         // eslint-disable-next-line react-native/no-inline-styles
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
@@ -164,14 +164,14 @@ export default function BarcodeScanScreen() {
           <View className="w-full aspect-[2/1] rounded-2xl border-2 border-dashed border-white/30 items-center justify-center overflow-hidden">
             {!scannedCode && (
               <View
-                className="absolute left-4 right-4 h-0.5 bg-orange top-[50%]"
+                className="absolute left-4 right-4 h-0.5 bg-terra top-[50%]"
               />
             )}
           </View>
 
           {scannedCode && isFetching ? (
             <View className="items-center mt-6">
-              <ActivityIndicator size="small" color={colors.orange.DEFAULT} />
+              <ActivityIndicator size="small" color={colors.terra.DEFAULT} />
               <Text className="text-white/70 text-[14px] mt-3">
                 Looking up product...
               </Text>

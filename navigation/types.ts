@@ -1,3 +1,4 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { ReceiptScanItem } from '../hooks/useReceiptScanMutation';
 import type { PantryItem } from '../hooks/usePantryQuery';
 
@@ -28,7 +29,7 @@ export type HomeStackParamList = {
 
 export type TabParamList = {
   Home: undefined;
-  PantryStack: undefined;
+  PantryStack: NavigatorScreenParams<PantryStackParamList> | undefined;
   MealsStack: undefined;
   AIChefStack: undefined;
   ProfileStack: undefined;

@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import AppText from './AppText';
 
 interface DividerProps {
   className?: string;
@@ -7,11 +8,11 @@ interface DividerProps {
 export default function Divider({ className = '' }: DividerProps) {
   return (
     <View className={`flex-row items-center gap-3 ${className}`}>
-      <View className="flex-1 h-px bg-border" />
-      <Text className="text-[11px] font-semibold text-muted">
+      <View className="flex-1 h-px bg-line" />
+      <AppText className="text-[11px] font-semibold text-stone">
         OR
-      </Text>
-      <View className="flex-1 h-px bg-border" />
+      </AppText>
+      <View className="flex-1 h-px bg-line" />
     </View>
   );
 }
