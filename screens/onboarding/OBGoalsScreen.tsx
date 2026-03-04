@@ -8,6 +8,7 @@ import MacroProgressBar from '../../components/MacroProgressBar';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { useCompleteOnboardingMutation } from '../../hooks/useCompleteOnboardingMutation';
 import { GoalType, MACRO_PRESETS } from '../../shared/enums';
+import { fonts } from '../../theme/typography';
 import type { OnboardingParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<OnboardingParamList, 'OBGoals'>;
@@ -41,10 +42,12 @@ export default function OBGoalsScreen() {
       onNext={handleFinish}
       nextLabel="Finish Setup"
       isSubmitting={mutation.isPending}>
-      <Text className="text-2xl font-bold text-dark mb-2 mt-2">
+      <Text
+        className="text-2xl text-espresso mb-2 mt-2"
+        style={{ fontFamily: fonts.serif }}>
         Nutrition Goals
       </Text>
-      <Text className="text-base leading-[22px] text-muted mb-6">
+      <Text className="text-base leading-[22px] text-stone mb-6">
         Choose a goal and we'll set smart defaults for your daily targets.
       </Text>
 
@@ -54,7 +57,9 @@ export default function OBGoalsScreen() {
       />
 
       {/* Daily targets */}
-      <Text className="text-lg font-semibold text-dark mb-4 mt-4">
+      <Text
+        className="text-lg text-espresso mb-4 mt-4"
+        style={{ fontFamily: fonts.serif }}>
         Daily Targets
       </Text>
 
@@ -85,7 +90,7 @@ export default function OBGoalsScreen() {
 
       {/* Error state */}
       {mutation.isError && (
-        <Text className="text-sm text-danger mt-3 text-center">
+        <Text className="text-sm text-berry mt-3 text-center">
           Something went wrong. Please try again.
         </Text>
       )}

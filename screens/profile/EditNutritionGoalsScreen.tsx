@@ -9,6 +9,7 @@ import { useUserProfileQuery } from '../../hooks/useUserProfileQuery';
 import { useUpdateProfileMutation } from '../../hooks/useUpdateProfileMutation';
 import { GoalType, MACRO_PRESETS } from '../../shared/enums';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 import type { ProfileStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'EditNutritionGoals'>;
@@ -51,7 +52,7 @@ export default function EditNutritionGoalsScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       <ScreenHeader
         title="Nutrition Goals"
         centerTitle
@@ -61,10 +62,12 @@ export default function EditNutritionGoalsScreen() {
 
       <ScrollView contentContainerClassName="px-5 pb-10">
         {/* Goal Type */}
-        <Text className="text-lg font-bold text-dark mb-2 mt-2">
+        <Text
+          className="text-lg text-espresso mb-2 mt-2"
+          style={{ fontFamily: fonts.serif }}>
           Goal Type
         </Text>
-        <Text className="text-sm text-muted mb-4">
+        <Text className="text-sm text-stone mb-4">
           Choose a goal and we'll set smart defaults for your daily targets.
         </Text>
         <GoalTypeSelector
@@ -73,7 +76,9 @@ export default function EditNutritionGoalsScreen() {
         />
 
         {/* Macro Targets */}
-        <Text className="text-lg font-bold text-dark mb-4 mt-4">
+        <Text
+          className="text-lg text-espresso mb-4 mt-4"
+          style={{ fontFamily: fonts.serif }}>
           Daily Targets
         </Text>
 
@@ -84,7 +89,7 @@ export default function EditNutritionGoalsScreen() {
 
         {/* Error state */}
         {mutation.isError && (
-          <Text className="text-sm text-danger mt-3 text-center">
+          <Text className="text-sm text-berry mt-3 text-center">
             Something went wrong. Please try again.
           </Text>
         )}
@@ -106,16 +111,16 @@ function MacroInput({
 }) {
   return (
     <View className="mb-4">
-      <Text className="text-sm font-medium text-dark mb-1.5">{label}</Text>
-      <View className="flex-row items-center bg-white border border-border rounded-2xl px-4 py-3">
+      <Text className="text-sm font-medium text-espresso mb-1.5">{label}</Text>
+      <View className="flex-row items-center bg-cream border border-line rounded-2xl px-4 py-3">
         <TextInput
-          className="flex-1 text-base text-dark"
+          className="flex-1 text-base text-espresso"
           value={value}
           onChangeText={onChangeText}
           keyboardType="numeric"
-          placeholderTextColor={colors.muted}
+          placeholderTextColor={colors.stone}
         />
-        <Text className="text-sm text-muted ml-2">{unit}</Text>
+        <Text className="text-sm text-stone ml-2">{unit}</Text>
       </View>
     </View>
   );

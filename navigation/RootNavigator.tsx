@@ -27,7 +27,7 @@ export default function RootNavigator() {
   if (isLoading || (isAuthenticated && isProfileLoading)) {
     return (
       <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color={colors.navy.DEFAULT} />
+        <ActivityIndicator size="large" color={colors.terra.DEFAULT} />
       </View>
     );
   }

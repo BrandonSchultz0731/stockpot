@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, TextInput, View } from 'react-native';
+import AppText from '../AppText';
 import Button from '../Button';
 import StorageLocationPills from './StorageLocationPills';
 import QuantityUnitInput from './QuantityUnitInput';
@@ -31,6 +32,14 @@ interface PantryItemFormProps {
   onSubmit: (values: PantryItemFormValues) => void;
   submitLabel: string;
   isPending: boolean;
+}
+
+function FieldLabel({ children }: { children: string }) {
+  return (
+    <AppText font="sansBold" className="text-[11px] text-stone uppercase tracking-[1.2px] mb-2">
+      {children}
+    </AppText>
+  );
 }
 
 export default function PantryItemForm({
@@ -111,27 +120,25 @@ export default function PantryItemForm({
 
   return (
     <ScrollView
-      className="flex-1 px-5"
-      keyboardShouldPersistTaps="handled">
+      className="flex-1 px-7"
+      contentContainerClassName="pb-28"
+      keyboardShouldPersistTaps="handled"
+    >
       {/* Name */}
-      <Text className="text-[13px] text-muted font-semibold mb-1.5">
-        NAME
-      </Text>
-      <View className="bg-white rounded-input border border-border px-3.5 py-3 mb-4">
+      <FieldLabel>Item Name</FieldLabel>
+      <View className="border-b-2 border-line pb-2.5 mb-5">
         <TextInput
-          className="text-[14px] leading-[18px] text-dark"
+          className="text-[15px] text-espresso"
           value={displayName}
           onChangeText={setDisplayName}
-          placeholder="Item name"
-          placeholderTextColor={colors.muted}
+          placeholder="e.g., Chicken Breast"
+          placeholderTextColor={colors.dust}
         />
       </View>
 
       {/* Quantity & Unit */}
-      <Text className="text-[13px] text-muted font-semibold mb-1.5">
-        QUANTITY
-      </Text>
-      <View className="mb-4">
+      <FieldLabel>Quantity</FieldLabel>
+      <View className="mb-5">
         <QuantityUnitInput
           quantity={quantity}
           unit={unit}
@@ -141,10 +148,8 @@ export default function PantryItemForm({
       </View>
 
       {/* Storage Location */}
-      <Text className="text-[13px] text-muted font-semibold mb-1.5">
-        STORAGE LOCATION
-      </Text>
-      <View className="mb-4">
+      <FieldLabel>Storage Location</FieldLabel>
+      <View className="mb-5">
         <StorageLocationPills
           selected={storageLocation}
           onSelect={handleStorageChange}
@@ -152,10 +157,8 @@ export default function PantryItemForm({
       </View>
 
       {/* Expiration Date */}
-      <Text className="text-[13px] text-muted font-semibold mb-1.5">
-        EXPIRATION DATE
-      </Text>
-      <View className="mb-4">
+      <FieldLabel>Expiration Date</FieldLabel>
+      <View className="mb-5">
         <ExpirationDateInput
           date={expirationDate}
           onChange={handleExpirationChange}
@@ -163,16 +166,14 @@ export default function PantryItemForm({
       </View>
 
       {/* Notes */}
-      <Text className="text-[13px] text-muted font-semibold mb-1.5">
-        NOTES
-      </Text>
-      <View className="bg-white rounded-input border border-border px-3.5 py-3 mb-6">
+      <FieldLabel>Notes</FieldLabel>
+      <View className="border-b-2 border-line pb-2.5 mb-6">
         <TextInput
-          className="text-[14px] leading-[18px] text-dark min-h-[60px]"
+          className="text-[15px] text-espresso min-h-[60px]"
           value={notes}
           onChangeText={setNotes}
           placeholder="Optional notes..."
-          placeholderTextColor={colors.muted}
+          placeholderTextColor={colors.dust}
           multiline
           numberOfLines={3}
           textAlignVertical="top"
@@ -183,7 +184,7 @@ export default function PantryItemForm({
         label={submitLabel}
         onPress={handleSubmit}
         disabled={isPending}
-        className="mb-8"
+        className="mb-6"
       />
     </ScrollView>
   );

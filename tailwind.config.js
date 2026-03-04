@@ -14,10 +14,18 @@ module.exports = {
     extend: {
       colors,
       borderRadius: {
-        card: '16px',
-        button: '14px',
+        card: '20px',
+        button: '50px',
         input: '14px',
-        pill: '20px',
+        pill: '50px',
+      },
+      fontFamily: {
+        serif: ['Fraunces-Bold'],
+        'serif-heavy': ['Fraunces-ExtraBold'],
+        sans: ['PlusJakartaSans-Regular'],
+        'sans-medium': ['PlusJakartaSans-Medium'],
+        'sans-semibold': ['PlusJakartaSans-SemiBold'],
+        'sans-bold': ['PlusJakartaSans-Bold'],
       },
     },
   },

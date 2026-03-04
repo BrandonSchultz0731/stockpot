@@ -78,7 +78,7 @@ export default function AddMealActionSheet({
         <View className="rounded-t-2xl bg-white px-5 pb-8 pt-3">
         {/* Handle bar */}
         <View className="mb-3 items-center">
-          <View className="h-1 w-10 rounded-full bg-border" />
+          <View className="h-1 w-10 rounded-full bg-line" />
         </View>
 
         {/* Header */}
@@ -90,10 +90,10 @@ export default function AddMealActionSheet({
                 hitSlop={10}
                 className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-cream"
               >
-                <ArrowLeft size={16} color={colors.muted} />
+                <ArrowLeft size={16} color={colors.stone} />
               </Pressable>
             )}
-            <Text className="text-[20px] font-bold text-dark">
+            <Text className="text-[20px] font-bold text-espresso">
               Add {mealType}
             </Text>
           </View>
@@ -102,7 +102,7 @@ export default function AddMealActionSheet({
             hitSlop={10}
             className="h-8 w-8 items-center justify-center rounded-full bg-cream"
           >
-            <X size={16} color={colors.muted} />
+            <X size={16} color={colors.stone} />
           </Pressable>
         </View>
 
@@ -112,21 +112,21 @@ export default function AddMealActionSheet({
             <Pressable
               onPress={handleGenerateAI}
               disabled={isLoading}
-              className="flex-row items-center rounded-2xl border border-border bg-white p-4"
+              className="flex-row items-center rounded-2xl border border-line bg-white p-4"
             >
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-orange/10">
-                <Zap size={20} color={colors.orange.DEFAULT} />
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-terra/10">
+                <Zap size={20} color={colors.terra.DEFAULT} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-dark">
+                <Text className="text-[15px] font-semibold text-espresso">
                   Generate with AI
                 </Text>
-                <Text className="mt-0.5 text-[12px] text-muted">
+                <Text className="mt-0.5 text-[12px] text-stone">
                   Create a recipe based on your pantry
                 </Text>
               </View>
               {isLoading && (
-                <ActivityIndicator size="small" color={colors.orange.DEFAULT} />
+                <ActivityIndicator size="small" color={colors.terra.DEFAULT} />
               )}
             </Pressable>
 
@@ -134,16 +134,16 @@ export default function AddMealActionSheet({
             <Pressable
               onPress={() => setMode('url')}
               disabled={isLoading}
-              className="flex-row items-center rounded-2xl border border-border bg-white p-4"
+              className="flex-row items-center rounded-2xl border border-line bg-white p-4"
             >
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-navy/10">
-                <Globe size={20} color={colors.navy.DEFAULT} />
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-espresso/10">
+                <Globe size={20} color={colors.espresso} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-dark">
+                <Text className="text-[15px] font-semibold text-espresso">
                   Import from Website
                 </Text>
-                <Text className="mt-0.5 text-[12px] text-muted">
+                <Text className="mt-0.5 text-[12px] text-stone">
                   Paste a URL to import a recipe
                 </Text>
               </View>
@@ -153,16 +153,16 @@ export default function AddMealActionSheet({
             <Pressable
               onPress={() => setMode('photo')}
               disabled={isLoading}
-              className="flex-row items-center rounded-2xl border border-border bg-white p-4"
+              className="flex-row items-center rounded-2xl border border-line bg-white p-4"
             >
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-success/10">
-                <Camera size={20} color={colors.success.DEFAULT} />
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-sage/10">
+                <Camera size={20} color={colors.sage.DEFAULT} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-dark">
+                <Text className="text-[15px] font-semibold text-espresso">
                   Scan from Photo
                 </Text>
-                <Text className="mt-0.5 text-[12px] text-muted">
+                <Text className="mt-0.5 text-[12px] text-stone">
                   Take a photo of a recipe
                 </Text>
               </View>
@@ -172,16 +172,16 @@ export default function AddMealActionSheet({
             <Pressable
               onPress={() => setMode('leftovers')}
               disabled={isLoading || !hasLeftovers}
-              className={`flex-row items-center rounded-2xl border border-border bg-white p-4 ${!hasLeftovers ? 'opacity-40' : ''}`}
+              className={`flex-row items-center rounded-2xl border border-line bg-white p-4 ${!hasLeftovers ? 'opacity-40' : ''}`}
             >
-              <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: colors.warning.pale }}>
-                <UtensilsCrossed size={20} color={colors.warning.icon} />
+              <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: colors.honey.pale }}>
+                <UtensilsCrossed size={20} color={colors.honey.DEFAULT} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-dark">
+                <Text className="text-[15px] font-semibold text-espresso">
                   Eat Leftovers
                 </Text>
-                <Text className="mt-0.5 text-[12px] text-muted">
+                <Text className="mt-0.5 text-[12px] text-stone">
                   {hasLeftovers
                     ? 'Use leftover servings from another meal'
                     : 'No leftovers available'}
@@ -191,18 +191,18 @@ export default function AddMealActionSheet({
           </View>
         ) : mode === 'url' ? (
           <View>
-            <Text className="mb-2 text-[13px] font-semibold text-muted">
+            <Text className="mb-2 text-[13px] font-semibold text-stone">
               Recipe URL
             </Text>
             <TextInput
               value={url}
               onChangeText={setUrl}
               placeholder="https://example.com/recipe"
-              placeholderTextColor={colors.muted}
+              placeholderTextColor={colors.stone}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"
-              className="mb-4 rounded-xl border border-border bg-cream px-4 py-3 text-[15px] text-dark"
+              className="mb-4 rounded-xl border border-line bg-cream px-4 py-3 text-[15px] text-espresso"
             />
             <Button
               label={isLoading ? 'Importing...' : 'Import Recipe'}
@@ -215,16 +215,16 @@ export default function AddMealActionSheet({
             {/* Take Photo */}
             <Pressable
               onPress={() => onPhotoCapture('camera')}
-              className="flex-row items-center rounded-2xl border border-border bg-white p-4"
+              className="flex-row items-center rounded-2xl border border-line bg-white p-4"
             >
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-success/10">
-                <Camera size={20} color={colors.success.DEFAULT} />
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-sage/10">
+                <Camera size={20} color={colors.sage.DEFAULT} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-dark">
+                <Text className="text-[15px] font-semibold text-espresso">
                   Take Photo
                 </Text>
-                <Text className="mt-0.5 text-[12px] text-muted">
+                <Text className="mt-0.5 text-[12px] text-stone">
                   Use your camera to capture a recipe
                 </Text>
               </View>
@@ -233,16 +233,16 @@ export default function AddMealActionSheet({
             {/* Choose from Library */}
             <Pressable
               onPress={() => onPhotoCapture('gallery')}
-              className="flex-row items-center rounded-2xl border border-border bg-white p-4"
+              className="flex-row items-center rounded-2xl border border-line bg-white p-4"
             >
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-success/10">
-                <Image size={20} color={colors.success.DEFAULT} />
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-sage/10">
+                <Image size={20} color={colors.sage.DEFAULT} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-dark">
+                <Text className="text-[15px] font-semibold text-espresso">
                   Choose from Library
                 </Text>
-                <Text className="mt-0.5 text-[12px] text-muted">
+                <Text className="mt-0.5 text-[12px] text-stone">
                   Pick a photo from your gallery
                 </Text>
               </View>
@@ -260,16 +260,16 @@ export default function AddMealActionSheet({
                         setSelectedLeftover(lo);
                         setLeftoverServings(1);
                       }}
-                      className="flex-row items-center rounded-2xl border border-border bg-white p-4"
+                      className="flex-row items-center rounded-2xl border border-line bg-white p-4"
                     >
-                      <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: colors.warning.pale }}>
-                        <UtensilsCrossed size={20} color={colors.warning.icon} />
+                      <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: colors.honey.pale }}>
+                        <UtensilsCrossed size={20} color={colors.honey.DEFAULT} />
                       </View>
                       <View className="ml-3 flex-1">
-                        <Text className="text-[15px] font-semibold text-dark" numberOfLines={1}>
+                        <Text className="text-[15px] font-semibold text-espresso" numberOfLines={1}>
                           {lo.recipeTitle}
                         </Text>
-                        <Text className="mt-0.5 text-[12px] text-muted">
+                        <Text className="mt-0.5 text-[12px] text-stone">
                           {lo.availableServings} {lo.availableServings === 1 ? 'serving' : 'servings'} available
                         </Text>
                       </View>
@@ -279,21 +279,21 @@ export default function AddMealActionSheet({
               </ScrollView>
             ) : (
               <View>
-                <Text className="mb-1 text-[15px] font-semibold text-dark" numberOfLines={1}>
+                <Text className="mb-1 text-[15px] font-semibold text-espresso" numberOfLines={1}>
                   {selectedLeftover.recipeTitle}
                 </Text>
-                <Text className="mb-4 text-[12px] text-muted">
+                <Text className="mb-4 text-[12px] text-stone">
                   {selectedLeftover.availableServings} {selectedLeftover.availableServings === 1 ? 'serving' : 'servings'} available
                 </Text>
                 <View className="mb-4 flex-row items-center justify-center">
                   <Pressable
                     onPress={() => setLeftoverServings((s) => Math.max(1, s - 1))}
                     disabled={leftoverServings <= 1}
-                    className={`h-10 w-10 items-center justify-center rounded-lg border border-border ${leftoverServings <= 1 ? 'opacity-30' : ''}`}
+                    className={`h-10 w-10 items-center justify-center rounded-lg border border-line ${leftoverServings <= 1 ? 'opacity-30' : ''}`}
                   >
-                    <Minus size={16} color={colors.dark} />
+                    <Minus size={16} color={colors.espresso} />
                   </Pressable>
-                  <Text className="mx-5 text-[22px] font-bold text-orange">
+                  <Text className="mx-5 text-[22px] font-bold text-terra">
                     {leftoverServings}
                   </Text>
                   <Pressable
@@ -303,9 +303,9 @@ export default function AddMealActionSheet({
                       )
                     }
                     disabled={leftoverServings >= selectedLeftover.availableServings}
-                    className={`h-10 w-10 items-center justify-center rounded-lg border border-border ${leftoverServings >= selectedLeftover.availableServings ? 'opacity-30' : ''}`}
+                    className={`h-10 w-10 items-center justify-center rounded-lg border border-line ${leftoverServings >= selectedLeftover.availableServings ? 'opacity-30' : ''}`}
                   >
-                    <Plus size={16} color={colors.dark} />
+                    <Plus size={16} color={colors.espresso} />
                   </Pressable>
                 </View>
                 <Button

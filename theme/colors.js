@@ -1,15 +1,22 @@
 /** @type {const} */
 const colors = {
-  navy: {DEFAULT: '#16213E', light: '#1a2744', pale: '#E8EDF5'},
-  orange: {DEFAULT: '#FF6B35', light: '#FF8A5C', pale: '#FFF3ED'},
-  cream: '#FAFAF7',
-  dark: '#1A1A2E',
-  body: '#4A4A5A',
-  muted: '#8E8E9A',
-  border: '#EBEBEF',
-  success: {DEFAULT: '#34C759', pale: '#E8F9ED'},
-  danger: {DEFAULT: '#FF3B30', pale: '#FFEDED'},
-  warning: {DEFAULT: '#FFCC00', light: '#FFE066', pale: '#FFF9E0', icon: '#CC8800', dark: '#996600', text: '#664400', muted: '#886600', border: '#F0E0A0'},
+  // ── Primary palette ──
+  terra: {DEFAULT: '#C25B2E', light: '#E8845A', pale: '#FFF0E8', dark: '#9C4520'},
+  ivory: '#FAF7F2',
+  cream: '#F3EDE4',
+  espresso: '#1C1512',
+  ink: '#3D322C',
+  stone: '#8A7F78',
+  dust: '#C4BBB3',
+
+  // ── Semantic ──
+  sage: {DEFAULT: '#6B7F5E', pale: '#EDF3EA'},
+  berry: {DEFAULT: '#C04040', pale: '#FDEAEA'},
+  honey: {DEFAULT: '#C49A2A', pale: '#FFF8E6'},
+  ocean: {DEFAULT: '#4A7F9E', pale: '#E8F2F8'},
+
+  // ── Borders / lines ──
+  line: {DEFAULT: '#E8E2DA', light: '#F0EBE4'},
 };
 
 module.exports = colors;

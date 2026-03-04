@@ -594,6 +594,9 @@ export class MealPlansService {
     const scaledIngredients = (entry.recipe.ingredients ?? []).map((ing) => ({
       ...ing,
       quantity: Math.round(ing.quantity * scale * 100) / 100,
+      ...(ing.baseQuantity != null
+        ? { baseQuantity: Math.round(ing.baseQuantity * scale * 100) / 100 }
+        : {}),
     }));
 
     // 1. Deterministic deductions

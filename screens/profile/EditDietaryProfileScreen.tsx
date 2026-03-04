@@ -12,6 +12,7 @@ import { useUserProfileQuery } from '../../hooks/useUserProfileQuery';
 import { useUpdateProfileMutation } from '../../hooks/useUpdateProfileMutation';
 import { useToggleDiet, useToggleItem } from '../../hooks/useToggleList';
 import { DietaryPreference, CookingSkill } from '../../shared/enums';
+import { fonts } from '../../theme/typography';
 import type { ProfileStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'EditDietaryProfile'>;
@@ -50,7 +51,7 @@ export default function EditDietaryProfileScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       <ScreenHeader
         title="Dietary Profile"
         centerTitle
@@ -58,12 +59,14 @@ export default function EditDietaryProfileScreen() {
         isSaving={mutation.isPending}
       />
 
-      <ScrollView contentContainerClassName="px-5 pb-10">
+      <ScrollView contentContainerClassName="px-5 pb-28">
         {/* Dietary Preferences */}
-        <Text className="text-lg font-bold text-dark mb-2 mt-2">
+        <Text
+          className="text-lg text-espresso mb-2 mt-2"
+          style={{ fontFamily: fonts.serif }}>
           Dietary Preferences
         </Text>
-        <Text className="text-sm text-muted mb-4">
+        <Text className="text-sm text-stone mb-4">
           Select any that apply to your diet.
         </Text>
         <DietSelector
@@ -73,10 +76,12 @@ export default function EditDietaryProfileScreen() {
         />
 
         {/* Excluded Ingredients */}
-        <Text className="text-lg font-bold text-dark mb-2">
+        <Text
+          className="text-lg text-espresso mb-2"
+          style={{ fontFamily: fonts.serif }}>
           Ingredients to Avoid
         </Text>
-        <Text className="text-sm text-muted mb-4">
+        <Text className="text-sm text-stone mb-4">
           We'll make sure these never show up in your recipes.
         </Text>
         <ExcludedIngredientsSelector
@@ -86,7 +91,9 @@ export default function EditDietaryProfileScreen() {
         />
 
         {/* Household Size */}
-        <Text className="text-lg font-bold text-dark mb-4">
+        <Text
+          className="text-lg text-espresso mb-4"
+          style={{ fontFamily: fonts.serif }}>
           Household Size
         </Text>
         <HouseholdSizeStepper
@@ -95,7 +102,9 @@ export default function EditDietaryProfileScreen() {
         />
 
         {/* Cooking Skill */}
-        <Text className="text-lg font-bold text-dark mb-3">
+        <Text
+          className="text-lg text-espresso mb-3"
+          style={{ fontFamily: fonts.serif }}>
           Cooking Skill
         </Text>
         <CookingSkillSelector
@@ -105,7 +114,7 @@ export default function EditDietaryProfileScreen() {
 
         {/* Error state */}
         {mutation.isError && (
-          <Text className="text-sm text-danger mt-3 text-center">
+          <Text className="text-sm text-berry mt-3 text-center">
             Something went wrong. Please try again.
           </Text>
         )}

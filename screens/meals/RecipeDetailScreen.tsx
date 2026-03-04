@@ -18,6 +18,8 @@ import {
   Plus,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
+import { cardShadow } from '../../theme/shadows';
 import ScreenHeader from '../../components/ScreenHeader';
 import PantryStatusIcon from '../../components/PantryStatusIcon';
 import ErrorState from '../../components/ErrorState';
@@ -38,7 +40,7 @@ type ScreenProps = NativeStackScreenProps<MealsStackParamList, 'RecipeDetail'>;
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function HeroBanner({
+function RecipeInfoPills({
   totalTimeMinutes,
   calories,
   difficulty,
@@ -47,45 +49,52 @@ function HeroBanner({
   calories: number | undefined;
   difficulty: string;
 }) {
-  const badges: { icon: React.ReactNode; label: string }[] = [];
+  const pills: { icon: React.ReactNode; label: string; bg: string; fg: string }[] = [];
 
   if (totalTimeMinutes > 0) {
-    badges.push({
-      icon: <Clock size={12} color="#fff" />,
+    pills.push({
+      icon: <Clock size={13} color={colors.terra.DEFAULT} />,
       label: `${totalTimeMinutes} min`,
+      bg: colors.terra.pale,
+      fg: colors.terra.DEFAULT,
     });
   }
   if (calories != null) {
-    badges.push({
-      icon: <Flame size={12} color="#fff" />,
+    pills.push({
+      icon: <Flame size={13} color={colors.honey.DEFAULT} />,
       label: `${calories} cal`,
+      bg: colors.honey.pale,
+      fg: colors.honey.DEFAULT,
     });
   }
   if (difficulty) {
-    badges.push({
-      icon: <ChefHat size={12} color="#fff" />,
+    pills.push({
+      icon: <ChefHat size={13} color={colors.sage.DEFAULT} />,
       label: difficulty,
+      bg: colors.sage.pale,
+      fg: colors.sage.DEFAULT,
     });
   }
 
+  if (pills.length === 0) return null;
+
   return (
-    <View
-      className="mx-4 h-40 items-center justify-end overflow-hidden rounded-[20px]"
-      style={{ backgroundColor: colors.navy.DEFAULT }}
-    >
-      <View className="flex-row gap-2 px-4 pb-3">
-        {badges.map((b) => (
-          <View
-            key={b.label}
-            className="flex-row items-center rounded-lg bg-white/15 px-2.5 py-1"
+    <View className="flex-row flex-wrap gap-2 px-5 mt-3">
+      {pills.map((p) => (
+        <View
+          key={p.label}
+          className="flex-row items-center rounded-full px-3 py-1.5"
+          style={{ backgroundColor: p.bg }}
+        >
+          {p.icon}
+          <Text
+            className="ml-1.5 text-[12px] font-semibold"
+            style={{ color: p.fg }}
           >
-            {b.icon}
-            <Text className="ml-1 text-[11px] font-semibold text-white">
-              {b.label}
-            </Text>
-          </View>
-        ))}
-      </View>
+            {p.label}
+          </Text>
+        </View>
+      ))}
     </View>
   );
 }
@@ -99,11 +108,14 @@ function TitleSection({
 }) {
   return (
     <View className="px-5 pt-4">
-      <Text className="text-[22px] font-extrabold tracking-[-0.3px] text-navy">
+      <Text
+        className="text-[22px] tracking-[-0.3px] text-espresso"
+        style={{ fontFamily: fonts.serif }}
+      >
         {title}
       </Text>
       {description ? (
-        <Text className="mt-1.5 text-[13px] text-muted">{description}</Text>
+        <Text className="mt-1.5 text-[13px] text-stone">{description}</Text>
       ) : null}
     </View>
   );
@@ -111,10 +123,13 @@ function TitleSection({
 
 function ServingDisplay({ servings }: { servings: number }) {
   return (
-    <View className="mx-5 mt-4 flex-row items-center rounded-xl border border-border bg-white px-3.5 py-2.5">
-      <Text className="text-[13px] font-semibold text-dark">Servings</Text>
+    <View
+      className="mx-5 mt-4 flex-row items-center rounded-xl bg-white px-3.5 py-2.5"
+      style={cardShadow}
+    >
+      <Text className="text-[13px] font-semibold text-espresso">Servings</Text>
       <View className="flex-1" />
-      <Text className="text-[16px] font-bold text-orange">{servings}</Text>
+      <Text className="text-[16px] font-bold text-terra">{servings}</Text>
     </View>
   );
 }
@@ -134,22 +149,22 @@ function ServingStepper({
 }) {
   return (
     <View className="flex-row items-center">
-      <Text className="flex-1 text-[13px] font-semibold text-dark">{label}</Text>
+      <Text className="flex-1 text-[13px] font-semibold text-espresso">{label}</Text>
       <Pressable
         onPress={onDecrement}
         disabled={value <= min}
-        className={`h-8 w-8 items-center justify-center rounded-lg border border-border ${value <= min ? 'opacity-30' : ''}`}
+        className={`h-8 w-8 items-center justify-center rounded-lg border border-line ${value <= min ? 'opacity-30' : ''}`}
       >
-        <Minus size={14} color={colors.dark} />
+        <Minus size={14} color={colors.espresso} />
       </Pressable>
-      <Text className="mx-3 min-w-[24px] text-center text-[16px] font-bold text-orange">
+      <Text className="mx-3 min-w-[24px] text-center text-[16px] font-bold text-terra">
         {value}
       </Text>
       <Pressable
         onPress={onIncrement}
-        className="h-8 w-8 items-center justify-center rounded-lg border border-border"
+        className="h-8 w-8 items-center justify-center rounded-lg border border-line"
       >
-        <Plus size={14} color={colors.dark} />
+        <Plus size={14} color={colors.espresso} />
       </Pressable>
     </View>
   );
@@ -169,7 +184,10 @@ function ServingsSection({
   const leftovers = servingsToCook - servingsToEat;
 
   return (
-    <View className="mx-5 mt-4 rounded-xl border border-border bg-white px-3.5 py-2.5">
+    <View
+      className="mx-5 mt-4 rounded-xl bg-white px-3.5 py-2.5"
+      style={cardShadow}
+    >
       <ServingStepper
         label="Servings to cook"
         value={servingsToCook}
@@ -183,7 +201,7 @@ function ServingsSection({
       />
       {servingsToCook > 1 && (
         <>
-          <View className="my-2 h-px bg-border" />
+          <View className="my-2 h-px bg-line" />
           <ServingStepper
             label="Servings to eat"
             value={servingsToEat}
@@ -196,7 +214,7 @@ function ServingsSection({
         </>
       )}
       {leftovers > 0 && (
-        <Text className="mt-2 text-center text-[12px] font-semibold text-warning-icon">
+        <Text className="mt-2 text-center text-[12px] font-semibold" style={{ color: colors.honey.DEFAULT }}>
           {leftovers} {leftovers === 1 ? 'serving' : 'servings'} of leftovers
         </Text>
       )}
@@ -219,11 +237,11 @@ function IngredientRow({
   return (
     <View
       className={`flex-row items-center px-3.5 py-2.5 ${
-        !isLast ? 'border-b border-border' : ''
+        !isLast ? 'border-b border-line' : ''
       }`}
     >
-      <Text className="flex-1 text-[13px] text-dark">{ingredient.name}</Text>
-      <Text className="mr-2 text-[12px] text-muted">{qtyLabel}</Text>
+      <Text className="flex-1 text-[13px] text-ink">{ingredient.name}</Text>
+      <Text className="mr-2 text-[12px] text-stone">{qtyLabel}</Text>
       <PantryStatusIcon status={ingredient.pantryStatus} />
     </View>
   );
@@ -246,8 +264,16 @@ function IngredientsSection({
 
   return (
     <View className="px-5 pt-5">
-      <Text className="mb-3 text-[16px] font-bold text-navy">Ingredients</Text>
-      <View className="overflow-hidden rounded-[14px] border border-border bg-white">
+      <Text
+        className="mb-3 text-[16px] text-espresso"
+        style={{ fontFamily: fonts.serif }}
+      >
+        Ingredients
+      </Text>
+      <View
+        className="overflow-hidden rounded-[14px] bg-white"
+        style={cardShadow}
+      >
         {ingredients.map((ing, i) => (
           <IngredientRow
             key={`${ing.name}-${i}`}
@@ -257,7 +283,7 @@ function IngredientsSection({
           />
         ))}
       </View>
-      <Text className="mt-2 text-center text-[12px] font-semibold text-orange">
+      <Text className="mt-2 text-center text-[12px] font-semibold text-terra">
         {summaryText}
       </Text>
     </View>
@@ -269,17 +295,20 @@ function InstructionsSection({ steps }: { steps: RecipeStep[] }) {
 
   return (
     <View className="px-5 pt-5">
-      <Text className="mb-3 text-[16px] font-bold text-navy">
+      <Text
+        className="mb-3 text-[16px] text-espresso"
+        style={{ fontFamily: fonts.serif }}
+      >
         Instructions
       </Text>
       {sorted.map((step) => (
         <View key={step.stepNumber} className="mb-3 flex-row gap-3">
-          <View className="h-6 w-6 items-center justify-center rounded-full bg-orange-pale">
-            <Text className="text-[11px] font-bold text-orange">
+          <View className="h-6 w-6 items-center justify-center rounded-full bg-terra">
+            <Text className="text-[11px] font-bold text-white">
               {step.stepNumber}
             </Text>
           </View>
-          <Text className="flex-1 text-[13px] leading-5 text-body">
+          <Text className="flex-1 text-[13px] leading-5 text-ink">
             {step.instruction}
           </Text>
         </View>
@@ -362,7 +391,10 @@ export default function RecipeDetailScreen() {
           <>
             <ScreenHeader />
             {routeTitle ? (
-              <Text className="px-5 pt-4 text-[22px] font-extrabold tracking-[-0.3px] text-navy">
+              <Text
+                className="px-5 pt-4 text-[22px] tracking-[-0.3px] text-espresso"
+                style={{ fontFamily: fonts.serif }}
+              >
                 {routeTitle}
               </Text>
             ) : null}
@@ -375,7 +407,7 @@ export default function RecipeDetailScreen() {
   // Error state
   if (isError) {
     return (
-      <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+      <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
         <ScreenHeader />
         <ErrorState
           message="Failed to load recipe."
@@ -386,27 +418,27 @@ export default function RecipeDetailScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       <ScreenHeader
         rightAction={
           <Pressable onPress={() => toggleSave(recipeId)} hitSlop={8}>
             <Heart
               size={22}
-              color={saved ? colors.orange.DEFAULT : colors.muted}
-              fill={saved ? colors.orange.DEFAULT : 'none'}
+              color={saved ? colors.terra.DEFAULT : colors.stone}
+              fill={saved ? colors.terra.DEFAULT : 'none'}
             />
           </Pressable>
         }
       />
-      <ScrollView className="flex-1" contentContainerClassName="pb-8">
-        <HeroBanner
-          totalTimeMinutes={recipe.totalTimeMinutes}
-          calories={recipe.nutrition?.calories}
-          difficulty={recipe.difficulty}
-        />
+      <ScrollView className="flex-1" contentContainerClassName="pb-28">
         <TitleSection
           title={recipe.title}
           description={recipe.description}
+        />
+        <RecipeInfoPills
+          totalTimeMinutes={recipe.totalTimeMinutes}
+          calories={recipe.nutrition?.calories}
+          difficulty={recipe.difficulty}
         />
         {entryId && !isCooked && !isLeftover ? (
           <ServingsSection
@@ -432,7 +464,7 @@ export default function RecipeDetailScreen() {
                 servingsToEat,
               })
             }
-            className="mx-5 mt-6 flex-row items-center justify-center rounded-[14px] bg-success py-3.5"
+            className="mx-5 mt-6 flex-row items-center justify-center rounded-full bg-sage py-3.5"
           >
             <CookingPot size={18} color="#fff" />
             <Text className="ml-2 text-[15px] font-bold text-white">

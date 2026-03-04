@@ -11,7 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import colors from '../theme/colors';
+import { fonts } from '../theme/typography';
 import Button from '../components/Button';
 import TextInputRow from '../components/TextInputRow';
 import Divider from '../components/Divider';
@@ -45,7 +47,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-cream">
+    <SafeAreaView className="flex-1 bg-ivory">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -54,24 +56,39 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerClassName="flex-grow">
           {/* Hero */}
-          <View className="items-center pt-10 pb-7 px-6">
-            <Image
-              source={require('../assets/app-icon.png')}
-              className="w-16 h-16 rounded-[18px] mb-4"
-            />
-            <Text className="text-[28px] font-extrabold tracking-[-0.5px] text-navy mb-1">
-              StockPot
-            </Text>
-            <Text className="text-[13px] text-muted">
-              Your AI-powered kitchen companion
-            </Text>
-          </View>
+          <LinearGradient colors={['#FFF0E8', '#FAF7F2']}>
+            <View className="items-center pt-10 pb-7 px-6">
+              <View
+                className="mb-4"
+                style={{
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 6,
+                }}
+              >
+                <Image
+                  source={require('../assets/app-icon.png')}
+                  className="w-16 h-16"
+                  style={{ borderRadius: 20 }}
+                />
+              </View>
+              <Text
+                className="text-[32px] tracking-[-0.5px] text-espresso mb-1"
+                style={{ fontFamily: fonts.serif }}>
+                StockPot
+              </Text>
+              <Text className="text-[13px] text-stone">
+                Your AI-powered kitchen companion
+              </Text>
+            </View>
+          </LinearGradient>
 
           {/* Form */}
           <View className="px-6 flex-1">
             {displayError && (
-              <View className="bg-danger-pale rounded-input px-4 py-3 mb-3">
-                <Text className="text-sm text-danger">
+              <View className="bg-berry-pale rounded-input px-4 py-3 mb-3">
+                <Text className="text-sm text-berry">
                   {displayError.message}
                 </Text>
               </View>
@@ -85,6 +102,7 @@ export default function LoginScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              variant="underline"
               className="mb-3"
             />
 
@@ -94,15 +112,16 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
+              variant="underline"
               className="mb-2"
               right={
                 <Pressable
                   onPress={() => setShowPassword(!showPassword)}
                   hitSlop={8}>
                   {showPassword ? (
-                    <EyeOff size={18} color={colors.muted} />
+                    <EyeOff size={18} color={colors.stone} />
                   ) : (
-                    <Eye size={18} color={colors.muted} />
+                    <Eye size={18} color={colors.stone} />
                   )}
                 </Pressable>
               }
@@ -110,7 +129,7 @@ export default function LoginScreen() {
 
             {/* Forgot password */}
             <Pressable className="self-end mb-5">
-              <Text className="text-xs font-semibold text-orange">
+              <Text className="text-xs font-semibold text-terra">
                 Forgot password?
               </Text>
             </Pressable>
@@ -145,10 +164,10 @@ export default function LoginScreen() {
 
           {/* Footer */}
           <View className="py-4 px-6 items-center">
-            <Text className="text-[13px] text-muted">
+            <Text className="text-[13px] text-stone">
               Don't have an account?{' '}
               <Text
-                className="font-bold text-orange"
+                className="font-bold text-terra"
                 onPress={() =>
                   navigation.navigate('SignUp')
                 }>

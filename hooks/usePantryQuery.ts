@@ -19,6 +19,7 @@ export interface FoodCacheItem {
   brand: string | null;
   imageUrl: string | null;
   aliases: string[] | null;
+  emoji: string | null;
   createdAt: string;
 }
 

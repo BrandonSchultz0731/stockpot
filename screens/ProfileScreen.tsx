@@ -2,20 +2,19 @@ import {
   Image,
   Pressable,
   ScrollView,
-  Switch,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import LinearGradient from 'react-native-linear-gradient';
 import {
-  Sparkles,
+  Zap,
   ChevronRight,
   Heart,
   CalendarDays,
-  Leaf,
   Bell,
 } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
 import { useUsageQuery } from '../hooks/useUsageQuery';
@@ -28,6 +27,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import colors from '../theme/colors';
+import { cardShadow } from '../theme/shadows';
+import AppText from '../components/AppText';
 import Button from '../components/Button';
 import LoadingScreen from '../components/LoadingScreen';
 import MacroProgressBar from '../components/MacroProgressBar';
@@ -42,92 +43,36 @@ function formatMemberSince(dateStr: string): string {
   return `Member since ${month} ${year}`;
 }
 
-function UserCard({
-  firstName,
-  lastName,
-  avatarUrl,
-  createdAt,
-  tier,
-}: {
-  firstName: string;
-  lastName: string | null;
-  avatarUrl: string | null;
-  createdAt: string;
-  tier: SubscriptionTier;
-}) {
-  const initial = firstName.charAt(0).toUpperCase();
-  const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-
-  return (
-    <View className="mx-4 mb-3 flex-row items-center rounded-card border border-border bg-white p-5">
-      {avatarUrl ? (
-        <Image
-          source={{ uri: avatarUrl }}
-          className="w-14 h-14 rounded-[18px]"
-        />
-      ) : (
-        <View className="w-14 h-14 items-center justify-center rounded-[18px] bg-navy">
-          <Text className="text-2xl font-bold text-white">
-            {initial}
-          </Text>
-        </View>
-      )}
-      <View className="flex-1 ml-4">
-        <Text className="text-lg font-bold text-dark">
-          {fullName}
-        </Text>
-        <Text className="text-[13px] text-muted mt-0.5">
-          {formatMemberSince(createdAt)}
-        </Text>
-      </View>
-      <View className="bg-orange-pale px-2.5 py-1 rounded-lg">
-        <Text className="text-[11px] font-bold text-orange">
-          {tier.toUpperCase()}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-function SubscriptionCard({ recipesUsed }: { recipesUsed: number }) {
+function UpgradeCard({ recipesUsed }: { recipesUsed: number }) {
   const progress = Math.min(recipesUsed / FREE_TIER_RECIPE_LIMIT, 1);
 
   return (
-    <Pressable
-      className="mx-4 mb-3 rounded-2xl bg-navy p-4 overflow-hidden">
-      {/* Decorative circles */}
-      <View className="absolute top-[-20px] right-[-20px] w-[80px] h-[80px] rounded-[40px] bg-orange/15" />
-      <View className="absolute bottom-[-10px] right-[30px] w-[50px] h-[50px] rounded-[25px] bg-orange/10" />
+    <Pressable className="mx-6 mt-4 mb-4 p-[18px] px-5 bg-espresso rounded-[22px] overflow-hidden">
+      {/* Decorative circle */}
+      <View className="absolute -top-5 -right-5 w-20 h-20 rounded-full bg-terra/15" />
 
       {/* Top row */}
-      <View className="flex-row items-center mb-2">
-        <View className="w-8 h-8 items-center justify-center rounded-[10px] bg-orange/20">
-          <Sparkles size={16} color={colors.orange.DEFAULT} />
-        </View>
-        <View className="flex-1 ml-3">
-          <Text className="text-[15px] font-bold text-white">
+      <View className="flex-row items-center gap-3">
+        <Zap size={18} color={colors.terra.DEFAULT} />
+        <View className="flex-1">
+          <AppText font="sansBold" className="text-[15px] text-white">
             Upgrade to Pro
-          </Text>
-          <Text className="text-[11px] mt-0.5 text-white/60">
-            Unlimited meal plans, recipes & more
-          </Text>
+          </AppText>
+          <AppText className="mt-0.5 text-[12px] text-white/50">
+            Unlimited recipes, plans & more
+          </AppText>
         </View>
-        <ChevronRight size={16} color="rgba(255,255,255,0.5)" />
+        <ChevronRight size={16} color="rgba(255,255,255,0.4)" />
       </View>
 
       {/* Usage bar */}
-      <View className="mt-2">
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-[10px] text-white/50">
-            Recipe generations this month
-          </Text>
-          <Text className="text-[10px] font-semibold text-orange">
-            {recipesUsed} of {FREE_TIER_RECIPE_LIMIT} used
-          </Text>
-        </View>
-        <View className="h-1 rounded-full bg-white/10">
+      <View className="flex-row items-center justify-between mt-3">
+        <AppText className="text-[10px] text-white/40">
+          Recipes: {recipesUsed}/{FREE_TIER_RECIPE_LIMIT} this month
+        </AppText>
+        <View className="w-20 h-[3px] rounded-[2px] bg-white/10">
           <View
-            className="h-1 rounded-full bg-orange"
+            className="bg-terra h-[3px] rounded-[2px]"
             style={{ width: `${progress * 100}%` }}
           />
         </View>
@@ -136,7 +81,7 @@ function SubscriptionCard({ recipesUsed }: { recipesUsed: number }) {
   );
 }
 
-function DietaryProfileCard({
+function DietaryProfileSection({
   dietaryProfile,
   onEdit,
 }: {
@@ -156,29 +101,34 @@ function DietaryProfileCard({
   }
 
   return (
-    <View className="mx-4 mb-3 rounded-2xl border border-border bg-white p-4">
-      <View className="flex-row justify-between items-center mb-3.5">
-        <Text className="text-[15px] font-bold text-navy">
+    <View className="mx-6 mb-4">
+      <View className="flex-row justify-between items-center mb-2.5">
+        <AppText font="serif" className="text-[16px] text-espresso">
           Dietary Profile
-        </Text>
+        </AppText>
         <Pressable onPress={onEdit} hitSlop={8}>
-          <Text className="text-xs font-semibold text-orange">
+          <AppText font="sansSemiBold" className="text-[13px] text-terra">
             Edit
-          </Text>
+          </AppText>
         </Pressable>
       </View>
       {pills.length > 0 ? (
         <View className="flex-row flex-wrap gap-2">
           {pills.map(label => (
-            <View key={label} className="bg-orange-pale px-3.5 py-1.5 rounded-full">
-              <Text className="text-xs font-semibold text-orange">
+            <View
+              key={label}
+              className="bg-terra-pale py-1.5 px-3.5 rounded-full"
+            >
+              <AppText font="sansSemiBold" className="text-[12px] text-terra">
                 {label}
-              </Text>
+              </AppText>
             </View>
           ))}
         </View>
       ) : (
-        <Text className="text-sm text-muted">No dietary preferences set.</Text>
+        <AppText className="text-sm text-stone">
+          No dietary preferences set.
+        </AppText>
       )}
     </View>
   );
@@ -191,7 +141,7 @@ interface NutritionTotals {
   fat: number;
 }
 
-function NutritionGoalsCard({
+function DailyGoalsCard({
   nutritionalGoals,
   todayTotals,
   onEdit,
@@ -202,18 +152,23 @@ function NutritionGoalsCard({
 }) {
   if (!nutritionalGoals) {
     return (
-      <View className="mx-4 mb-3 rounded-2xl border border-border bg-white p-4">
-        <View className="flex-row justify-between items-center mb-3.5">
-          <Text className="text-[15px] font-bold text-navy">
-            Daily Nutrition Goals
-          </Text>
+      <View
+        className="mx-6 mb-4 p-4 px-[18px] bg-white rounded-[18px]"
+        style={cardShadow}
+      >
+        <View className="flex-row justify-between items-center mb-3">
+          <AppText font="serif" className="text-[16px] text-espresso">
+            Daily Goals
+          </AppText>
           <Pressable onPress={onEdit} hitSlop={8}>
-            <Text className="text-xs font-semibold text-orange">
+            <AppText font="sansSemiBold" className="text-[13px] text-terra">
               Edit
-            </Text>
+            </AppText>
           </Pressable>
         </View>
-        <Text className="text-sm text-muted">No nutrition goals set.</Text>
+        <AppText className="text-sm text-stone">
+          No nutrition goals set.
+        </AppText>
       </View>
     );
   }
@@ -224,41 +179,44 @@ function NutritionGoalsCard({
       key: 'calories' as const,
       goal: nutritionalGoals.dailyCalories,
       unit: 'cal',
-      color: colors.orange.DEFAULT,
+      color: colors.terra.DEFAULT,
     },
     {
       label: 'Protein',
       key: 'protein' as const,
       goal: nutritionalGoals.dailyProteinGrams,
       unit: 'g',
-      color: colors.success.DEFAULT,
+      color: colors.sage.DEFAULT,
     },
     {
       label: 'Carbs',
       key: 'carbs' as const,
       goal: nutritionalGoals.dailyCarbsGrams,
       unit: 'g',
-      color: '#4A90D9',
+      color: colors.ocean.DEFAULT,
     },
     {
       label: 'Fat',
       key: 'fat' as const,
       goal: nutritionalGoals.dailyFatGrams,
       unit: 'g',
-      color: '#D9534F',
+      color: colors.honey.DEFAULT,
     },
   ];
 
   return (
-    <View className="mx-4 mb-3 rounded-2xl border border-border bg-white p-4">
-      <View className="flex-row justify-between items-center mb-3.5">
-        <Text className="text-[15px] font-bold text-navy">
-          Daily Nutrition Goals
-        </Text>
+    <View
+      className="mx-6 mb-4 p-4 px-[18px] bg-white rounded-[18px]"
+      style={cardShadow}
+    >
+      <View className="flex-row justify-between items-center mb-3">
+        <AppText font="serif" className="text-[16px] text-espresso">
+          Daily Goals
+        </AppText>
         <Pressable onPress={onEdit} hitSlop={8}>
-          <Text className="text-xs font-semibold text-orange">
+          <AppText font="sansSemiBold" className="text-[13px] text-terra">
             Edit
-          </Text>
+          </AppText>
         </Pressable>
       </View>
       {rows.map((row) => {
@@ -283,82 +241,11 @@ function NutritionGoalsCard({
   );
 }
 
-function SettingsRow({
-  icon,
-  label,
-  right,
-  showBorder,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  right: React.ReactNode;
-  showBorder: boolean;
-}) {
-  return (
-    <View
-      className={`flex-row items-center px-4 py-3.5 ${showBorder ? 'border-b border-border' : ''}`}>
-      {icon}
-      <Text className="flex-1 text-sm text-dark ml-3">{label}</Text>
-      {right}
-    </View>
-  );
-}
-
-function SettingsCard() {
-  const [wasteReduction, setWasteReduction] = useState(true);
-
-  return (
-    <View className="mx-4 mb-5 rounded-2xl border border-border bg-white overflow-hidden">
-      <SettingsRow
-        icon={<Heart size={18} color={colors.navy.DEFAULT} />}
-        label="Saved Recipes"
-        showBorder
-        right={
-          <View className="flex-row items-center">
-            <Text className="text-xs font-semibold text-muted mr-2">
-              12
-            </Text>
-            <ChevronRight size={16} color={colors.muted} />
-          </View>
-        }
-      />
-      <SettingsRow
-        icon={<CalendarDays size={18} color={colors.navy.DEFAULT} />}
-        label="Meal Plan Templates"
-        showBorder
-        right={
-          <View className="flex-row items-center">
-            <Text className="text-xs font-semibold text-muted mr-2">
-              3
-            </Text>
-            <ChevronRight size={16} color={colors.muted} />
-          </View>
-        }
-      />
-      <SettingsRow
-        icon={<Leaf size={18} color={colors.navy.DEFAULT} />}
-        label="Waste Reduction Mode"
-        showBorder
-        right={
-          <Switch
-            value={wasteReduction}
-            onValueChange={setWasteReduction}
-            trackColor={{
-              false: colors.border,
-              true: colors.success.DEFAULT,
-            }}
-          />
-        }
-      />
-      <SettingsRow
-        icon={<Bell size={18} color={colors.navy.DEFAULT} />}
-        label="Notification Settings"
-        showBorder={false}
-        right={<ChevronRight size={16} color={colors.muted} />}
-      />
-    </View>
-  );
-}
+const LINK_ITEMS = [
+  { label: 'Saved Recipes', icon: Heart, value: '12' },
+  { label: 'Templates', icon: CalendarDays, value: '3' },
+  { label: 'Notifications', icon: Bell },
+] as const;
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
@@ -396,59 +283,107 @@ export default function ProfileScreen() {
   };
 
   if (profileLoading) {
-    return <LoadingScreen color={colors.navy.DEFAULT} />;
+    return <LoadingScreen color={colors.espresso} />;
   }
 
   const tier = profile?.subscriptionTier ?? SubscriptionTier.Free;
+  const firstName = profile?.firstName ?? '';
+  const initial = (firstName || '?')[0].toUpperCase();
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-      <ScrollView contentContainerClassName="pb-10">
-        {/* Section 1: Header */}
-        <View className="px-5 pt-4">
-          <Text className="text-[26px] font-extrabold tracking-[-0.5px] text-navy">
-            Profile
-          </Text>
-        </View>
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
+      <ScrollView contentContainerClassName="pb-28">
+        {/* Header with gradient — title + user info */}
+        <LinearGradient
+          colors={['#FFF8F0', '#FAF7F2']}
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 0.9, y: 1 }}
+        >
+          <View className="px-6 pt-5">
+            <AppText font="serifHeavy" className="text-[28px] tracking-[-0.3px] text-espresso mb-4">
+              Profile
+            </AppText>
 
-        {/* Section 2: User Card */}
-        <View className="mt-4">
-          <UserCard
-            firstName={profile?.firstName ?? ''}
-            lastName={profile?.lastName ?? null}
-            avatarUrl={profile?.avatarUrl ?? null}
-            createdAt={profile?.createdAt ?? new Date().toISOString()}
-            tier={tier}
-          />
-        </View>
+            {/* User row */}
+            <View className="flex-row items-center gap-4 pb-5">
+              {profile?.avatarUrl ? (
+                <Image
+                  source={{ uri: profile.avatarUrl }}
+                  className="w-[60px] h-[60px] rounded-[20px]"
+                />
+              ) : (
+                <View className="w-[60px] h-[60px] rounded-[20px] overflow-hidden">
+                  <LinearGradient
+                    colors={[colors.terra.DEFAULT, colors.terra.light]}
+                    style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <AppText font="sansBold" className="text-[26px] text-white">
+                      {initial}
+                    </AppText>
+                  </LinearGradient>
+                </View>
+              )}
+              <View className="flex-1">
+                <AppText font="serif" className="text-[18px] text-espresso">
+                  {firstName}
+                </AppText>
+                <AppText className="mt-0.5 text-[13px] text-stone">
+                  {formatMemberSince(profile?.createdAt ?? new Date().toISOString())}
+                </AppText>
+              </View>
+              <View className="py-1 px-2.5 rounded-full bg-terra-pale">
+                <AppText font="sansBold" className="text-[11px] text-terra">
+                  {tier.toUpperCase()}
+                </AppText>
+              </View>
+            </View>
+          </View>
+        </LinearGradient>
 
-        {/* Section 3: Subscription Card (Free tier only) */}
+        {/* Upgrade card (Free tier only) */}
         {tier === SubscriptionTier.Free && (
-          <SubscriptionCard recipesUsed={usage?.featureCounts?.[MessageType.RecipeGeneration] ?? 0} />
+          <UpgradeCard recipesUsed={usage?.featureCounts?.[MessageType.RecipeGeneration] ?? 0} />
         )}
 
-        {/* Section 4: Dietary Profile */}
-        <DietaryProfileCard
-          dietaryProfile={
-            profile?.dietaryProfile as DietaryProfile | null
-          }
+        {/* Dietary Profile */}
+        <DietaryProfileSection
+          dietaryProfile={profile?.dietaryProfile as DietaryProfile | null}
           onEdit={() => navigation.navigate('EditDietaryProfile')}
         />
 
-        {/* Section 5: Nutrition Goals */}
-        <NutritionGoalsCard
-          nutritionalGoals={
-            profile?.nutritionalGoals as NutritionalGoals | null
-          }
+        {/* Daily Goals */}
+        <DailyGoalsCard
+          nutritionalGoals={profile?.nutritionalGoals as NutritionalGoals | null}
           todayTotals={todayTotals}
           onEdit={() => navigation.navigate('EditNutritionGoals')}
         />
 
-        {/* Section 6: Settings */}
-        <SettingsCard />
+        {/* Links — divider style */}
+        <View className="mx-6 mb-6">
+          {LINK_ITEMS.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <View
+                key={item.label}
+                className={`flex-row items-center gap-3 py-3.5 ${idx < LINK_ITEMS.length - 1 ? 'border-b border-line' : ''}`}
+              >
+                <Icon size={18} color={colors.stone} />
+                <AppText className="flex-1 text-[14px] text-espresso">
+                  {item.label}
+                </AppText>
+                {'value' in item && item.value && (
+                  <AppText font="sansSemiBold" className="text-[12px] text-stone">
+                    {item.value}
+                  </AppText>
+                )}
+                <ChevronRight size={16} color={colors.dust} />
+              </View>
+            );
+          })}
+        </View>
 
-        {/* Section 7: Sign Out */}
-        <View className="mx-4">
+        {/* Sign Out */}
+        <View className="mx-6">
           <Button label="Sign Out" variant="outline" onPress={handleSignOut} />
         </View>
       </ScrollView>

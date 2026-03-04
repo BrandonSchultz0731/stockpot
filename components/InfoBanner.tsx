@@ -17,10 +17,10 @@ export default function InfoBanner({
 }: InfoBannerProps) {
   return (
     <View
-      className={`flex-row items-start rounded-2xl bg-orange-pale p-4 ${className ?? ''}`}
+      className={`flex-row items-start rounded-2xl bg-terra-pale p-4 ${className ?? ''}`}
     >
-      {icon ?? <Info size={16} color={colors.orange.DEFAULT} className="mt-px" />}
-      <Text className="ml-2.5 flex-1 text-sm leading-5 text-dark">
+      {icon ?? <Info size={16} color={colors.terra.DEFAULT} className="mt-px" />}
+      <Text className="ml-2.5 flex-1 text-sm leading-5 text-ink">
         {children}
       </Text>
     </View>

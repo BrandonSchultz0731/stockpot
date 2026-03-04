@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
+import { fonts } from '../theme/typography';
 
 interface EmptyStateProps {
   icon: React.ReactNode;
@@ -18,17 +19,20 @@ export default function EmptyState({
   return (
     <View className="items-center justify-center pt-20">
       {icon}
-      <Text className="text-[17px] text-navy mt-4 mb-2 font-bold">
+      <Text
+        className="text-[17px] text-espresso mt-4 mb-2 font-bold"
+        style={{ fontFamily: fonts.serif }}
+      >
         {title}
       </Text>
       {description ? (
-        <Text className="text-[14px] text-muted text-center px-8">
+        <Text className="text-[14px] text-stone text-center px-8">
           {description}
         </Text>
       ) : null}
       {actionLabel && onAction ? (
         <Pressable onPress={onAction}>
-          <Text className="text-[14px] text-orange font-semibold">
+          <Text className="text-[14px] text-terra font-semibold">
             {actionLabel}
           </Text>
         </Pressable>

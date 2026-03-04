@@ -22,17 +22,17 @@ export default function PillButton({
     <Pressable
       className={clsx(
         'flex-row items-center rounded-full px-4 py-2.5 mr-2 mb-2',
-        selected && isDiet && 'bg-navy',
-        selected && !isDiet && 'bg-danger-pale',
-        !selected && 'bg-white border border-border',
+        selected && isDiet && 'bg-terra',
+        selected && !isDiet && 'bg-berry-pale',
+        !selected && 'bg-white border border-line',
       )}
       onPress={onPress}>
       <Text
         className={clsx(
           'text-sm',
           selected && isDiet && 'text-white',
-          selected && !isDiet && 'text-danger',
-          !selected && 'text-dark',
+          selected && !isDiet && 'text-berry',
+          !selected && 'text-espresso',
           selected ? 'font-semibold' : 'font-normal',
         )}>
         {label}
@@ -41,7 +41,7 @@ export default function PillButton({
         <Check size={14} color="#fff" className="ml-1.5" />
       )}
       {selected && !isDiet && (
-        <X size={14} color={colors.danger.DEFAULT} className="ml-1.5" />
+        <X size={14} color={colors.berry.DEFAULT} className="ml-1.5" />
       )}
     </Pressable>
   );

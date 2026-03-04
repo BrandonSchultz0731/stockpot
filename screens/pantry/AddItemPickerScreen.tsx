@@ -9,6 +9,8 @@ import {
   Lightbulb,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
+import { cardShadow } from '../../theme/shadows';
 import ScreenHeader from '../../components/ScreenHeader';
 import type { PantryStackParamList } from '../../navigation/types';
 
@@ -19,7 +21,7 @@ interface MethodCardProps {
   description: string;
   icon: React.ReactNode;
   onPress: () => void;
-  variant?: 'dark' | 'light';
+  variant?: 'featured' | 'light';
   badge?: string;
 }
 
@@ -31,29 +33,30 @@ function MethodCard({
   variant = 'light',
   badge,
 }: MethodCardProps) {
-  const isDark = variant === 'dark';
+  const isFeatured = variant === 'featured';
 
   return (
     <Pressable
       onPress={onPress}
-      className={`rounded-card border p-4 mb-3 ${
-        isDark ? 'bg-navy border-navy' : 'bg-white border-border'
-      }`}>
+      className={`rounded-card p-4 mb-3 ${
+        isFeatured ? 'bg-terra' : 'bg-white'
+      }`}
+      style={isFeatured ? undefined : cardShadow}>
       <View className="flex-row items-center gap-3">
         <View
           className={`w-10 h-10 rounded-xl items-center justify-center ${
-            isDark ? 'bg-white/10' : 'bg-cream'
+            isFeatured ? 'bg-white/15' : 'bg-cream'
           }`}>
           {icon}
         </View>
         <View className="flex-1">
           <View className="flex-row items-center gap-2">
             <Text
-              className={`text-[15px] font-semibold ${isDark ? 'text-white' : 'text-dark'}`}>
+              className={`text-[15px] font-semibold ${isFeatured ? 'text-white' : 'text-espresso'}`}>
               {title}
             </Text>
             {badge && (
-              <View className="bg-orange px-2 py-0.5 rounded-full">
+              <View className="bg-white/25 px-2 py-0.5 rounded-full">
                 <Text className="text-[10px] text-white font-bold">
                   {badge}
                 </Text>
@@ -62,7 +65,7 @@ function MethodCard({
           </View>
           <Text
             className={`text-[13px] mt-0.5 ${
-              isDark ? 'text-white/60' : 'text-muted'
+              isFeatured ? 'text-white/60' : 'text-stone'
             }`}>
             {description}
           </Text>
@@ -76,14 +79,15 @@ export default function AddItemPickerScreen() {
   const navigation = useNavigation<Nav>();
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       <ScreenHeader />
       <View className="px-5 pb-2">
         <Text
-          className="text-[26px] text-navy mb-2 font-extrabold tracking-[-0.5px]">
+          className="text-[26px] text-espresso mb-2 tracking-[-0.5px]"
+          style={{ fontFamily: fonts.serif }}>
           Add Items
         </Text>
-        <Text className="text-[14px] text-muted mb-6">
+        <Text className="text-[14px] text-stone mb-6">
           Choose how you'd like to add items to your pantry.
         </Text>
       </View>
@@ -94,32 +98,32 @@ export default function AddItemPickerScreen() {
           description="Snap a photo of your grocery receipt"
           icon={<Camera size={20} color="#FFFFFF" />}
           onPress={() => navigation.navigate('ReceiptScan')}
-          variant="dark"
+          variant="featured"
           badge="Recommended"
         />
 
         <MethodCard
           title="Barcode Scan"
           description="Scan a product barcode for instant lookup"
-          icon={<ScanBarcode size={20} color={colors.navy.DEFAULT} />}
+          icon={<ScanBarcode size={20} color={colors.terra.DEFAULT} />}
           onPress={() => navigation.navigate('BarcodeScan')}
         />
 
         <MethodCard
           title="Manual Entry"
           description="Search and add items by name"
-          icon={<PenLine size={20} color={colors.navy.DEFAULT} />}
+          icon={<PenLine size={20} color={colors.terra.DEFAULT} />}
           onPress={() => navigation.navigate('ManualEntry')}
         />
 
-        <View className="bg-orange-pale rounded-card p-4 mt-4 flex-row gap-3">
-          <Lightbulb size={18} color={colors.orange.DEFAULT} />
+        <View className="bg-terra-pale rounded-card p-4 mt-4 flex-row gap-3">
+          <Lightbulb size={18} color={colors.terra.DEFAULT} />
           <View className="flex-1">
             <Text
-              className="text-[13px] text-dark mb-1 font-semibold">
+              className="text-[13px] text-espresso mb-1 font-semibold">
               Pro tip
             </Text>
-            <Text className="text-[12px] text-muted leading-[18px]">
+            <Text className="text-[12px] text-stone leading-[18px]">
               Receipt scanning is the fastest way to add multiple items at once.
               Just snap a photo and we'll extract everything automatically.
             </Text>

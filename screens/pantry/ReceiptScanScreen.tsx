@@ -108,7 +108,7 @@ export default function ReceiptScanScreen() {
   // Permission denied
   if (hasPermission === false) {
     return (
-      <View className="flex-1 bg-dark items-center justify-center px-8">
+      <View className="flex-1 bg-espresso items-center justify-center px-8">
         <SafeAreaView className="items-center">
           <CameraIcon size={48} color="rgba(255,255,255,0.3)" />
           <Text className="text-white text-[18px] mt-6 text-center font-bold">
@@ -119,7 +119,7 @@ export default function ReceiptScanScreen() {
           </Text>
           <Pressable
             onPress={() => Linking.openSettings()}
-            className="mt-6 bg-orange px-6 py-3 rounded-full">
+            className="mt-6 bg-terra px-6 py-3 rounded-full">
             <Text className="text-white text-[14px] font-semibold">
               Open Settings
             </Text>
@@ -135,7 +135,7 @@ export default function ReceiptScanScreen() {
   // No camera device (simulator)
   if (!device) {
     return (
-      <View className="flex-1 bg-dark items-center justify-center px-8">
+      <View className="flex-1 bg-espresso items-center justify-center px-8">
         <SafeAreaView className="items-center">
           <CameraIcon size={48} color="rgba(255,255,255,0.3)" />
           <Text className="text-white text-[18px] mt-6 text-center font-bold">
@@ -145,7 +145,7 @@ export default function ReceiptScanScreen() {
             Camera is not available on the simulator. You can still pick a photo
             from the library.
           </Text>
-          <Pressable onPress={handleGallery} className="mt-6 bg-orange px-6 py-3 rounded-full">
+          <Pressable onPress={handleGallery} className="mt-6 bg-terra px-6 py-3 rounded-full">
             <Text className="text-white text-[14px] font-semibold">
               Choose from Library
             </Text>
@@ -159,7 +159,7 @@ export default function ReceiptScanScreen() {
   }
 
   return (
-    <View className="flex-1 bg-dark">
+    <View className="flex-1 bg-espresso">
       <Camera
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
@@ -226,7 +226,7 @@ export default function ReceiptScanScreen() {
       {/* Processing overlay */}
       {scanMutation.isPending && (
         <View className="absolute inset-0 bg-black/70 items-center justify-center">
-          <ActivityIndicator size="large" color={colors.orange.DEFAULT} />
+          <ActivityIndicator size="large" color={colors.terra.DEFAULT} />
           <Text className="text-white text-[16px] mt-4 font-semibold">
             Analyzing receipt...
           </Text>

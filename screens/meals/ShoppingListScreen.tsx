@@ -124,7 +124,7 @@ export default function ShoppingListScreen() {
   // Error
   if (isError || !shoppingList) {
     return (
-      <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+      <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
         <ScreenHeader title="Shopping List" />
         <ErrorState
           message="No shopping list available yet. Generate a meal plan first."
@@ -135,7 +135,7 @@ export default function ShoppingListScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       <ScreenHeader
         title="Shopping List"
         subtitle={weekLabel}
@@ -144,39 +144,39 @@ export default function ShoppingListScreen() {
             hitSlop={8}
             className="h-8 w-8 items-center justify-center rounded-full bg-cream opacity-50"
           >
-            <Share2 size={18} color={colors.navy.DEFAULT} />
+            <Share2 size={18} color={colors.espresso} />
           </Pressable>
         }
       />
 
       {/* Summary Card */}
       {summary && (
-        <View className="mx-4 mb-3 flex-row justify-around rounded-[14px] border border-border bg-white px-4 py-3.5">
-          <View className="items-center">
-            <Text className="text-[20px] font-bold text-orange">
+        <View className="mx-4 mb-3 flex-row justify-around rounded-[14px] px-4 py-3.5">
+          <View className="items-center rounded-xl bg-terra-pale px-4 py-2">
+            <Text className="text-[20px] font-bold text-terra">
               {summary.toBuy}
             </Text>
-            <Text className="mt-0.5 text-[10px] text-muted">To Buy</Text>
+            <Text className="mt-0.5 text-[10px] text-stone">To Buy</Text>
           </View>
           {summary.low > 0 && (
-            <View className="items-center">
-              <Text className="text-[20px] font-bold" style={{ color: colors.warning.icon }}>
+            <View className="items-center rounded-xl bg-honey-pale px-4 py-2">
+              <Text className="text-[20px] font-bold" style={{ color: colors.honey.DEFAULT }}>
                 {summary.low}
               </Text>
-              <Text className="mt-0.5 text-[10px] text-muted">Low</Text>
+              <Text className="mt-0.5 text-[10px] text-stone">Low</Text>
             </View>
           )}
-          <View className="items-center">
-            <Text className="text-[20px] font-bold text-success">
+          <View className="items-center rounded-xl bg-sage-pale px-4 py-2">
+            <Text className="text-[20px] font-bold text-sage">
               {summary.alreadyHave}
             </Text>
-            <Text className="mt-0.5 text-[10px] text-muted">Have</Text>
+            <Text className="mt-0.5 text-[10px] text-stone">Have</Text>
           </View>
-          <View className="items-center">
-            <Text className="text-[20px] font-bold text-navy">
+          <View className="items-center rounded-xl px-4 py-2">
+            <Text className="text-[20px] font-bold text-espresso">
               {summary.total}
             </Text>
-            <Text className="mt-0.5 text-[10px] text-muted">Total</Text>
+            <Text className="mt-0.5 text-[10px] text-stone">Total</Text>
           </View>
         </View>
       )}
@@ -197,23 +197,23 @@ export default function ShoppingListScreen() {
         renderItem={({ item }) => (
           <Pressable
             onPress={() => handleToggle(item.id)}
-            className={`mb-1.5 flex-row items-center rounded-[14px] border border-border bg-white px-3.5 py-3 ${item.pantryStatus === PantryStatus.Enough ? 'opacity-60' : ''
+            className={`mb-1.5 flex-row items-center rounded-[14px] border border-line bg-white px-3.5 py-3 ${item.pantryStatus === PantryStatus.Enough ? 'opacity-60' : ''
               }`}
           >
             {item.isChecked ? (
               <SquareCheck
                 size={22}
-                color={colors.success.DEFAULT}
-                fill={colors.success.DEFAULT}
+                color={colors.sage.DEFAULT}
+                fill={colors.sage.DEFAULT}
               />
             ) : (
-              <Square size={22} color={colors.border} />
+              <Square size={22} color={colors.line.DEFAULT} />
             )}
             <View className="ml-3 flex-1">
               <Text
                 className={`text-[14px] font-semibold ${item.pantryStatus === PantryStatus.Enough
-                  ? 'text-muted line-through'
-                  : 'text-dark'
+                  ? 'text-stone line-through'
+                  : 'text-espresso'
                   }`}
                 numberOfLines={1}
               >
@@ -222,27 +222,27 @@ export default function ShoppingListScreen() {
             </View>
             <View className="ml-2 items-end">
               {item.pantryStatus !== PantryStatus.Enough && (
-                <Text className="text-[12px] text-muted">
+                <Text className="text-[12px] text-stone">
                   {item.neededQuantity} {item.unit}
                 </Text>
               )}
               {item.pantryStatus === PantryStatus.Low && (
-                <Text className="text-[10px] text-muted">
+                <Text className="text-[10px] text-stone">
                   have {Math.round((item.quantity - item.neededQuantity) * 100) / 100} {item.unit}
                 </Text>
               )}
             </View>
             {item.pantryStatus === PantryStatus.Low && (
-              <View className="ml-2 flex-row items-center rounded bg-warning-pale px-1.5 py-0.5">
-                <AlertTriangle size={8} color={colors.warning.icon} />
-                <Text className="ml-0.5 text-[9px] font-bold uppercase" style={{ color: colors.warning.icon }}>
+              <View className="ml-2 flex-row items-center rounded bg-honey-pale px-1.5 py-0.5">
+                <AlertTriangle size={8} color={colors.honey.DEFAULT} />
+                <Text className="ml-0.5 text-[9px] font-bold uppercase" style={{ color: colors.honey.DEFAULT }}>
                   Low
                 </Text>
               </View>
             )}
             {item.pantryStatus === PantryStatus.Enough && (
-              <View className="ml-2 rounded bg-success-pale px-1.5 py-0.5">
-                <Text className="text-[9px] font-bold uppercase text-success">
+              <View className="ml-2 rounded bg-sage-pale px-1.5 py-0.5">
+                <Text className="text-[9px] font-bold uppercase text-sage">
                   Have
                 </Text>
               </View>
@@ -252,10 +252,10 @@ export default function ShoppingListScreen() {
         ListFooterComponent={
           <Pressable
             onPress={() => setShowAddItem(true)}
-            className="mt-4 mb-2 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-orange/30 py-3.5"
+            className="mt-4 mb-2 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-terra/30 py-3.5"
           >
-            <Plus size={16} color={colors.orange.DEFAULT} />
-            <Text className="ml-2 text-[13px] font-semibold text-orange">
+            <Plus size={16} color={colors.terra.DEFAULT} />
+            <Text className="ml-2 text-[13px] font-semibold text-terra">
               Add Custom Item
             </Text>
           </Pressable>
@@ -263,10 +263,10 @@ export default function ShoppingListScreen() {
       />
 
       {/* Sticky Footer */}
-      <View className="border-t border-border bg-white px-4 pb-6 pt-4">
+      <View className="border-t border-line bg-white px-4 pb-6 pt-4">
         <Pressable
           onPress={handleScanReceipt}
-          className="mb-2.5 flex-row items-center justify-center rounded-[14px] bg-success py-3.5"
+          className="mb-2.5 flex-row items-center justify-center rounded-full bg-sage py-3.5"
         >
           <Camera size={18} color="#fff" />
           <Text className="ml-2 text-[15px] font-bold text-white">
@@ -274,7 +274,7 @@ export default function ShoppingListScreen() {
           </Text>
         </Pressable>
         <Pressable onPress={handleDone} className="items-center py-2">
-          <Text className="text-[13px] font-semibold text-muted">
+          <Text className="text-[13px] font-semibold text-stone">
             Done
           </Text>
         </Pressable>

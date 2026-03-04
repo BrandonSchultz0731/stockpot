@@ -17,10 +17,10 @@ interface RichIngredientListProps {
 }
 
 const STATUS_CONFIG: Record<PantryStatus, { icon: typeof CircleCheck; color: string; bg: string }> = {
-  [PantryStatus.Enough]: { icon: CircleCheck, color: colors.success.DEFAULT, bg: 'bg-success-pale' },
-  [PantryStatus.Low]: { icon: CircleAlert, color: colors.warning.DEFAULT, bg: 'bg-warning-pale' },
-  [PantryStatus.None]: { icon: Circle, color: colors.danger.DEFAULT, bg: 'bg-danger-pale' },
-  [PantryStatus.NA]: { icon: Circle, color: colors.muted, bg: 'bg-cream' },
+  [PantryStatus.Enough]: { icon: CircleCheck, color: colors.sage.DEFAULT, bg: 'bg-sage-pale' },
+  [PantryStatus.Low]: { icon: CircleAlert, color: colors.honey.DEFAULT, bg: 'bg-honey-pale' },
+  [PantryStatus.None]: { icon: Circle, color: colors.berry.DEFAULT, bg: 'bg-berry-pale' },
+  [PantryStatus.NA]: { icon: Circle, color: colors.stone, bg: 'bg-cream' },
 };
 
 export default function RichIngredientList({ data }: RichIngredientListProps) {
@@ -28,7 +28,7 @@ export default function RichIngredientList({ data }: RichIngredientListProps) {
   if (items.length === 0) return null;
 
   return (
-    <View className="my-2 rounded-2xl border border-border bg-white p-3">
+    <View className="my-2 rounded-2xl border border-line bg-cream p-3">
       {items.map((item, idx) => {
         const status = item.pantryStatus ?? PantryStatus.None;
         const config = STATUS_CONFIG[status];
@@ -37,14 +37,14 @@ export default function RichIngredientList({ data }: RichIngredientListProps) {
         return (
           <View
             key={idx}
-            className="flex-row items-center border-b border-border py-2 last:border-b-0"
+            className="flex-row items-center border-b border-line py-2 last:border-b-0"
           >
             <View className={`mr-2 rounded-full p-0.5 ${config.bg}`}>
               <Icon size={14} color={config.color} />
             </View>
-            <Text className="flex-1 text-[13px] text-navy">{item.name}</Text>
+            <Text className="flex-1 text-[13px] text-espresso">{item.name}</Text>
             {item.quantity != null && (
-              <Text className="text-xs text-muted">
+              <Text className="text-xs text-stone">
                 {item.quantity} {item.unit}
               </Text>
             )}

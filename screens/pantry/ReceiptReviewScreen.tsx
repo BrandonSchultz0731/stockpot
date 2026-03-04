@@ -27,6 +27,8 @@ import {
 import { UnitOfMeasure, StorageLocation, type ShelfLife } from '../../shared/enums';
 import pluralize from 'pluralize';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
+import { cardShadow } from '../../theme/shadows';
 import type { PantryStackParamList } from '../../navigation/types';
 import {
   calculateExpirationDate,
@@ -190,14 +192,15 @@ export default function ReceiptReviewScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       <ScreenHeader />
       <View className="px-5 pb-2">
         <Text
-          className="text-[26px] text-navy mb-1 font-extrabold tracking-[-0.5px]">
+          className="text-[26px] text-espresso mb-1 tracking-[-0.5px]"
+          style={{ fontFamily: fonts.serif }}>
           Review Items
         </Text>
-        <Text className="text-[14px] text-muted mb-4">
+        <Text className="text-[14px] text-stone mb-4">
           {items.length} {pluralize('item', items.length)} found. Edit or
           remove before adding.
         </Text>
@@ -210,19 +213,20 @@ export default function ReceiptReviewScreen() {
         renderItem={({ item, index }) => (
           <Pressable
             onPress={() => openEdit(index)}
-            className="bg-white rounded-card border border-border p-3.5 mb-2 flex-row items-center">
+            className="bg-cream rounded-card p-3.5 mb-2 flex-row items-center"
+            style={cardShadow}>
             <View className="flex-1 mr-2">
               <Text
-                className="text-[14px] text-dark font-semibold"
+                className="text-[14px] text-espresso font-semibold"
                 numberOfLines={1}>
                 {item.displayName || 'Unnamed item'}
               </Text>
-              <Text className="text-[12px] text-muted mt-0.5">
+              <Text className="text-[12px] text-stone mt-0.5">
                 {item.quantity ?? 1} {item.unit ?? UnitOfMeasure.Count}
                 {item.storageLocation ? `  ·  ${item.storageLocation}` : ''}
               </Text>
               {item.expirationDate && (
-                <Text className="text-[11px] text-muted mt-0.5">
+                <Text className="text-[11px] text-stone mt-0.5">
                   Expires: {formatDisplayDate(item.expirationDate)}
                   {item.expiryIsEstimated ? ' (est.)' : ''}
                 </Text>
@@ -231,14 +235,14 @@ export default function ReceiptReviewScreen() {
             <Pressable
               onPress={() => removeItem(index)}
               hitSlop={8}
-              className="w-7 h-7 items-center justify-center rounded-full bg-danger-pale">
-              <X size={14} color={colors.danger.DEFAULT} />
+              className="w-7 h-7 items-center justify-center rounded-full bg-berry-pale">
+              <X size={14} color={colors.berry.DEFAULT} />
             </Pressable>
           </Pressable>
         )}
         ListEmptyComponent={
           <View className="items-center pt-12">
-            <Text className="text-[14px] text-muted">
+            <Text className="text-[14px] text-stone">
               All items removed. Go back to scan again.
             </Text>
           </View>
@@ -262,26 +266,27 @@ export default function ReceiptReviewScreen() {
             className="flex-1 bg-black/40"
             onPress={() => setEditIndex(null)}
           />
-          <View className="bg-white rounded-t-2xl pb-8 px-5 pt-5">
+          <View className="bg-ivory rounded-t-2xl pb-8 px-5 pt-5">
             <Text
-              className="text-[18px] text-navy mb-4 font-bold">
+              className="text-[18px] text-espresso mb-4"
+              style={{ fontFamily: fonts.serif }}>
               Edit Item
             </Text>
 
-            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+            <Text className="text-[13px] text-stone font-semibold mb-1.5">
               NAME
             </Text>
-            <View className="bg-cream rounded-input border border-border px-3.5 py-3 mb-4">
+            <View className="bg-cream rounded-input border border-line px-3.5 py-3 mb-4">
               <TextInput
-                className="text-[14px] leading-[18px] text-dark"
+                className="text-[14px] leading-[18px] text-espresso"
                 value={editName}
                 onChangeText={setEditName}
                 placeholder="Item name"
-                placeholderTextColor={colors.muted}
+                placeholderTextColor={colors.stone}
               />
             </View>
 
-            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+            <Text className="text-[13px] text-stone font-semibold mb-1.5">
               QUANTITY
             </Text>
             <View className="mb-4">
@@ -293,7 +298,7 @@ export default function ReceiptReviewScreen() {
               />
             </View>
 
-            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+            <Text className="text-[13px] text-stone font-semibold mb-1.5">
               STORAGE LOCATION
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -305,7 +310,7 @@ export default function ReceiptReviewScreen() {
               </View>
             </ScrollView>
 
-            <Text className="text-[13px] text-muted font-semibold mb-1.5">
+            <Text className="text-[13px] text-stone font-semibold mb-1.5">
               EXPIRATION DATE
               {editExpiryIsEstimated && editExpiration ? ' (estimated)' : ''}
             </Text>

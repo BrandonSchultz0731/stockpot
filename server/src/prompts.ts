@@ -139,7 +139,7 @@ No markdown fences, no explanation — only the JSON object.`;
 export function buildShelfLifePrompt(displayName: string): string {
   const storageKeys = Object.values(StorageLocation).join(', ');
   const categories = FOOD_CATEGORIES.join(', ');
-  return `How many days does "${displayName}" typically last when stored properly? Return ONLY a JSON object with numeric values for applicable storage methods and a category: { "${StorageLocation.Fridge}": days, "${StorageLocation.Freezer}": days, "${StorageLocation.Pantry}": days, "category": "<category>" }. Valid storage keys: ${storageKeys}. Omit a storage key if that method is not applicable. "category" must be one of: ${categories}. No explanation.`;
+  return `How many days does "${displayName}" typically last when stored properly? Return ONLY a JSON object with numeric values for applicable storage methods, a category, and an emoji: { "${StorageLocation.Fridge}": days, "${StorageLocation.Freezer}": days, "${StorageLocation.Pantry}": days, "category": "<category>", "emoji": "<single emoji>" }. Valid storage keys: ${storageKeys}. Omit a storage key if that method is not applicable. "category" must be one of: ${categories}. "emoji" should be a single emoji that best represents this food item. No explanation.`;
 }
 
 export function buildCategoryPrompt(displayName: string): string {
@@ -152,12 +152,12 @@ export function buildBatchCategoryPrompt(
 ): string {
   const categories = FOOD_CATEGORIES.join(', ');
   const list = ingredientNames.map((n) => `- "${n}"`).join('\n');
-  return `Categorize each food item below into one of these categories: ${categories}.
+  return `Categorize each food item below into one of these categories: ${categories}. Also provide a single emoji that best represents each food item.
 
 Food items:
 ${list}
 
-Return ONLY a JSON object mapping each food item name to its category. Example: { "Cinnamon": "Spices & Herbs", "Chicken Breast": "Meat & Poultry" }
+Return ONLY a JSON object mapping each food item name to an object with "category" and "emoji". Example: { "Cinnamon": { "category": "Spices & Herbs", "emoji": "🫚" }, "Chicken Breast": { "category": "Meat & Poultry", "emoji": "🍗" } }
 
 No markdown fences, no explanation — only the JSON object.`;
 }
@@ -203,6 +203,7 @@ Return a JSON array of objects with these fields:
 - "displayName": Human-readable product name. Expand common receipt abbreviations (e.g. "ORG" → "Organic", "GRN" → "Green", "BNLS" → "Boneless", "SKNLS" → "Skinless", "WHL" → "Whole", "BLK" → "Black", "WHT" → "White", "FRZ" → "Frozen", "BRST" → "Breast", "GRND" → "Ground"). Use title case.
 - "quantity": Number of items (default 1 if not clear).
 - "unit": One of these exact values: ${Object.values(UnitOfMeasure).join(', ')}. Use "count" if unsure.
+- "emoji": A single emoji that best represents this food item (e.g. "🥛" for milk, "🍗" for chicken, "🥚" for eggs).
 - "estimatedShelfLife": An object with estimated shelf life in days for each storage method: { "${StorageLocation.Fridge}": number, "${StorageLocation.Freezer}": number, "${StorageLocation.Pantry}": number }. Use typical values for an unopened product. Omit a key if that storage method is not applicable (e.g. omit "${StorageLocation.Fridge}" for raw meat).
 - "suggestedStorageLocation": The most common storage location for this item. One of: ${Object.values(StorageLocation).join(', ')}.
 

@@ -7,22 +7,22 @@ interface LoadingScreenProps {
   header?: React.ReactNode;
   /** Optional message shown below the spinner */
   message?: string;
-  /** Spinner colour — defaults to orange */
+  /** Spinner colour — defaults to terra */
   color?: string;
 }
 
 export default function LoadingScreen({
   header,
   message,
-  color = colors.orange.DEFAULT,
+  color = colors.terra.DEFAULT,
 }: LoadingScreenProps) {
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       {header}
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color={color} />
         {message ? (
-          <Text className="mt-4 text-[14px] text-muted">{message}</Text>
+          <Text className="mt-4 text-[14px] text-stone">{message}</Text>
         ) : null}
       </View>
     </SafeAreaView>

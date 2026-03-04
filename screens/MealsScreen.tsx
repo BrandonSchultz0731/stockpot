@@ -263,8 +263,8 @@ export default function MealsScreen() {
   // ---------------------------------------------------------------------------
   if (isPlanLoading) {
     return (
-      <SafeAreaView edges={['top']} className="flex-1 items-center justify-center bg-cream">
-        <ActivityIndicator size="large" color={colors.orange.DEFAULT} />
+      <SafeAreaView edges={['top']} className="flex-1 items-center justify-center bg-ivory">
+        <ActivityIndicator size="large" color={colors.terra.DEFAULT} />
       </SafeAreaView>
     );
   }
@@ -273,8 +273,8 @@ export default function MealsScreen() {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-cream">
-      <ScrollView className="flex-1" contentContainerClassName="pb-8">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
+      <ScrollView className="flex-1" contentContainerClassName="pb-24">
         <MealPlanHeader
           onGenerate={handleOpenSelector}
           disabled={isGenerating}
@@ -285,11 +285,11 @@ export default function MealsScreen() {
         {/* ---- Empty state (no plan) ---- */}
         {hasNoPlan && !isGenerating && (
           <View className="flex-1 items-center justify-center px-8 pt-32">
-            <CalendarDays size={48} color={colors.muted} />
-            <Text className="mt-4 text-[18px] font-bold text-dark">
+            <CalendarDays size={48} color={colors.stone} />
+            <Text className="mt-4 text-[18px] font-bold text-espresso">
               No meal plan yet
             </Text>
-            <Text className="mt-2 text-center text-[14px] text-muted">
+            <Text className="mt-2 text-center text-[14px] text-stone">
               Tap Generate to create your weekly meal plan
             </Text>
           </View>
@@ -300,8 +300,8 @@ export default function MealsScreen() {
           <>
             <WeekDateSubtitle label={weekDateRangeLabel} />
             <View className="items-center justify-center pt-32">
-              <ActivityIndicator size="large" color={colors.orange.DEFAULT} />
-              <Text className="mt-4 text-[14px] text-muted">
+              <ActivityIndicator size="large" color={colors.terra.DEFAULT} />
+              <Text className="mt-4 text-[14px] text-stone">
                 Generating your meal plan...
               </Text>
             </View>
@@ -312,12 +312,12 @@ export default function MealsScreen() {
         {isError && !isGenerating && (
           <>
             <WeekDateSubtitle label={weekDateRangeLabel} />
-            <View className="mx-4 mt-8 items-center rounded-2xl border border-danger bg-danger-pale p-6">
-              <Text className="text-center text-[14px] text-dark">
+            <View className="mx-4 mt-8 items-center rounded-2xl border border-berry bg-berry-pale p-6">
+              <Text className="text-center text-[14px] text-espresso">
                 Something went wrong generating your meal plan.
               </Text>
               <Pressable onPress={handleOpenSelector} className="mt-3">
-                <Text className="text-[14px] font-semibold text-orange">
+                <Text className="text-[14px] font-semibold text-terra">
                   Try Again
                 </Text>
               </Pressable>

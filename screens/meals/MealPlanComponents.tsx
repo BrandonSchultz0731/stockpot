@@ -1,7 +1,6 @@
 import {
   ActivityIndicator,
   Pressable,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -18,6 +17,8 @@ import {
   Zap,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
+import { cardShadow } from '../../theme/shadows';
 import pluralize from 'pluralize';
 import { MealType, DAY_LABELS } from '../../shared/enums';
 import { countByPantryStatus } from '../../shared/pantryStatusCounts';
@@ -29,16 +30,6 @@ export const MEAL_TYPE_ORDER: Record<string, number> = {
   [MealType.Dinner]: 2,
   [MealType.Snack]: 3,
 };
-
-const styles = StyleSheet.create({
-  activeDayShadow: {
-    shadowColor: colors.orange.DEFAULT,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-});
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -96,18 +87,21 @@ export function MealPlanHeader({
 }) {
   return (
     <View className="flex-row items-center justify-between px-5 pt-4">
-      <Text className="text-[26px] font-extrabold tracking-[-0.5px] text-navy">
+      <Text
+        className="text-[26px] tracking-[-0.5px] text-espresso"
+        style={{ fontFamily: fonts.serif }}
+      >
         Meal Plan
       </Text>
       <View className="flex-row items-center gap-6">
         {onCartPress != null && (
           <Pressable
             onPress={onCartPress}
-            className="relative h-10 w-10 items-center justify-center rounded-full bg-success-pale"
+            className="relative h-10 w-10 items-center justify-center rounded-full bg-sage-pale"
           >
-            <ShoppingCart size={20} color={colors.success.DEFAULT} />
+            <ShoppingCart size={20} color={colors.sage.DEFAULT} />
             {cartBadgeCount != null && cartBadgeCount > 0 && (
-              <View className="absolute -right-1 -top-1 min-w-[18px] items-center justify-center rounded-full bg-orange px-1 py-0.5">
+              <View className="absolute -right-1 -top-1 min-w-[18px] items-center justify-center rounded-full bg-terra px-1 py-0.5">
                 <Text className="text-[9px] font-bold text-white">
                   {cartBadgeCount}
                 </Text>
@@ -118,7 +112,7 @@ export function MealPlanHeader({
         <Pressable
           onPress={onGenerate}
           disabled={disabled}
-          className={`flex-row items-center rounded-[10px] bg-orange px-3.5 py-2 ${disabled ? 'opacity-50' : ''
+          className={`flex-row items-center rounded-full bg-terra px-3.5 py-2 ${disabled ? 'opacity-50' : ''
             }`}
         >
           <Zap size={14} color="#fff" fill="#fff" />
@@ -133,7 +127,7 @@ export function MealPlanHeader({
 
 export function WeekDateSubtitle({ label }: { label: string }) {
   return (
-    <Text className="mt-1 px-5 text-[13px] text-muted">{label}</Text>
+    <Text className="mt-1 px-5 text-[13px] text-stone">{label}</Text>
   );
 }
 
@@ -149,7 +143,7 @@ export function DaySelector({
   entries?: MealPlanEntry[];
 }) {
   return (
-    <View className="mx-4 my-3 flex-row justify-between rounded-[16px] border border-border bg-white px-2 py-2.5">
+    <View className="mx-4 my-3 flex-row justify-between rounded-[16px] border border-line bg-white px-2 py-2.5">
       {weekDates.map((d) => {
         const active = d.dayOfWeek === selectedDay;
         const isToday = d.isToday;
@@ -160,18 +154,17 @@ export function DaySelector({
           <Pressable
             key={d.dayOfWeek}
             onPress={() => onSelectDay(d.dayOfWeek)}
-            style={active ? styles.activeDayShadow : undefined}
-            className={`h-[62px] w-[42px] items-center justify-center rounded-[14px] ${active ? 'bg-orange' : 'bg-transparent'
+            className={`h-[62px] w-[42px] items-center justify-center rounded-[14px] ${active ? 'bg-espresso' : 'bg-transparent'
               }`}
           >
             <Text
-              className={`text-[10px] font-semibold ${active ? 'text-white/70' : isToday ? 'text-orange' : 'text-muted'
+              className={`text-[10px] font-semibold ${active ? 'text-white/70' : isToday ? 'text-terra' : 'text-stone'
                 }`}
             >
               {d.dayLabel}
             </Text>
             <Text
-              className={`mt-0.5 text-[17px] font-bold ${active ? 'text-white' : isToday ? 'text-orange' : 'text-dark'
+              className={`mt-0.5 text-[17px] font-bold ${active ? 'text-white' : isToday ? 'text-terra' : 'text-espresso'
                 }`}
             >
               {d.dateNumber}
@@ -184,7 +177,7 @@ export function DaySelector({
                     key={i}
                     className={`h-[4px] w-[4px] rounded-full ${active
                       ? i < cookedMeals ? 'bg-white' : 'bg-white/30'
-                      : i < cookedMeals ? 'bg-success' : 'bg-border'
+                      : i < cookedMeals ? 'bg-sage' : 'bg-line'
                       }`}
                   />
                 ))}
@@ -192,7 +185,7 @@ export function DaySelector({
             )}
             {/* Today underline */}
             {isToday && !active && (
-              <View className="mt-0.5 h-[2px] w-3 rounded-full bg-orange" />
+              <View className="mt-0.5 h-[2px] w-3 rounded-full bg-terra" />
             )}
           </Pressable>
         );
@@ -208,26 +201,29 @@ export function NutritionSummaryBar({
   totals: { calories: number; protein: number; carbs: number; fat: number };
   targets?: { calories: number; protein: number; carbs: number; fat: number } | null;
 }) {
-  const items = [
-    { label: 'Calories', value: formatCalories(totals.calories), target: targets ? `/ ${formatCalories(targets.calories)}` : null },
-    { label: 'Protein', value: `${totals.protein}g`, target: targets ? `/ ${targets.protein}g` : null },
-    { label: 'Carbs', value: `${totals.carbs}g`, target: targets ? `/ ${targets.carbs}g` : null },
-    { label: 'Fat', value: `${totals.fat}g`, target: targets ? `/ ${targets.fat}g` : null },
+  const items: { label: string; value: string; target: string | null; color: string }[] = [
+    { label: 'Calories', value: formatCalories(totals.calories), target: targets ? `/ ${formatCalories(targets.calories)}` : null, color: colors.terra.DEFAULT },
+    { label: 'Protein', value: `${totals.protein}g`, target: targets ? `/ ${targets.protein}g` : null, color: colors.sage.DEFAULT },
+    { label: 'Carbs', value: `${totals.carbs}g`, target: targets ? `/ ${targets.carbs}g` : null, color: colors.ocean.DEFAULT },
+    { label: 'Fat', value: `${totals.fat}g`, target: targets ? `/ ${targets.fat}g` : null, color: colors.honey.DEFAULT },
   ];
 
   return (
-    <View className="mx-4 my-3 flex-row justify-around rounded-[14px] border border-border bg-white px-4 py-3">
+    <View
+      className="mx-4 my-3 flex-row justify-around rounded-[14px] bg-white px-4 py-3"
+      style={cardShadow}
+    >
       {items.map((n) => (
         <View key={n.label} className="items-center">
-          <Text className="text-[15px] font-bold text-dark">
+          <Text className="text-[15px] font-bold" style={{ color: n.color }}>
             {n.value}
             {n.target && (
-              <Text className="text-[10px] font-normal text-muted">
+              <Text className="text-[10px] font-normal text-stone">
                 {' '}{n.target}
               </Text>
             )}
           </Text>
-          <Text className="mt-0.5 text-[10px] text-muted">{n.label}</Text>
+          <Text className="mt-0.5 text-[10px] text-stone">{n.label}</Text>
         </View>
       ))}
     </View>
@@ -257,8 +253,8 @@ export function MealCard({
     if (noneCount > 0) {
       return (
         <View className="ml-2 flex-row items-center">
-          <ShoppingCart size={10} color={colors.orange.DEFAULT} />
-          <Text className="ml-0.5 text-[11px] text-orange">
+          <ShoppingCart size={10} color={colors.terra.DEFAULT} />
+          <Text className="ml-0.5 text-[11px] text-terra">
             Need {noneCount} {pluralize('item', noneCount)}
           </Text>
         </View>
@@ -267,8 +263,8 @@ export function MealCard({
     if (lowCount > 0) {
       return (
         <View className="ml-2 flex-row items-center">
-          <AlertTriangle size={10} color={colors.warning.icon} />
-          <Text className="ml-0.5 text-[11px]" style={{ color: colors.warning.icon }}>
+          <AlertTriangle size={10} color={colors.honey.DEFAULT} />
+          <Text className="ml-0.5 text-[11px]" style={{ color: colors.honey.DEFAULT }}>
             {lowCount} {pluralize('item', lowCount)} low
           </Text>
         </View>
@@ -276,8 +272,8 @@ export function MealCard({
     }
     return (
       <View className="ml-2 flex-row items-center">
-        <Check size={10} color={colors.success.DEFAULT} />
-        <Text className="ml-0.5 text-[11px] text-success">
+        <Check size={10} color={colors.sage.DEFAULT} />
+        <Text className="ml-0.5 text-[11px] text-sage">
           All in pantry
         </Text>
       </View>
@@ -285,37 +281,42 @@ export function MealCard({
   };
 
   return (
-    <Pressable onPress={onPress} className="mx-4 mb-2.5 overflow-hidden rounded-2xl border border-border bg-white">
+    <Pressable
+      onPress={onPress}
+      className="mx-4 mb-2.5 overflow-hidden rounded-2xl bg-white"
+      style={cardShadow}
+    >
       {/* Top row: content + favorite */}
       <View className="flex-row items-start p-3.5 pb-2.5">
         <View className="flex-1">
           <View className="flex-row items-center">
-            <Text className="text-[11px] font-bold uppercase tracking-[0.5px] text-orange">
+            <Text className="text-[11px] font-bold uppercase tracking-[0.5px] text-terra">
               {entry.mealType}
             </Text>
             {isLeftover && (
-              <View className="ml-2 flex-row items-center rounded-md px-1.5 py-0.5" style={{ backgroundColor: colors.warning.pale }}>
-                <UtensilsCrossed size={10} color={colors.warning.icon} />
-                <Text className="ml-0.5 text-[10px] font-semibold" style={{ color: colors.warning.icon }}>
+              <View className="ml-2 flex-row items-center rounded-md px-1.5 py-0.5" style={{ backgroundColor: colors.honey.pale }}>
+                <UtensilsCrossed size={10} color={colors.honey.DEFAULT} />
+                <Text className="ml-0.5 text-[10px] font-semibold" style={{ color: colors.honey.DEFAULT }}>
                   Leftovers
                 </Text>
               </View>
             )}
             {entry.isCooked && !isLeftover && (
-              <View className="ml-2 flex-row items-center rounded-md bg-success-pale px-1.5 py-0.5">
-                <Check size={10} color={colors.success.DEFAULT} />
-                <Text className="ml-0.5 text-[10px] font-semibold text-success">Cooked</Text>
+              <View className="ml-2 flex-row items-center rounded-md bg-sage-pale px-1.5 py-0.5">
+                <Check size={10} color={colors.sage.DEFAULT} />
+                <Text className="ml-0.5 text-[10px] font-semibold text-sage">Cooked</Text>
               </View>
             )}
           </View>
           <Text
-            className="mt-1 text-[15px] font-semibold text-dark"
+            className="mt-1 text-[15px] text-espresso"
+            style={{ fontFamily: fonts.serif }}
             numberOfLines={1}
           >
             {entry.recipe.title}
           </Text>
           <View className="mt-0.5 flex-row items-center">
-            <Text className="text-[12px] text-muted">
+            <Text className="text-[12px] text-stone">
               {(entry.recipe.nutrition?.calories ?? 0) * getEatServings(entry)} cal
             </Text>
             {renderPantryBadge()}
@@ -328,15 +329,15 @@ export function MealCard({
         >
           <Heart
             size={16}
-            color={isSaved ? colors.orange.DEFAULT : colors.muted}
-            fill={isSaved ? colors.orange.DEFAULT : 'none'}
+            color={isSaved ? colors.terra.DEFAULT : colors.stone}
+            fill={isSaved ? colors.terra.DEFAULT : 'none'}
           />
         </Pressable>
       </View>
 
-      {/* Bottom action bar — hidden for cooked and leftover entries */}
+      {/* Bottom action bar -- hidden for cooked and leftover entries */}
       {!entry.isCooked && !isLeftover && (
-        <View className="flex-row items-center border-t border-border px-3.5 py-2">
+        <View className="flex-row items-center border-t border-line px-3.5 py-2">
           <Pressable
             onPress={onSwap}
             disabled={isSwapping}
@@ -344,11 +345,11 @@ export function MealCard({
             className="flex-row items-center rounded-lg bg-cream px-2.5 py-1.5"
           >
             {isSwapping ? (
-              <ActivityIndicator size="small" color={colors.muted} />
+              <ActivityIndicator size="small" color={colors.stone} />
             ) : (
               <>
-                <RefreshCw size={13} color={colors.muted} />
-                <Text className="ml-1.5 text-[12px] font-semibold text-muted">Swap</Text>
+                <RefreshCw size={13} color={colors.stone} />
+                <Text className="ml-1.5 text-[12px] font-semibold text-stone">Swap</Text>
               </>
             )}
           </Pressable>
@@ -377,18 +378,18 @@ export function ShoppingListBanner({
   return (
     <Pressable
       onPress={onPress}
-      className="mx-4 mb-3 flex-row items-center rounded-[14px] bg-success-pale px-4 py-3.5"
+      className="mx-4 mb-3 flex-row items-center rounded-[14px] bg-sage-pale px-4 py-3.5"
     >
-      <ShoppingCart size={18} color={colors.success.DEFAULT} />
+      <ShoppingCart size={18} color={colors.sage.DEFAULT} />
       <View className="ml-3 flex-1">
-        <Text className="text-[14px] font-semibold text-dark">
+        <Text className="text-[14px] font-semibold text-espresso">
           Shopping List Ready
         </Text>
-        <Text className="mt-0.5 text-[12px] text-muted">
+        <Text className="mt-0.5 text-[12px] text-stone">
           {parts.join(' \u00B7 ')}
         </Text>
       </View>
-      <ChevronRight size={16} color={colors.muted} />
+      <ChevronRight size={16} color={colors.stone} />
     </Pressable>
   );
 }
@@ -406,14 +407,14 @@ export function MealPlaceholder({
     <Pressable
       onPress={onPress}
       disabled={isLoading}
-      className="mx-4 mb-2.5 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-border py-3.5"
+      className="mx-4 mb-2.5 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-line py-3.5"
     >
       {isLoading ? (
-        <ActivityIndicator size="small" color={colors.orange.DEFAULT} />
+        <ActivityIndicator size="small" color={colors.terra.DEFAULT} />
       ) : (
         <>
-          <Plus size={16} color={colors.muted} />
-          <Text className="ml-2 text-[13px] font-semibold text-muted">
+          <Plus size={16} color={colors.stone} />
+          <Text className="ml-2 text-[13px] font-semibold text-stone">
             Add {mealType}
           </Text>
         </>
@@ -424,9 +425,9 @@ export function MealPlaceholder({
 
 export function SaveTemplateButton() {
   return (
-    <View className="mx-4 mb-5 flex-row items-center justify-center rounded-[14px] border border-navy py-3 opacity-50">
-      <Bookmark size={16} color={colors.navy.DEFAULT} />
-      <Text className="ml-2 text-[13px] font-semibold text-navy">
+    <View className="mx-4 mb-5 flex-row items-center justify-center rounded-[14px] border border-espresso py-3 opacity-50">
+      <Bookmark size={16} color={colors.espresso} />
+      <Text className="ml-2 text-[13px] font-semibold text-espresso">
         Save as Template
       </Text>
     </View>

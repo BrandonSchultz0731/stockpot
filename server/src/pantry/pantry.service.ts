@@ -107,6 +107,11 @@ export class PantryService {
         ),
     );
 
+    // Cache emoji from receipt scan if provided
+    if (dto.emoji && foodCacheId) {
+      this.foodCacheService.updateEmoji(foodCacheId, dto.emoji).catch(() => {});
+    }
+
     const item = this.pantryItemRepo.create({
       userId,
       foodCacheId,
@@ -226,7 +231,7 @@ export class PantryService {
       let shelfLife = await this.foodCacheService.getShelfLife(foodCacheId);
 
       if (!shelfLife) {
-        // Fall back to AI estimation (also returns category)
+        // Fall back to AI estimation (also returns category and emoji)
         const aiResult = await this.estimateShelfLifeViaAI(userId, displayName);
         if (aiResult) {
           shelfLife = aiResult.shelfLife;
@@ -235,6 +240,12 @@ export class PantryService {
             await this.foodCacheService.updateCategory(
               foodCacheId,
               aiResult.category,
+            );
+          }
+          if (aiResult.emoji) {
+            await this.foodCacheService.updateEmoji(
+              foodCacheId,
+              aiResult.emoji,
             );
           }
         }
@@ -259,7 +270,7 @@ export class PantryService {
   private async estimateShelfLifeViaAI(
     userId: string,
     displayName: string,
-  ): Promise<{ shelfLife: ShelfLife; category: string | null } | null> {
+  ): Promise<{ shelfLife: ShelfLife; category: string | null; emoji: string | null } | null> {
     try {
       const response = await this.anthropicService.sendMessage(userId, {
         model: CLAUDE_MODELS['haiku-4.5'],
@@ -288,7 +299,13 @@ export class PantryService {
           ? rawCategory
           : null;
 
-      return { shelfLife, category };
+      // Extract emoji if present
+      const emoji =
+        typeof obj.emoji === 'string' && obj.emoji.trim().length > 0
+          ? obj.emoji.trim()
+          : null;
+
+      return { shelfLife, category, emoji };
     } catch (error) {
       this.logger.warn(
         `AI shelf life estimation failed for "${displayName}"`,
