@@ -93,7 +93,7 @@ function QuickActions() {
       icon: ReceiptText,
       bgColor: colors.terra.pale,
       iconColor: colors.terra.DEFAULT,
-      onPress: () => tabNav.navigate('PantryStack'),
+      onPress: () => tabNav.navigate('PantryStack', { screen: 'ReceiptScan' }),
     },
     {
       label: 'Add Items',
