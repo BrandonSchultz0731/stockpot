@@ -2,6 +2,7 @@ export const QUERY_KEYS = {
   RECIPES: {
     SAVED: ['recipes', 'saved'],
     DETAIL: (id: string) => ['recipes', id],
+    PANTRY_CHECK: (id: string, scale: number) => ['recipes', 'pantry-check', id, scale],
   },
   USER_PROFILE: ['user', 'profile'],
   USAGE_CURRENT: ['usage', 'current'],

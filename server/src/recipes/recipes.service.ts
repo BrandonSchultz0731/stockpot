@@ -47,6 +47,32 @@ export class RecipesService {
     return recipe;
   }
 
+  async checkPantryStatus(
+    recipeId: string,
+    userId: string,
+    scale: number,
+  ): Promise<Record<string, string>> {
+    const recipe = await this.recipeRepo.findOne({ where: { id: recipeId } });
+    if (!recipe) {
+      throw new NotFoundException('Recipe not found');
+    }
+
+    const scaledIngredients = (recipe.ingredients ?? []).map((ing) => ({
+      ...ing,
+      quantity: ing.quantity * scale,
+      baseQuantity: ing.baseQuantity * scale,
+    }));
+
+    const pantryItems = await this.pantryService.findAllForUser(userId);
+    const enriched = enrichPantryStatus(scaledIngredients, pantryItems);
+
+    const result: Record<string, string> = {};
+    for (let i = 0; i < enriched.length; i++) {
+      result[i] = enriched[i].pantryStatus ?? 'none';
+    }
+    return result;
+  }
+
   async generateRecipes(
     userId: string,
     dto: GenerateRecipeDto,

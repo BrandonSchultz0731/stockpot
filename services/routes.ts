@@ -20,6 +20,7 @@ export const ROUTES = {
     SAVED: '/recipes/saved',
     DETAIL: (id: string) => `/recipes/${id}`,
     SAVE: (id: string) => `/recipes/${id}/save`,
+    PANTRY_CHECK: (id: string) => `/recipes/${id}/pantry-check`,
     UPDATE_SAVED: (id: string) => `/recipes/saved/${id}`,
   },
   FOOD: {

@@ -23,6 +23,7 @@ import PantryStatusIcon from '../../components/PantryStatusIcon';
 import ErrorState from '../../components/ErrorState';
 import LoadingScreen from '../../components/LoadingScreen';
 import { useRecipeDetailQuery } from '../../hooks/useRecipeDetailQuery';
+import { usePantryCheckQuery } from '../../hooks/usePantryCheckQuery';
 import { useSavedRecipes } from '../../hooks/useSavedRecipes';
 import { api } from '../../services/api';
 import { ROUTES } from '../../services/routes';
@@ -351,6 +352,7 @@ export default function RecipeDetailScreen() {
   );
 
   const scale = recipe ? servingsToCook / (recipe.servings || 1) : 1;
+  const displayIngredients = usePantryCheckQuery(recipeId, recipe?.ingredients, scale);
 
   // Loading state
   if (isLoading || !recipe) {
@@ -417,7 +419,7 @@ export default function RecipeDetailScreen() {
           <ServingDisplay servings={isLeftover ? servingsToEat : recipe.servings} />
         )}
         <IngredientsSection
-          ingredients={recipe.ingredients}
+          ingredients={displayIngredients}
           scale={scale}
         />
         <InstructionsSection steps={recipe.steps} />
