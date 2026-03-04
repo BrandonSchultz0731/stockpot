@@ -17,6 +17,13 @@ const colors = {
 
   // ── Borders / lines ──
   line: {DEFAULT: '#E8E2DA', light: '#F0EBE4'},
+
+  // ── Gradients (arrays for LinearGradient `colors` prop) ──
+  gradient: {
+    warmHeader: ['#FFF0E8', '#FAF7F2'],   // terra-pale → ivory
+    warmBackground: ['#FFF8F0', '#FAF7F2'], // warm cream → ivory
+    avatar: ['#C25B2E', '#E8845A'],        // terra → terra-light
+  },
 };
 
 module.exports = colors;

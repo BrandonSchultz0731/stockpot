@@ -4,10 +4,10 @@ import {
   Modal,
   Platform,
   Pressable,
-  Text,
   TextInput,
   View,
 } from 'react-native';
+import AppText from '../../components/AppText';
 import { X } from 'lucide-react-native';
 import colors from '../../theme/colors';
 import Button from '../../components/Button';
@@ -53,7 +53,7 @@ export default function AddCustomItemSheet({
         className="flex-1"
       >
         {/* Backdrop */}
-        <Pressable className="flex-1 bg-black/40" onPress={onClose} />
+        <Pressable testID="backdrop" className="flex-1 bg-black/40" onPress={onClose} />
 
         {/* Sheet */}
         <View className="rounded-t-2xl bg-white px-5 pb-8 pt-3">
@@ -64,9 +64,9 @@ export default function AddCustomItemSheet({
 
           {/* Header */}
           <View className="mb-5 flex-row items-center justify-between">
-            <Text className="text-[20px] font-bold text-espresso">
+            <AppText className="text-[20px] font-bold text-espresso">
               Add Custom Item
-            </Text>
+            </AppText>
             <Pressable
               onPress={onClose}
               hitSlop={10}
@@ -77,9 +77,9 @@ export default function AddCustomItemSheet({
           </View>
 
           {/* Item Name */}
-          <Text className="mb-2 text-[13px] font-semibold text-stone">
+          <AppText className="mb-2 text-[13px] font-semibold text-stone">
             Item Name
-          </Text>
+          </AppText>
           <TextInput
             value={name}
             onChangeText={setName}
@@ -93,9 +93,9 @@ export default function AddCustomItemSheet({
           {/* Quantity + Unit row */}
           <View className="mb-4 flex-row gap-3">
             <View className="flex-1">
-              <Text className="mb-2 text-[13px] font-semibold text-stone">
+              <AppText className="mb-2 text-[13px] font-semibold text-stone">
                 Quantity
-              </Text>
+              </AppText>
               <TextInput
                 value={quantity}
                 onChangeText={setQuantity}
@@ -106,9 +106,9 @@ export default function AddCustomItemSheet({
               />
             </View>
             <View className="flex-1">
-              <Text className="mb-2 text-[13px] font-semibold text-stone">
+              <AppText className="mb-2 text-[13px] font-semibold text-stone">
                 Unit
-              </Text>
+              </AppText>
               <TextInput
                 value={unit}
                 onChangeText={setUnit}

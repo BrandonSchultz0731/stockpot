@@ -6,10 +6,10 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Text,
   TextInput,
   View,
 } from 'react-native';
+import AppText from '../../components/AppText';
 import { ArrowLeft, Camera, Globe, Image, Minus, Plus, UtensilsCrossed, X, Zap } from 'lucide-react-native';
 import colors from '../../theme/colors';
 import Button from '../../components/Button';
@@ -93,9 +93,9 @@ export default function AddMealActionSheet({
                 <ArrowLeft size={16} color={colors.stone} />
               </Pressable>
             )}
-            <Text className="text-[20px] font-bold text-espresso">
+            <AppText className="text-[20px] font-bold text-espresso">
               Add {mealType}
-            </Text>
+            </AppText>
           </View>
           <Pressable
             onPress={onClose}
@@ -118,12 +118,12 @@ export default function AddMealActionSheet({
                 <Zap size={20} color={colors.terra.DEFAULT} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-espresso">
+                <AppText className="text-[15px] font-semibold text-espresso">
                   Generate with AI
-                </Text>
-                <Text className="mt-0.5 text-[12px] text-stone">
+                </AppText>
+                <AppText className="mt-0.5 text-[12px] text-stone">
                   Create a recipe based on your pantry
-                </Text>
+                </AppText>
               </View>
               {isLoading && (
                 <ActivityIndicator size="small" color={colors.terra.DEFAULT} />
@@ -140,12 +140,12 @@ export default function AddMealActionSheet({
                 <Globe size={20} color={colors.espresso} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-espresso">
+                <AppText className="text-[15px] font-semibold text-espresso">
                   Import from Website
-                </Text>
-                <Text className="mt-0.5 text-[12px] text-stone">
+                </AppText>
+                <AppText className="mt-0.5 text-[12px] text-stone">
                   Paste a URL to import a recipe
-                </Text>
+                </AppText>
               </View>
             </Pressable>
 
@@ -159,12 +159,12 @@ export default function AddMealActionSheet({
                 <Camera size={20} color={colors.sage.DEFAULT} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-espresso">
+                <AppText className="text-[15px] font-semibold text-espresso">
                   Scan from Photo
-                </Text>
-                <Text className="mt-0.5 text-[12px] text-stone">
+                </AppText>
+                <AppText className="mt-0.5 text-[12px] text-stone">
                   Take a photo of a recipe
-                </Text>
+                </AppText>
               </View>
             </Pressable>
 
@@ -178,22 +178,22 @@ export default function AddMealActionSheet({
                 <UtensilsCrossed size={20} color={colors.honey.DEFAULT} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-espresso">
+                <AppText className="text-[15px] font-semibold text-espresso">
                   Eat Leftovers
-                </Text>
-                <Text className="mt-0.5 text-[12px] text-stone">
+                </AppText>
+                <AppText className="mt-0.5 text-[12px] text-stone">
                   {hasLeftovers
                     ? 'Use leftover servings from another meal'
                     : 'No leftovers available'}
-                </Text>
+                </AppText>
               </View>
             </Pressable>
           </View>
         ) : mode === 'url' ? (
           <View>
-            <Text className="mb-2 text-[13px] font-semibold text-stone">
+            <AppText className="mb-2 text-[13px] font-semibold text-stone">
               Recipe URL
-            </Text>
+            </AppText>
             <TextInput
               value={url}
               onChangeText={setUrl}
@@ -221,12 +221,12 @@ export default function AddMealActionSheet({
                 <Camera size={20} color={colors.sage.DEFAULT} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-espresso">
+                <AppText className="text-[15px] font-semibold text-espresso">
                   Take Photo
-                </Text>
-                <Text className="mt-0.5 text-[12px] text-stone">
+                </AppText>
+                <AppText className="mt-0.5 text-[12px] text-stone">
                   Use your camera to capture a recipe
-                </Text>
+                </AppText>
               </View>
             </Pressable>
 
@@ -239,12 +239,12 @@ export default function AddMealActionSheet({
                 <Image size={20} color={colors.sage.DEFAULT} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-[15px] font-semibold text-espresso">
+                <AppText className="text-[15px] font-semibold text-espresso">
                   Choose from Library
-                </Text>
-                <Text className="mt-0.5 text-[12px] text-stone">
+                </AppText>
+                <AppText className="mt-0.5 text-[12px] text-stone">
                   Pick a photo from your gallery
-                </Text>
+                </AppText>
               </View>
             </Pressable>
           </View>
@@ -266,12 +266,12 @@ export default function AddMealActionSheet({
                         <UtensilsCrossed size={20} color={colors.honey.DEFAULT} />
                       </View>
                       <View className="ml-3 flex-1">
-                        <Text className="text-[15px] font-semibold text-espresso" numberOfLines={1}>
+                        <AppText className="text-[15px] font-semibold text-espresso" numberOfLines={1}>
                           {lo.recipeTitle}
-                        </Text>
-                        <Text className="mt-0.5 text-[12px] text-stone">
+                        </AppText>
+                        <AppText className="mt-0.5 text-[12px] text-stone">
                           {lo.availableServings} {lo.availableServings === 1 ? 'serving' : 'servings'} available
-                        </Text>
+                        </AppText>
                       </View>
                     </Pressable>
                   ))}
@@ -279,12 +279,12 @@ export default function AddMealActionSheet({
               </ScrollView>
             ) : (
               <View>
-                <Text className="mb-1 text-[15px] font-semibold text-espresso" numberOfLines={1}>
+                <AppText className="mb-1 text-[15px] font-semibold text-espresso" numberOfLines={1}>
                   {selectedLeftover.recipeTitle}
-                </Text>
-                <Text className="mb-4 text-[12px] text-stone">
+                </AppText>
+                <AppText className="mb-4 text-[12px] text-stone">
                   {selectedLeftover.availableServings} {selectedLeftover.availableServings === 1 ? 'serving' : 'servings'} available
-                </Text>
+                </AppText>
                 <View className="mb-4 flex-row items-center justify-center">
                   <Pressable
                     onPress={() => setLeftoverServings((s) => Math.max(1, s - 1))}
@@ -293,9 +293,9 @@ export default function AddMealActionSheet({
                   >
                     <Minus size={16} color={colors.espresso} />
                   </Pressable>
-                  <Text className="mx-5 text-[22px] font-bold text-terra">
+                  <AppText className="mx-5 text-[22px] font-bold text-terra">
                     {leftoverServings}
-                  </Text>
+                  </AppText>
                   <Pressable
                     onPress={() =>
                       setLeftoverServings((s) =>

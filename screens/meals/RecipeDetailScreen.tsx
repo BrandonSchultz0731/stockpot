@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Pressable,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
+import AppText from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -87,12 +87,12 @@ function RecipeInfoPills({
           style={{ backgroundColor: p.bg }}
         >
           {p.icon}
-          <Text
+          <AppText
             className="ml-1.5 text-[12px] font-semibold"
             style={{ color: p.fg }}
           >
             {p.label}
-          </Text>
+          </AppText>
         </View>
       ))}
     </View>
@@ -108,14 +108,14 @@ function TitleSection({
 }) {
   return (
     <View className="px-5 pt-4">
-      <Text
+      <AppText
         className="text-[22px] tracking-[-0.3px] text-espresso"
         style={{ fontFamily: fonts.serif }}
       >
         {title}
-      </Text>
+      </AppText>
       {description ? (
-        <Text className="mt-1.5 text-[13px] text-stone">{description}</Text>
+        <AppText className="mt-1.5 text-[13px] text-stone">{description}</AppText>
       ) : null}
     </View>
   );
@@ -127,9 +127,9 @@ function ServingDisplay({ servings }: { servings: number }) {
       className="mx-5 mt-4 flex-row items-center rounded-xl bg-white px-3.5 py-2.5"
       style={cardShadow}
     >
-      <Text className="text-[13px] font-semibold text-espresso">Servings</Text>
+      <AppText className="text-[13px] font-semibold text-espresso">Servings</AppText>
       <View className="flex-1" />
-      <Text className="text-[16px] font-bold text-terra">{servings}</Text>
+      <AppText className="text-[16px] font-bold text-terra">{servings}</AppText>
     </View>
   );
 }
@@ -149,7 +149,7 @@ function ServingStepper({
 }) {
   return (
     <View className="flex-row items-center">
-      <Text className="flex-1 text-[13px] font-semibold text-espresso">{label}</Text>
+      <AppText className="flex-1 text-[13px] font-semibold text-espresso">{label}</AppText>
       <Pressable
         onPress={onDecrement}
         disabled={value <= min}
@@ -157,9 +157,9 @@ function ServingStepper({
       >
         <Minus size={14} color={colors.espresso} />
       </Pressable>
-      <Text className="mx-3 min-w-[24px] text-center text-[16px] font-bold text-terra">
+      <AppText className="mx-3 min-w-[24px] text-center text-[16px] font-bold text-terra">
         {value}
-      </Text>
+      </AppText>
       <Pressable
         onPress={onIncrement}
         className="h-8 w-8 items-center justify-center rounded-lg border border-line"
@@ -214,9 +214,9 @@ function ServingsSection({
         </>
       )}
       {leftovers > 0 && (
-        <Text className="mt-2 text-center text-[12px] font-semibold" style={{ color: colors.honey.DEFAULT }}>
+        <AppText className="mt-2 text-center text-[12px] font-semibold" style={{ color: colors.honey.DEFAULT }}>
           {leftovers} {leftovers === 1 ? 'serving' : 'servings'} of leftovers
-        </Text>
+        </AppText>
       )}
     </View>
   );
@@ -240,8 +240,8 @@ function IngredientRow({
         !isLast ? 'border-b border-line' : ''
       }`}
     >
-      <Text className="flex-1 text-[13px] text-ink">{ingredient.name}</Text>
-      <Text className="mr-2 text-[12px] text-stone">{qtyLabel}</Text>
+      <AppText className="flex-1 text-[13px] text-ink">{ingredient.name}</AppText>
+      <AppText className="mr-2 text-[12px] text-stone">{qtyLabel}</AppText>
       <PantryStatusIcon status={ingredient.pantryStatus} />
     </View>
   );
@@ -264,12 +264,12 @@ function IngredientsSection({
 
   return (
     <View className="px-5 pt-5">
-      <Text
+      <AppText
         className="mb-3 text-[16px] text-espresso"
         style={{ fontFamily: fonts.serif }}
       >
         Ingredients
-      </Text>
+      </AppText>
       <View
         className="overflow-hidden rounded-[14px] bg-white"
         style={cardShadow}
@@ -283,9 +283,9 @@ function IngredientsSection({
           />
         ))}
       </View>
-      <Text className="mt-2 text-center text-[12px] font-semibold text-terra">
+      <AppText className="mt-2 text-center text-[12px] font-semibold text-terra">
         {summaryText}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -295,22 +295,22 @@ function InstructionsSection({ steps }: { steps: RecipeStep[] }) {
 
   return (
     <View className="px-5 pt-5">
-      <Text
+      <AppText
         className="mb-3 text-[16px] text-espresso"
         style={{ fontFamily: fonts.serif }}
       >
         Instructions
-      </Text>
+      </AppText>
       {sorted.map((step) => (
         <View key={step.stepNumber} className="mb-3 flex-row gap-3">
           <View className="h-6 w-6 items-center justify-center rounded-full bg-terra">
-            <Text className="text-[11px] font-bold text-white">
+            <AppText className="text-[11px] font-bold text-white">
               {step.stepNumber}
-            </Text>
+            </AppText>
           </View>
-          <Text className="flex-1 text-[13px] leading-5 text-ink">
+          <AppText className="flex-1 text-[13px] leading-5 text-ink">
             {step.instruction}
-          </Text>
+          </AppText>
         </View>
       ))}
     </View>
@@ -391,12 +391,12 @@ export default function RecipeDetailScreen() {
           <>
             <ScreenHeader />
             {routeTitle ? (
-              <Text
+              <AppText
                 className="px-5 pt-4 text-[22px] tracking-[-0.3px] text-espresso"
                 style={{ fontFamily: fonts.serif }}
               >
                 {routeTitle}
-              </Text>
+              </AppText>
             ) : null}
           </>
         }
@@ -467,9 +467,9 @@ export default function RecipeDetailScreen() {
             className="mx-5 mt-6 flex-row items-center justify-center rounded-full bg-sage py-3.5"
           >
             <CookingPot size={18} color="#fff" />
-            <Text className="ml-2 text-[15px] font-bold text-white">
+            <AppText className="ml-2 text-[15px] font-bold text-white">
               Mark as Cooked
-            </Text>
+            </AppText>
           </Pressable>
         )}
         <View className="h-5" />

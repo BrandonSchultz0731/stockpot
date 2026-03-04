@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import AppText from './AppText';
 
 interface ErrorStateProps {
   message: string;
@@ -13,12 +14,12 @@ export default function ErrorState({
 }: ErrorStateProps) {
   return (
     <View className="flex-1 items-center justify-center px-8">
-      <Text className="text-center text-[14px] text-stone">{message}</Text>
+      <AppText className="text-center text-[14px] text-stone">{message}</AppText>
       {onGoBack && (
         <Pressable onPress={onGoBack} className="mt-3">
-          <Text className="text-[14px] font-semibold text-terra">
+          <AppText className="text-[14px] font-semibold text-terra">
             {actionLabel}
-          </Text>
+          </AppText>
         </Pressable>
       )}
     </View>

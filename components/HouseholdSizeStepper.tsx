@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import AppText from './AppText';
 import { fonts } from '../theme/typography';
 
 interface HouseholdSizeStepperProps {
@@ -22,19 +23,19 @@ export default function HouseholdSizeStepper({
           disabled={value <= min}
           onPress={() => onChange(value - 1)}
         >
-          <Text className="text-2xl font-semibold -mt-0.5 text-espresso">−</Text>
+          <AppText className="text-2xl font-semibold -mt-0.5 text-espresso">−</AppText>
         </Pressable>
 
         <View className="mx-8 items-center">
-          <Text
+          <AppText
             className="text-5xl font-bold text-terra"
             style={{ fontFamily: fonts.serif }}
           >
             {value}
-          </Text>
-          <Text className="text-sm text-stone mt-1">
+          </AppText>
+          <AppText className="text-sm text-stone mt-1">
             {value === 1 ? 'person' : 'people'}
-          </Text>
+          </AppText>
         </View>
 
         <Pressable
@@ -42,7 +43,7 @@ export default function HouseholdSizeStepper({
           disabled={value >= max}
           onPress={() => onChange(value + 1)}
         >
-          <Text className="text-2xl font-semibold -mt-0.5 text-espresso">+</Text>
+          <AppText className="text-2xl font-semibold -mt-0.5 text-espresso">+</AppText>
         </Pressable>
       </View>
     </View>

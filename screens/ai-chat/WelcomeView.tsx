@@ -1,4 +1,5 @@
-import { View, Text, Pressable, ScrollView } from 'react-native';
+import { View, Pressable, ScrollView } from 'react-native';
+import AppText from '../../components/AppText';
 import { ChefHat } from 'lucide-react-native';
 import colors from '../../theme/colors';
 import { fonts } from '../../theme/typography';
@@ -22,16 +23,16 @@ export default function WelcomeView({ onSuggestionPress }: WelcomeViewProps) {
       <View className="mb-5 h-16 w-16 items-center justify-center rounded-full bg-terra-pale">
         <ChefHat size={32} color={colors.terra.DEFAULT} />
       </View>
-      <Text
+      <AppText
         className="mb-2 text-center text-xl text-espresso"
         style={{ fontFamily: fonts.serif }}
       >
         Hi, I'm Chef StockPot
-      </Text>
-      <Text className="mb-8 text-center text-[15px] text-ink">
+      </AppText>
+      <AppText className="mb-8 text-center text-[15px] text-ink">
         Ask me anything about cooking, your pantry, meal ideas, or what to do with ingredients
         you have on hand.
-      </Text>
+      </AppText>
       <View className="w-full">
         {SUGGESTIONS.map((suggestion) => (
           <Pressable
@@ -40,7 +41,7 @@ export default function WelcomeView({ onSuggestionPress }: WelcomeViewProps) {
             className={`mb-2 rounded-2xl px-4 py-3 ${suggestion.bg}`}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <Text className="text-[15px] text-espresso">{suggestion.text}</Text>
+            <AppText className="text-[15px] text-espresso">{suggestion.text}</AppText>
           </Pressable>
         ))}
       </View>

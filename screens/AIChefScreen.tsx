@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { View, Text, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import AppText from '../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -76,12 +77,12 @@ export default function AIChefScreen() {
           >
             <MessageSquare size={20} color={colors.espresso} />
           </Pressable>
-          <Text
+          <AppText
             className="text-[17px] text-espresso"
             style={{ fontFamily: fonts.serif }}
           >
             AI Chef
-          </Text>
+          </AppText>
           <Pressable
             onPress={startNewConversation}
             className="h-9 w-9 items-center justify-center rounded-full"

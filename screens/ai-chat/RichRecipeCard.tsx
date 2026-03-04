@@ -1,4 +1,5 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Pressable } from 'react-native';
+import AppText from '../../components/AppText';
 import { Clock, ChefHat } from 'lucide-react-native';
 import colors from '../../theme/colors';
 import { fonts } from '../../theme/typography';
@@ -34,38 +35,38 @@ export default function RichRecipeCard({ data, onPress }: RichRecipeCardProps) {
       })}
     >
       <View className="flex-row items-start justify-between">
-        <Text
+        <AppText
           className="flex-1 text-[15px] text-espresso"
           style={{ fontFamily: fonts.serif }}
         >
           {title}
-        </Text>
+        </AppText>
         {pantryMatch != null && (
           <View className="ml-2 rounded-full bg-sage-pale px-2 py-0.5">
-            <Text className="text-[11px] font-semibold text-sage">{pantryMatch}% match</Text>
+            <AppText className="text-[11px] font-semibold text-sage">{pantryMatch}% match</AppText>
           </View>
         )}
       </View>
       {description ? (
-        <Text className="mt-1 text-[13px] text-ink" numberOfLines={2}>
+        <AppText className="mt-1 text-[13px] text-ink" numberOfLines={2}>
           {description}
-        </Text>
+        </AppText>
       ) : null}
       <View className="mt-2 flex-row items-center">
         {totalTimeMinutes ? (
           <View className="mr-3 flex-row items-center">
             <Clock size={13} color={colors.stone} />
-            <Text className="ml-1 text-xs text-stone">{totalTimeMinutes} min</Text>
+            <AppText className="ml-1 text-xs text-stone">{totalTimeMinutes} min</AppText>
           </View>
         ) : null}
         {difficulty ? (
           <View className="mr-3 flex-row items-center">
             <ChefHat size={13} color={colors.stone} />
-            <Text className="ml-1 text-xs text-stone">{difficulty}</Text>
+            <AppText className="ml-1 text-xs text-stone">{difficulty}</AppText>
           </View>
         ) : null}
         {cuisine ? (
-          <Text className="text-xs text-stone">{cuisine}</Text>
+          <AppText className="text-xs text-stone">{cuisine}</AppText>
         ) : null}
       </View>
     </Pressable>

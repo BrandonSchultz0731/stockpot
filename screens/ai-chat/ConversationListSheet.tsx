@@ -1,4 +1,5 @@
-import { View, Text, Pressable, FlatList, Modal, ActivityIndicator } from 'react-native';
+import { View, Pressable, FlatList, Modal, ActivityIndicator } from 'react-native';
+import AppText from '../../components/AppText';
 import { X, Trash2, Plus } from 'lucide-react-native';
 import colors from '../../theme/colors';
 
@@ -51,7 +52,7 @@ export default function ConversationListSheet({
         <View className="mt-auto h-3/4 rounded-t-3xl bg-ivory">
           {/* Header */}
           <View className="flex-row items-center justify-between border-b border-line px-5 py-4">
-            <Text className="text-lg font-bold text-espresso">Conversations</Text>
+            <AppText className="text-lg font-bold text-espresso">Conversations</AppText>
             <View className="flex-row items-center">
               <Pressable
                 onPress={() => { onNewChat(); onClose(); }}
@@ -72,7 +73,7 @@ export default function ConversationListSheet({
             </View>
           ) : conversations.length === 0 ? (
             <View className="flex-1 items-center justify-center px-8">
-              <Text className="text-center text-ink">No conversations yet. Start chatting with Chef StockPot!</Text>
+              <AppText className="text-center text-ink">No conversations yet. Start chatting with Chef StockPot!</AppText>
             </View>
           ) : (
             <FlatList
@@ -89,16 +90,16 @@ export default function ConversationListSheet({
                     style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                   >
                     <View className="flex-1">
-                      <Text
+                      <AppText
                         className={`text-[15px] font-semibold ${isActive ? 'text-terra' : 'text-espresso'
                           }`}
                         numberOfLines={1}
                       >
                         {item.title ?? 'New conversation'}
-                      </Text>
-                      <Text className="mt-0.5 text-xs text-stone">
+                      </AppText>
+                      <AppText className="mt-0.5 text-xs text-stone">
                         {formatDate(item.updatedAt)}
-                      </Text>
+                      </AppText>
                     </View>
                     <Pressable
                       onPress={() => onDelete(item.id)}

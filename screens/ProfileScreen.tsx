@@ -294,7 +294,7 @@ export default function ProfileScreen() {
       <ScrollView contentContainerClassName="pb-28">
         {/* Header with gradient — title + user info */}
         <LinearGradient
-          colors={['#FFF8F0', '#FAF7F2']}
+          colors={colors.gradient.warmBackground}
           start={{ x: 0.1, y: 0 }}
           end={{ x: 0.9, y: 1 }}
         >
@@ -313,7 +313,7 @@ export default function ProfileScreen() {
               ) : (
                 <View className="w-[60px] h-[60px] rounded-[20px] overflow-hidden">
                   <LinearGradient
-                    colors={[colors.terra.DEFAULT, colors.terra.light]}
+                    colors={colors.gradient.avatar}
                     style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
                   >
                     <AppText font="sansBold" className="text-[26px] text-white">

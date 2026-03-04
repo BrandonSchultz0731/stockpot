@@ -1,4 +1,5 @@
-import { Text, TextInput } from 'react-native';
+import { TextInput } from 'react-native';
+import AppText from '../../components/AppText';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Zap } from 'lucide-react-native';
@@ -26,14 +27,14 @@ export default function OBExcludeScreen() {
       step={3}
       onBack={() => navigation.goBack()}
       onNext={() => navigation.navigate('OBHousehold')}>
-      <Text
+      <AppText
         className="text-2xl text-espresso mb-2 mt-2"
         style={{ fontFamily: fonts.serif }}>
         Ingredients to Avoid
-      </Text>
-      <Text className="text-base leading-[22px] text-stone mb-5">
+      </AppText>
+      <AppText className="text-base leading-[22px] text-stone mb-5">
         We'll make sure these never show up in your recipes.
-      </Text>
+      </AppText>
 
       {/* Search input (placeholder, no filtering) */}
       <TextInput
@@ -43,9 +44,9 @@ export default function OBExcludeScreen() {
         editable={false}
       />
 
-      <Text className="text-xs font-semibold tracking-[1px] text-stone mb-3 uppercase">
+      <AppText className="text-xs font-semibold tracking-[1px] text-stone mb-3 uppercase">
         Common allergens & dislikes
-      </Text>
+      </AppText>
 
       <ExcludedIngredientsSelector
         selectedIngredients={data.excludedIngredients}

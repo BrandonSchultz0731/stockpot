@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, Text } from 'react-native';
+import { Pressable, ScrollView } from 'react-native';
+import AppText from '../AppText';
 
 interface CategoryFilterPillsProps {
   categories: string[];
@@ -54,12 +55,12 @@ function Pill({
           ? 'bg-espresso'
           : 'bg-cream border border-line'
       }`}>
-      <Text
+      <AppText
         className={`text-[13px] ${
           active ? 'text-white font-semibold' : 'text-espresso'
         }`}>
         {label}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }

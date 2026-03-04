@@ -1,4 +1,5 @@
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import AppText from './AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import colors from '../theme/colors';
 
@@ -22,7 +23,7 @@ export default function LoadingScreen({
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color={color} />
         {message ? (
-          <Text className="mt-4 text-[14px] text-stone">{message}</Text>
+          <AppText className="mt-4 text-[14px] text-stone">{message}</AppText>
         ) : null}
       </View>
     </SafeAreaView>

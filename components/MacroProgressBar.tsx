@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import AppText from './AppText';
 import colors from '../theme/colors';
 
 interface MacroProgressBarProps {
@@ -21,10 +22,10 @@ export default function MacroProgressBar({
   return (
     <View className={'mb-3'}>
       <View className="flex-row justify-between mb-1">
-        <Text className="text-[13px] text-ink">{label}</Text>
-        <Text className="text-[13px] font-semibold text-espresso">
+        <AppText className="text-[13px] text-ink">{label}</AppText>
+        <AppText className="text-[13px] font-semibold text-espresso">
           {displayValue}
-        </Text>
+        </AppText>
       </View>
       <View className="overflow-hidden bg-line-light" style={{ height: 4, borderRadius: 2 }}>
         <View

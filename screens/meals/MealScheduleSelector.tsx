@@ -3,9 +3,9 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
+import AppText from '../../components/AppText';
 import { Check, X } from 'lucide-react-native';
 import clsx from 'clsx';
 import colors from '../../theme/colors';
@@ -175,7 +175,7 @@ export default function MealScheduleSelector({
 
         {/* Header */}
         <View className="mb-4 flex-row items-center justify-between">
-          <Text className="text-[20px] font-bold text-espresso">Plan Your Week</Text>
+          <AppText className="text-[20px] font-bold text-espresso">Plan Your Week</AppText>
           <Pressable
             onPress={onClose}
             hitSlop={10}
@@ -187,9 +187,9 @@ export default function MealScheduleSelector({
 
         {/* Start day picker */}
         <View className="mb-4">
-          <Text className="mb-2 text-[13px] font-semibold text-stone">
+          <AppText className="mb-2 text-[13px] font-semibold text-stone">
             Starts on
-          </Text>
+          </AppText>
           <View className="flex-row justify-between">
             {Array.from({ length: 7 }, (_, i) => {
               const active = startDay === i;
@@ -202,14 +202,14 @@ export default function MealScheduleSelector({
                     active ? 'bg-espresso' : 'border border-line bg-white',
                   )}
                 >
-                  <Text
+                  <AppText
                     className={clsx(
                       'text-[13px] font-semibold',
                       active ? 'text-white' : 'text-espresso',
                     )}
                   >
                     {DAY_LABELS[i]}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
@@ -234,14 +234,14 @@ export default function MealScheduleSelector({
                   active ? 'bg-espresso' : 'border border-line bg-white',
                 )}
               >
-                <Text
+                <AppText
                   className={clsx(
                     'text-[13px] font-semibold',
                     active ? 'text-white' : 'text-espresso',
                   )}
                 >
                   {preset.label}
-                </Text>
+                </AppText>
               </Pressable>
             );
           })}
@@ -262,14 +262,14 @@ export default function MealScheduleSelector({
                   onPress={() => toggleColumn(type)}
                   className="flex-1 items-center"
                 >
-                  <Text
+                  <AppText
                     className={clsx(
                       'text-[11px] font-bold uppercase tracking-[0.5px]',
                       allSelected ? 'text-terra' : 'text-stone',
                     )}
                   >
                     {type}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
@@ -282,14 +282,14 @@ export default function MealScheduleSelector({
             return (
               <View key={dayIndex} className="mb-2 flex-row items-center">
                 <Pressable onPress={() => toggleRow(dayIndex)} className="w-12">
-                  <Text
+                  <AppText
                     className={clsx(
                       'text-[13px] font-semibold',
                       allRowSelected ? 'text-terra' : 'text-stone',
                     )}
                   >
                     {SHORT_DAY_NAMES[dayIndex]}
-                  </Text>
+                  </AppText>
                 </Pressable>
                 {MEAL_TYPES.map((type) => {
                   const key = makeKey(dayIndex, type);

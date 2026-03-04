@@ -96,7 +96,7 @@ export default function SignUpScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerClassName="flex-grow">
           {/* Header */}
-          <LinearGradient colors={['#FFF0E8', '#FAF7F2']}>
+          <LinearGradient colors={colors.gradient.warmHeader}>
             <View className="items-center pt-10 pb-5 px-6">
               <View
                 className="mb-3.5"

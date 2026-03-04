@@ -2,9 +2,9 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   Pressable,
   SectionList,
-  Text,
   View,
 } from 'react-native';
+import AppText from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type {
@@ -153,30 +153,30 @@ export default function ShoppingListScreen() {
       {summary && (
         <View className="mx-4 mb-3 flex-row justify-around rounded-[14px] px-4 py-3.5">
           <View className="items-center rounded-xl bg-terra-pale px-4 py-2">
-            <Text className="text-[20px] font-bold text-terra">
+            <AppText className="text-[20px] font-bold text-terra">
               {summary.toBuy}
-            </Text>
-            <Text className="mt-0.5 text-[10px] text-stone">To Buy</Text>
+            </AppText>
+            <AppText className="mt-0.5 text-[10px] text-stone">To Buy</AppText>
           </View>
           {summary.low > 0 && (
             <View className="items-center rounded-xl bg-honey-pale px-4 py-2">
-              <Text className="text-[20px] font-bold" style={{ color: colors.honey.DEFAULT }}>
+              <AppText className="text-[20px] font-bold" style={{ color: colors.honey.DEFAULT }}>
                 {summary.low}
-              </Text>
-              <Text className="mt-0.5 text-[10px] text-stone">Low</Text>
+              </AppText>
+              <AppText className="mt-0.5 text-[10px] text-stone">Low</AppText>
             </View>
           )}
           <View className="items-center rounded-xl bg-sage-pale px-4 py-2">
-            <Text className="text-[20px] font-bold text-sage">
+            <AppText className="text-[20px] font-bold text-sage">
               {summary.alreadyHave}
-            </Text>
-            <Text className="mt-0.5 text-[10px] text-stone">Have</Text>
+            </AppText>
+            <AppText className="mt-0.5 text-[10px] text-stone">Have</AppText>
           </View>
           <View className="items-center rounded-xl px-4 py-2">
-            <Text className="text-[20px] font-bold text-espresso">
+            <AppText className="text-[20px] font-bold text-espresso">
               {summary.total}
-            </Text>
-            <Text className="mt-0.5 text-[10px] text-stone">Total</Text>
+            </AppText>
+            <AppText className="mt-0.5 text-[10px] text-stone">Total</AppText>
           </View>
         </View>
       )}
@@ -210,7 +210,7 @@ export default function ShoppingListScreen() {
               <Square size={22} color={colors.line.DEFAULT} />
             )}
             <View className="ml-3 flex-1">
-              <Text
+              <AppText
                 className={`text-[14px] font-semibold ${item.pantryStatus === PantryStatus.Enough
                   ? 'text-stone line-through'
                   : 'text-espresso'
@@ -218,33 +218,33 @@ export default function ShoppingListScreen() {
                 numberOfLines={1}
               >
                 {item.displayName}
-              </Text>
+              </AppText>
             </View>
             <View className="ml-2 items-end">
               {item.pantryStatus !== PantryStatus.Enough && (
-                <Text className="text-[12px] text-stone">
+                <AppText className="text-[12px] text-stone">
                   {item.neededQuantity} {item.unit}
-                </Text>
+                </AppText>
               )}
               {item.pantryStatus === PantryStatus.Low && (
-                <Text className="text-[10px] text-stone">
+                <AppText className="text-[10px] text-stone">
                   have {Math.round((item.quantity - item.neededQuantity) * 100) / 100} {item.unit}
-                </Text>
+                </AppText>
               )}
             </View>
             {item.pantryStatus === PantryStatus.Low && (
               <View className="ml-2 flex-row items-center rounded bg-honey-pale px-1.5 py-0.5">
                 <AlertTriangle size={8} color={colors.honey.DEFAULT} />
-                <Text className="ml-0.5 text-[9px] font-bold uppercase" style={{ color: colors.honey.DEFAULT }}>
+                <AppText className="ml-0.5 text-[9px] font-bold uppercase" style={{ color: colors.honey.DEFAULT }}>
                   Low
-                </Text>
+                </AppText>
               </View>
             )}
             {item.pantryStatus === PantryStatus.Enough && (
               <View className="ml-2 rounded bg-sage-pale px-1.5 py-0.5">
-                <Text className="text-[9px] font-bold uppercase text-sage">
+                <AppText className="text-[9px] font-bold uppercase text-sage">
                   Have
-                </Text>
+                </AppText>
               </View>
             )}
           </Pressable>
@@ -255,9 +255,9 @@ export default function ShoppingListScreen() {
             className="mt-4 mb-2 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-terra/30 py-3.5"
           >
             <Plus size={16} color={colors.terra.DEFAULT} />
-            <Text className="ml-2 text-[13px] font-semibold text-terra">
+            <AppText className="ml-2 text-[13px] font-semibold text-terra">
               Add Custom Item
-            </Text>
+            </AppText>
           </Pressable>
         }
       />
@@ -269,14 +269,14 @@ export default function ShoppingListScreen() {
           className="mb-2.5 flex-row items-center justify-center rounded-full bg-sage py-3.5"
         >
           <Camera size={18} color="#fff" />
-          <Text className="ml-2 text-[15px] font-bold text-white">
+          <AppText className="ml-2 text-[15px] font-bold text-white">
             Scan Receipt to Add to Pantry
-          </Text>
+          </AppText>
         </Pressable>
         <Pressable onPress={handleDone} className="items-center py-2">
-          <Text className="text-[13px] font-semibold text-stone">
+          <AppText className="text-[13px] font-semibold text-stone">
             Done
-          </Text>
+          </AppText>
         </Pressable>
       </View>
 

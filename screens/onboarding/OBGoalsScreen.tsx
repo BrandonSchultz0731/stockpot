@@ -1,4 +1,4 @@
-import { Text } from 'react-native';
+import AppText from '../../components/AppText';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import OnboardingLayout from '../../components/onboarding/OnboardingLayout';
@@ -42,14 +42,14 @@ export default function OBGoalsScreen() {
       onNext={handleFinish}
       nextLabel="Finish Setup"
       isSubmitting={mutation.isPending}>
-      <Text
+      <AppText
         className="text-2xl text-espresso mb-2 mt-2"
         style={{ fontFamily: fonts.serif }}>
         Nutrition Goals
-      </Text>
-      <Text className="text-base leading-[22px] text-stone mb-6">
+      </AppText>
+      <AppText className="text-base leading-[22px] text-stone mb-6">
         Choose a goal and we'll set smart defaults for your daily targets.
-      </Text>
+      </AppText>
 
       <GoalTypeSelector
         selectedGoal={data.goalType}
@@ -57,11 +57,11 @@ export default function OBGoalsScreen() {
       />
 
       {/* Daily targets */}
-      <Text
+      <AppText
         className="text-lg text-espresso mb-4 mt-4"
         style={{ fontFamily: fonts.serif }}>
         Daily Targets
-      </Text>
+      </AppText>
 
       <MacroProgressBar
         label="Calories"
@@ -90,9 +90,9 @@ export default function OBGoalsScreen() {
 
       {/* Error state */}
       {mutation.isError && (
-        <Text className="text-sm text-berry mt-3 text-center">
+        <AppText className="text-sm text-berry mt-3 text-center">
           Something went wrong. Please try again.
-        </Text>
+        </AppText>
       )}
     </OnboardingLayout>
   );

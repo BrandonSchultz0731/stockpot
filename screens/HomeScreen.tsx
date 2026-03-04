@@ -72,7 +72,7 @@ function AvatarButton({
         />
       ) : (
         <LinearGradient
-          colors={[colors.terra.DEFAULT, colors.terra.light]}
+          colors={colors.gradient.avatar}
           style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}
         >
           <AppText font="sansBold" className="text-[18px] text-white">
@@ -452,7 +452,7 @@ export default function HomeScreen() {
         contentContainerClassName="pb-28"
       >
         {/* Greeting + Quick Actions inside gradient */}
-        <LinearGradient colors={['#FFF8F0', '#FAF7F2']}>
+        <LinearGradient colors={colors.gradient.warmBackground}>
           <View className="flex-row items-center justify-between px-6 pt-5 mb-5">
             <View>
               <AppText className="text-[14px] text-stone">

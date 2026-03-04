@@ -56,7 +56,7 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerClassName="flex-grow">
           {/* Hero */}
-          <LinearGradient colors={['#FFF0E8', '#FAF7F2']}>
+          <LinearGradient colors={colors.gradient.warmHeader}>
             <View className="items-center pt-10 pb-7 px-6">
               <View
                 className="mb-4"

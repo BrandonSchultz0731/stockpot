@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import AppText from '../AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import colors from '../../theme/colors';
@@ -67,9 +68,9 @@ export default function OnboardingLayout({
           {isSubmitting ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text className="text-[15px] font-bold text-white">
+            <AppText className="text-[15px] font-bold text-white">
               {nextLabel}
-            </Text>
+            </AppText>
           )}
         </Pressable>
       </View>

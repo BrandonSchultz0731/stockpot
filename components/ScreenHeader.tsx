@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
+import AppText from './AppText';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft } from 'lucide-react-native';
 import colors from '../theme/colors';
@@ -39,7 +40,7 @@ export default function ScreenHeader({
       {isSaving ? (
         <ActivityIndicator size="small" color={colors.terra.DEFAULT} />
       ) : (
-        <Text className="text-[15px] font-semibold text-terra">Save</Text>
+        <AppText className="text-[15px] font-semibold text-terra">Save</AppText>
       )}
     </Pressable>
   ) : null;
@@ -53,12 +54,12 @@ export default function ScreenHeader({
           <ChevronLeft size={24} color={colors.espresso} />
         </Pressable>
         {title ? (
-          <Text
+          <AppText
             className="text-[18px] font-bold text-espresso"
             style={{ fontFamily: fonts.serif }}
           >
             {title}
-          </Text>
+          </AppText>
         ) : (
           <View />
         )}
@@ -75,16 +76,16 @@ export default function ScreenHeader({
         </Pressable>
         {title ? (
           <View className="ml-3 flex-1">
-            <Text
+            <AppText
               className="text-[18px] font-bold text-espresso"
               style={{ fontFamily: fonts.serif }}
             >
               {title}
-            </Text>
+            </AppText>
             {subtitle ? (
-              <Text className="text-[13px] text-stone" numberOfLines={1}>
+              <AppText className="text-[13px] text-stone" numberOfLines={1}>
                 {subtitle}
-              </Text>
+              </AppText>
             ) : null}
           </View>
         ) : null}

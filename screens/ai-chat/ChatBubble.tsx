@@ -1,4 +1,5 @@
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
+import AppText from '../../components/AppText';
 import { Zap } from 'lucide-react-native';
 import type { ChatMessage } from '../../hooks/useAiChat';
 import { RICH_BLOCK_PATTERN, RichBlockType } from '../../shared/richBlocks';
@@ -43,10 +44,10 @@ function renderAssistantContent(
 ) {
   if (message.isStreaming) {
     return (
-      <Text className="text-[15px] leading-[22px] text-ink">
+      <AppText className="text-[15px] leading-[22px] text-ink">
         {message.content}
-        <Text className="text-terra">|</Text>
-      </Text>
+        <AppText className="text-terra">|</AppText>
+      </AppText>
     );
   }
 
@@ -63,9 +64,9 @@ function renderAssistantContent(
     const textBefore = content.slice(lastIndex, match.index).trim();
     if (textBefore) {
       parts.push(
-        <Text key={`text-${matchIndex}`} className="text-[15px] leading-[22px] text-ink">
+        <AppText key={`text-${matchIndex}`} className="text-[15px] leading-[22px] text-ink">
           {textBefore}
-        </Text>,
+        </AppText>,
       );
     }
 
@@ -87,18 +88,18 @@ function renderAssistantContent(
   const remaining = content.slice(lastIndex).trim();
   if (remaining) {
     parts.push(
-      <Text key="text-end" className="text-[15px] leading-[22px] text-ink">
+      <AppText key="text-end" className="text-[15px] leading-[22px] text-ink">
         {remaining}
-      </Text>,
+      </AppText>,
     );
   }
 
   // If no parts were generated (no rich blocks found), render as plain text
   if (parts.length === 0) {
     return (
-      <Text className="text-[15px] leading-[22px] text-ink">
+      <AppText className="text-[15px] leading-[22px] text-ink">
         {message.content}
-      </Text>
+      </AppText>
     );
   }
 
@@ -111,7 +112,7 @@ export default function ChatBubble({ message, onRecipePress, onAction }: ChatBub
   if (isUser) {
     return (
       <View className="mb-3 ml-12 self-end rounded-[20px] bg-terra px-4 py-3">
-        <Text className="text-[15px] leading-[22px] text-white">{message.content}</Text>
+        <AppText className="text-[15px] leading-[22px] text-white">{message.content}</AppText>
       </View>
     );
   }

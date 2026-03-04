@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import AppText from './AppText';
 import { fonts } from '../theme/typography';
 
 type ButtonVariant = 'primary' | 'outline' | 'dark';
@@ -49,12 +50,12 @@ export default function Button({
       disabled={disabled}
       onPress={onPress}>
       {icon && <View className="mr-2">{icon}</View>}
-      <Text
+      <AppText
         className={v.text}
         style={serif ? { fontFamily: fonts.serif } : undefined}
       >
         {label}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }

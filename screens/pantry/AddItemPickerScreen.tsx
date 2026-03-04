@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import AppText from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -51,24 +52,24 @@ function MethodCard({
         </View>
         <View className="flex-1">
           <View className="flex-row items-center gap-2">
-            <Text
+            <AppText
               className={`text-[15px] font-semibold ${isFeatured ? 'text-white' : 'text-espresso'}`}>
               {title}
-            </Text>
+            </AppText>
             {badge && (
               <View className="bg-white/25 px-2 py-0.5 rounded-full">
-                <Text className="text-[10px] text-white font-bold">
+                <AppText className="text-[10px] text-white font-bold">
                   {badge}
-                </Text>
+                </AppText>
               </View>
             )}
           </View>
-          <Text
+          <AppText
             className={`text-[13px] mt-0.5 ${
               isFeatured ? 'text-white/60' : 'text-stone'
             }`}>
             {description}
-          </Text>
+          </AppText>
         </View>
       </View>
     </Pressable>
@@ -82,14 +83,14 @@ export default function AddItemPickerScreen() {
     <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       <ScreenHeader />
       <View className="px-5 pb-2">
-        <Text
+        <AppText
           className="text-[26px] text-espresso mb-2 tracking-[-0.5px]"
           style={{ fontFamily: fonts.serif }}>
           Add Items
-        </Text>
-        <Text className="text-[14px] text-stone mb-6">
+        </AppText>
+        <AppText className="text-[14px] text-stone mb-6">
           Choose how you'd like to add items to your pantry.
-        </Text>
+        </AppText>
       </View>
 
       <View className="px-5">
@@ -119,14 +120,14 @@ export default function AddItemPickerScreen() {
         <View className="bg-terra-pale rounded-card p-4 mt-4 flex-row gap-3">
           <Lightbulb size={18} color={colors.terra.DEFAULT} />
           <View className="flex-1">
-            <Text
+            <AppText
               className="text-[13px] text-espresso mb-1 font-semibold">
               Pro tip
-            </Text>
-            <Text className="text-[12px] text-stone leading-[18px]">
+            </AppText>
+            <AppText className="text-[12px] text-stone leading-[18px]">
               Receipt scanning is the fastest way to add multiple items at once.
               Just snap a photo and we'll extract everything automatically.
-            </Text>
+            </AppText>
           </View>
         </View>
       </View>

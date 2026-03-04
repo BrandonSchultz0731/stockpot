@@ -3,9 +3,9 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
-  Text,
   View,
 } from 'react-native';
+import AppText from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type {
@@ -148,10 +148,10 @@ export default function CookedReviewScreen() {
       {/* Info banner */}
       <View className="mx-4 mb-3 flex-row items-start rounded-[14px] bg-terra-pale px-4 py-3">
         <Info size={16} color={colors.terra.DEFAULT} className="mt-0.5" />
-        <Text className="ml-2.5 flex-1 text-[12px] leading-[18px] text-ink">
+        <AppText className="ml-2.5 flex-1 text-[12px] leading-[18px] text-ink">
           We estimated how much of each ingredient was used. Adjust quantities
           or uncheck items you don't want to deduct.
-        </Text>
+        </AppText>
       </View>
 
       {/* Ingredient rows */}
@@ -180,14 +180,14 @@ export default function CookedReviewScreen() {
                 <Square size={22} color={colors.line.DEFAULT} />
               )}
               <View className="ml-3 flex-1">
-                <Text className="text-[14px] font-semibold text-espresso">
+                <AppText className="text-[14px] font-semibold text-espresso">
                   {item.recipeIngredientName}
-                </Text>
+                </AppText>
                 {item.pantryItemId == null && (
                   <View className="mt-1 self-start rounded bg-berry-pale px-1.5 py-0.5">
-                    <Text className="text-[10px] font-bold uppercase text-berry">
+                    <AppText className="text-[10px] font-bold uppercase text-berry">
                       Not in pantry
-                    </Text>
+                    </AppText>
                   </View>
                 )}
               </View>
@@ -201,23 +201,23 @@ export default function CookedReviewScreen() {
                 >
                   <Minus size={14} color={colors.espresso} />
                 </Pressable>
-                <Text className="mx-4 min-w-[48px] text-center text-[18px] font-bold text-terra">
+                <AppText className="mx-4 min-w-[48px] text-center text-[18px] font-bold text-terra">
                   {formatQuantity(item.adjustedQuantity)}
-                </Text>
+                </AppText>
                 <Pressable
                   onPress={() => adjustQuantity(index, 0.25)}
                   className="h-8 w-8 items-center justify-center rounded-lg border border-line"
                 >
                   <Plus size={14} color={colors.espresso} />
                 </Pressable>
-                <Text className="ml-2 text-[13px] text-stone">
+                <AppText className="ml-2 text-[13px] text-stone">
                   {item.deductUnit}
-                </Text>
+                </AppText>
               </View>
             )}
 
             {item.notes ? (
-              <Text className="mt-2 text-[11px] text-stone">{item.notes}</Text>
+              <AppText className="mt-2 text-[11px] text-stone">{item.notes}</AppText>
             ) : null}
           </View>
         )}
@@ -225,9 +225,9 @@ export default function CookedReviewScreen() {
 
       {/* Footer */}
       <View className="border-t border-line bg-white px-4 pb-6 pt-4">
-        <Text className="mb-3 text-center text-[13px] text-stone">
+        <AppText className="mb-3 text-center text-[13px] text-stone">
           {checkedCount} of {totalCount} ingredients will be deducted
-        </Text>
+        </AppText>
         <Pressable
           onPress={handleConfirm}
           disabled={confirmMutation.isPending}
@@ -238,15 +238,15 @@ export default function CookedReviewScreen() {
           {confirmMutation.isPending ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text className="text-[15px] font-bold text-white">
+            <AppText className="text-[15px] font-bold text-white">
               Confirm & Update Pantry
-            </Text>
+            </AppText>
           )}
         </Pressable>
         <Pressable onPress={handleSkip} className="items-center py-2">
-          <Text className="text-[13px] font-semibold text-stone">
+          <AppText className="text-[13px] font-semibold text-stone">
             Skip — Don't update pantry
-          </Text>
+          </AppText>
         </Pressable>
       </View>
     </SafeAreaView>

@@ -1,4 +1,5 @@
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
+import AppText from '../../components/AppText';
 import { Check } from 'lucide-react-native';
 import colors from '../../theme/colors';
 import { AI_CHAT_TOOL_LABELS } from '../../shared/aiChatTools';
@@ -18,7 +19,7 @@ export default function ToolUseIndicator({ name, done }: ToolUseIndicatorProps) 
       ) : (
         <ActivityIndicator size="small" color={colors.terra.DEFAULT} />
       )}
-      <Text className="ml-1.5 text-xs text-ink">{label}...</Text>
+      <AppText className="ml-1.5 text-xs text-ink">{label}...</AppText>
     </View>
   );
 }

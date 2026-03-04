@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import AppText from '../../components/AppText';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import OnboardingLayout from '../../components/onboarding/OnboardingLayout';
@@ -17,17 +18,17 @@ export default function OBWelcomeScreen() {
       nextLabel="Let's Go">
       <View className="flex-1 items-center justify-center">
         <View className="w-24 h-24 rounded-3xl bg-terra-pale items-center justify-center mb-6">
-          <Text className="text-[48px]">🍲</Text>
+          <AppText className="text-[48px]">🍲</AppText>
         </View>
-        <Text
+        <AppText
           className="text-2xl text-espresso text-center mb-3"
           style={{ fontFamily: fonts.serif }}>
           Welcome to StockPot
-        </Text>
-        <Text className="text-base leading-[22px] text-stone text-center px-6">
+        </AppText>
+        <AppText className="text-base leading-[22px] text-stone text-center px-6">
           Let's personalize your experience so our AI chef can suggest meals
           you'll love.
-        </Text>
+        </AppText>
       </View>
     </OnboardingLayout>
   );

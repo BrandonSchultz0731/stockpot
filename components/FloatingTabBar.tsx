@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import AppText from './AppText';
 import { BlurView } from '@react-native-community/blur';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -75,11 +76,11 @@ export default function FloatingTabBar({
                   size={20}
                   color={isFocused ? '#FFFFFF' : colors.stone}
                 />
-                <Text
+                <AppText
                   className={`text-[9px] font-semibold tracking-[0.3px] ${isFocused ? 'text-white' : 'text-stone'}`}
                 >
                   {config.label}
-                </Text>
+                </AppText>
               </Pressable>
             );
           })}

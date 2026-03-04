@@ -1,4 +1,4 @@
-import { Text } from 'react-native';
+import AppText from '../../components/AppText';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import OnboardingLayout from '../../components/onboarding/OnboardingLayout';
@@ -23,15 +23,15 @@ export default function OBDietScreen() {
       step={2}
       onBack={() => navigation.goBack()}
       onNext={() => navigation.navigate('OBExclude')}>
-      <Text
+      <AppText
         className="text-2xl text-espresso mb-2 mt-2"
         style={{ fontFamily: fonts.serif }}>
         Dietary Preferences
-      </Text>
-      <Text className="text-base leading-[22px] text-stone mb-6">
+      </AppText>
+      <AppText className="text-base leading-[22px] text-stone mb-6">
         Select any that apply. Our AI will use these to tailor recipe
         suggestions.
-      </Text>
+      </AppText>
 
       <DietSelector selectedDiets={data.diets} onToggle={toggleDiet} />
     </OnboardingLayout>

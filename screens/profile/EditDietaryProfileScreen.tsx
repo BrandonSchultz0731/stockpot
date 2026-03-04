@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ScrollView, Text } from 'react-native';
+import { ScrollView } from 'react-native';
+import AppText from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -61,14 +62,14 @@ export default function EditDietaryProfileScreen() {
 
       <ScrollView contentContainerClassName="px-5 pb-28">
         {/* Dietary Preferences */}
-        <Text
+        <AppText
           className="text-lg text-espresso mb-2 mt-2"
           style={{ fontFamily: fonts.serif }}>
           Dietary Preferences
-        </Text>
-        <Text className="text-sm text-stone mb-4">
+        </AppText>
+        <AppText className="text-sm text-stone mb-4">
           Select any that apply to your diet.
-        </Text>
+        </AppText>
         <DietSelector
           selectedDiets={diets}
           onToggle={toggleDiet}
@@ -76,14 +77,14 @@ export default function EditDietaryProfileScreen() {
         />
 
         {/* Excluded Ingredients */}
-        <Text
+        <AppText
           className="text-lg text-espresso mb-2"
           style={{ fontFamily: fonts.serif }}>
           Ingredients to Avoid
-        </Text>
-        <Text className="text-sm text-stone mb-4">
+        </AppText>
+        <AppText className="text-sm text-stone mb-4">
           We'll make sure these never show up in your recipes.
-        </Text>
+        </AppText>
         <ExcludedIngredientsSelector
           selectedIngredients={excludedIngredients}
           onToggle={toggleIngredient}
@@ -91,22 +92,22 @@ export default function EditDietaryProfileScreen() {
         />
 
         {/* Household Size */}
-        <Text
+        <AppText
           className="text-lg text-espresso mb-4"
           style={{ fontFamily: fonts.serif }}>
           Household Size
-        </Text>
+        </AppText>
         <HouseholdSizeStepper
           value={householdSize}
           onChange={setHouseholdSize}
         />
 
         {/* Cooking Skill */}
-        <Text
+        <AppText
           className="text-lg text-espresso mb-3"
           style={{ fontFamily: fonts.serif }}>
           Cooking Skill
-        </Text>
+        </AppText>
         <CookingSkillSelector
           selectedSkill={cookingSkill}
           onSelect={setCookingSkill}
@@ -114,9 +115,9 @@ export default function EditDietaryProfileScreen() {
 
         {/* Error state */}
         {mutation.isError && (
-          <Text className="text-sm text-berry mt-3 text-center">
+          <AppText className="text-sm text-berry mt-3 text-center">
             Something went wrong. Please try again.
-          </Text>
+          </AppText>
         )}
       </ScrollView>
     </SafeAreaView>

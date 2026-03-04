@@ -1,4 +1,5 @@
-import { Pressable, Text } from 'react-native';
+import { Pressable } from 'react-native';
+import AppText from '../AppText';
 import { Check, X } from 'lucide-react-native';
 import clsx from 'clsx';
 import colors from '../../theme/colors';
@@ -27,7 +28,7 @@ export default function PillButton({
         !selected && 'bg-white border border-line',
       )}
       onPress={onPress}>
-      <Text
+      <AppText
         className={clsx(
           'text-sm',
           selected && isDiet && 'text-white',
@@ -36,7 +37,7 @@ export default function PillButton({
           selected ? 'font-semibold' : 'font-normal',
         )}>
         {label}
-      </Text>
+      </AppText>
       {selected && isDiet && (
         <Check size={14} color="#fff" className="ml-1.5" />
       )}

@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import AppText from '../AppText';
 import { Check } from 'lucide-react-native';
 import clsx from 'clsx';
 
@@ -23,11 +24,11 @@ export default function SelectableCard({
       )}
       onPress={onPress}>
       <View className="flex-1">
-        <Text className="text-[15px] font-semibold text-espresso">
+        <AppText className="text-[15px] font-semibold text-espresso">
           {title}
-        </Text>
+        </AppText>
         {description ? (
-          <Text className="text-sm text-stone mt-0.5">{description}</Text>
+          <AppText className="text-sm text-stone mt-0.5">{description}</AppText>
         ) : null}
       </View>
       {selected && (

@@ -1,4 +1,5 @@
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
+import AppText from '../../components/AppText';
 import { Circle, CircleAlert, CircleCheck } from 'lucide-react-native';
 import { PantryStatus } from '../../shared/enums';
 import colors from '../../theme/colors';
@@ -42,11 +43,11 @@ export default function RichIngredientList({ data }: RichIngredientListProps) {
             <View className={`mr-2 rounded-full p-0.5 ${config.bg}`}>
               <Icon size={14} color={config.color} />
             </View>
-            <Text className="flex-1 text-[13px] text-espresso">{item.name}</Text>
+            <AppText className="flex-1 text-[13px] text-espresso">{item.name}</AppText>
             {item.quantity != null && (
-              <Text className="text-xs text-stone">
+              <AppText className="text-xs text-stone">
                 {item.quantity} {item.unit}
-              </Text>
+              </AppText>
             )}
           </View>
         );
