@@ -42,6 +42,16 @@ export class RecipesController {
     return this.recipesService.findById(recipeId, userId);
   }
 
+  @Post(':id/pantry-check')
+  @HttpCode(200)
+  checkPantryStatus(
+    @GetUser('id') userId: string,
+    @Param('id') recipeId: string,
+    @Body() body: { scale: number },
+  ) {
+    return this.recipesService.checkPantryStatus(recipeId, userId, body.scale);
+  }
+
   @Post(':id/save')
   saveRecipe(
     @GetUser('id') userId: string,

@@ -14,13 +14,14 @@ import {
   Plus,
   RefreshCw,
   ShoppingCart,
+  UtensilsCrossed,
   Zap,
 } from 'lucide-react-native';
 import colors from '../../theme/colors';
 import pluralize from 'pluralize';
 import { MealType, DAY_LABELS } from '../../shared/enums';
 import { countByPantryStatus } from '../../shared/pantryStatusCounts';
-import type { MealPlanEntry } from '../../hooks/useCurrentMealPlanQuery';
+import { getEatServings, type MealPlanEntry } from '../../hooks/useCurrentMealPlanQuery';
 
 export const MEAL_TYPE_ORDER: Record<string, number> = {
   [MealType.Breakfast]: 0,
@@ -248,6 +249,7 @@ export function MealCard({
   onToggleSave: () => void;
   onPress: () => void;
 }) {
+  const isLeftover = !!entry.leftoverSourceEntryId;
   const ingredients = entry.recipe.ingredients ?? [];
   const { none: noneCount, low: lowCount } = countByPantryStatus(ingredients);
 
@@ -291,7 +293,15 @@ export function MealCard({
             <Text className="text-[11px] font-bold uppercase tracking-[0.5px] text-orange">
               {entry.mealType}
             </Text>
-            {entry.isCooked && (
+            {isLeftover && (
+              <View className="ml-2 flex-row items-center rounded-md px-1.5 py-0.5" style={{ backgroundColor: colors.warning.pale }}>
+                <UtensilsCrossed size={10} color={colors.warning.icon} />
+                <Text className="ml-0.5 text-[10px] font-semibold" style={{ color: colors.warning.icon }}>
+                  Leftovers
+                </Text>
+              </View>
+            )}
+            {entry.isCooked && !isLeftover && (
               <View className="ml-2 flex-row items-center rounded-md bg-success-pale px-1.5 py-0.5">
                 <Check size={10} color={colors.success.DEFAULT} />
                 <Text className="ml-0.5 text-[10px] font-semibold text-success">Cooked</Text>
@@ -306,7 +316,7 @@ export function MealCard({
           </Text>
           <View className="mt-0.5 flex-row items-center">
             <Text className="text-[12px] text-muted">
-              {entry.recipe.nutrition?.calories ?? 0} cal
+              {(entry.recipe.nutrition?.calories ?? 0) * getEatServings(entry)} cal
             </Text>
             {renderPantryBadge()}
           </View>
@@ -324,8 +334,8 @@ export function MealCard({
         </Pressable>
       </View>
 
-      {/* Bottom action bar — hidden for cooked entries */}
-      {!entry.isCooked && (
+      {/* Bottom action bar — hidden for cooked and leftover entries */}
+      {!entry.isCooked && !isLeftover && (
         <View className="flex-row items-center border-t border-border px-3.5 py-2">
           <Pressable
             onPress={onSwap}

@@ -12,6 +12,9 @@ export interface MealPlanEntry {
   dayOfWeek: number;
   mealType: MealType;
   servings: number;
+  servingsToCook: number | null;
+  leftoverSourceEntryId: string | null;
+  leftoverEntries?: MealPlanEntry[];
   isLocked: boolean;
   isCooked: boolean;
   recipe: MealPlanRecipe;
@@ -23,6 +26,11 @@ export interface MealPlan {
   status: string;
   source: string;
   entries: MealPlanEntry[];
+}
+
+/** How many servings this person eats — only differs from 1 when the user explicitly adjusted via stepper. */
+export function getEatServings(entry: MealPlanEntry): number {
+  return entry.servingsToCook != null ? entry.servings : 1;
 }
 
 export function useCurrentMealPlanQuery() {

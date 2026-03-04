@@ -20,6 +20,7 @@ export const ROUTES = {
     SAVED: '/recipes/saved',
     DETAIL: (id: string) => `/recipes/${id}`,
     SAVE: (id: string) => `/recipes/${id}/save`,
+    PANTRY_CHECK: (id: string) => `/recipes/${id}/pantry-check`,
     UPDATE_SAVED: (id: string) => `/recipes/saved/${id}`,
   },
   FOOD: {
@@ -42,9 +43,11 @@ export const ROUTES = {
     WEEK: (date: string) => `/meal-plans/week/${date}`,
     UPDATE_ENTRY: (id: string) => `/meal-plans/entries/${id}`,
     ADD_ENTRY: '/meal-plans/entries/add',
+    ADD_LEFTOVER: '/meal-plans/entries/add-leftover',
     SWAP_ENTRY: (id: string) => `/meal-plans/entries/${id}/swap`,
     COOK_PREVIEW: (id: string) => `/meal-plans/entries/${id}/cook/preview`,
     COOK_CONFIRM: (id: string) => `/meal-plans/entries/${id}/cook/confirm`,
+    LEFTOVERS: (planId: string) => `/meal-plans/${planId}/leftovers`,
     DELETE: (id: string) => `/meal-plans/${id}`,
   },
   SHOPPING_LISTS: {

@@ -17,13 +17,15 @@ import type { MealsStackParamList } from '../navigation/types';
 import { getCurrentWeekStartDate, getTodayDayOfWeek } from '../utils/dayOfWeek';
 import { captureFromCamera, pickFromGallery } from '../utils/imageCapture';
 
-import { useCurrentMealPlanQuery } from '../hooks/useCurrentMealPlanQuery';
+import { useCurrentMealPlanQuery, getEatServings } from '../hooks/useCurrentMealPlanQuery';
 import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
 import { useSavedRecipes } from '../hooks/useSavedRecipes';
 import {
   useGenerateMealPlanMutation,
   useSwapMealPlanEntryMutation,
   useAddMealPlanEntryMutation,
+  useAvailableLeftoversQuery,
+  useAddLeftoverEntryMutation,
 } from '../hooks/useMealPlanMutations';
 import { useShoppingListQuery } from '../hooks/useShoppingListQuery';
 import {
@@ -61,6 +63,10 @@ export default function MealsScreen() {
   const generateMutation = useGenerateMealPlanMutation();
   const swapMutation = useSwapMealPlanEntryMutation();
   const addEntryMutation = useAddMealPlanEntryMutation();
+  const addLeftoverMutation = useAddLeftoverEntryMutation();
+
+  // Leftovers
+  const { data: availableLeftovers } = useAvailableLeftoversQuery(mealPlan?.id);
 
   // Shopping list
   const { data: shoppingList } = useShoppingListQuery(mealPlan?.id);
@@ -89,10 +95,11 @@ export default function MealsScreen() {
     for (const entry of selectedDayEntries) {
       const n = entry.recipe.nutrition;
       if (n) {
-        totals.calories += n.calories ?? 0;
-        totals.protein += n.protein ?? 0;
-        totals.carbs += n.carbs ?? 0;
-        totals.fat += n.fat ?? 0;
+        const s = getEatServings(entry);
+        totals.calories += (n.calories ?? 0) * s;
+        totals.protein += (n.protein ?? 0) * s;
+        totals.carbs += (n.carbs ?? 0) * s;
+        totals.fat += (n.fat ?? 0) * s;
       }
     }
     return totals;
@@ -111,10 +118,12 @@ export default function MealsScreen() {
 
   const ALL_MEAL_TYPES = [MealType.Breakfast, MealType.Lunch, MealType.Dinner, MealType.Snack] as const;
 
-  const entryByMealType = useMemo(() => {
-    const map = new Map<MealType, typeof selectedDayEntries[number]>();
+  const entriesByMealType = useMemo(() => {
+    const map = new Map<MealType, typeof selectedDayEntries[number][]>();
     for (const entry of selectedDayEntries) {
-      map.set(entry.mealType, entry);
+      const list = map.get(entry.mealType) ?? [];
+      list.push(entry);
+      map.set(entry.mealType, list);
     }
     return map;
   }, [selectedDayEntries]);
@@ -196,6 +205,20 @@ export default function MealsScreen() {
       );
     },
     [mealPlan, addSheetMealType, selectedDay, addEntryMutation],
+  );
+
+  const handleAddLeftover = useCallback(
+    (sourceEntryId: string, servings: number) => {
+      if (!mealPlan) return;
+      addLeftoverMutation.mutate({
+        mealPlanId: mealPlan.id,
+        sourceEntryId,
+        dayOfWeek: selectedDay,
+        mealType: addSheetMealType,
+        servings,
+      });
+    },
+    [mealPlan, selectedDay, addSheetMealType, addLeftoverMutation],
   );
 
   const handlePhotoCapture = useCallback(
@@ -319,27 +342,36 @@ export default function MealsScreen() {
 
             <View className="mt-1">
               {ALL_MEAL_TYPES.map((mealType) => {
-                const entry = entryByMealType.get(mealType);
-                if (entry) {
-                  return (
-                    <MealCard
-                      key={entry.id}
-                      entry={entry}
-                      isSaved={isSaved(entry.recipe.id)}
-                      isSwapping={swappingEntryId === entry.id}
-                      onSwap={() => handleSwap(entry.id)}
-                      onToggleSave={() => handleToggleSave(entry.recipe.id)}
-                      onPress={() => navigation.navigate('RecipeDetail', { recipeId: entry.recipe.id, title: entry.recipe.title, entryId: entry.id, isCooked: entry.isCooked })}
-                    />
-                  );
-                }
+                const entries = entriesByMealType.get(mealType) ?? [];
                 return (
-                  <MealPlaceholder
-                    key={mealType}
-                    mealType={mealType}
-                    onPress={() => handlePlaceholderPress(mealType)}
-                    isLoading={loadingMealType === mealType}
-                  />
+                  <View key={mealType}>
+                    {entries.map((entry) => (
+                      <MealCard
+                        key={entry.id}
+                        entry={entry}
+                        isSaved={isSaved(entry.recipe.id)}
+                        isSwapping={swappingEntryId === entry.id}
+                        onSwap={() => handleSwap(entry.id)}
+                        onToggleSave={() => handleToggleSave(entry.recipe.id)}
+                        onPress={() =>
+                          navigation.navigate('RecipeDetail', {
+                            recipeId: entry.recipe.id,
+                            title: entry.recipe.title,
+                            entryId: entry.id,
+                            isCooked: entry.isCooked,
+                            isLeftover: !!entry.leftoverSourceEntryId,
+                          })
+                        }
+                      />
+                    ))}
+                    {entries.length === 0 && (
+                      <MealPlaceholder
+                        mealType={mealType}
+                        onPress={() => handlePlaceholderPress(mealType)}
+                        isLoading={loadingMealType === mealType}
+                      />
+                    )}
+                  </View>
                 );
               })}
             </View>
@@ -369,6 +401,8 @@ export default function MealsScreen() {
         onAddMeal={handleAddMeal}
         onPhotoCapture={handlePhotoCapture}
         isLoading={addEntryMutation.isPending}
+        availableLeftovers={availableLeftovers}
+        onAddLeftover={handleAddLeftover}
       />
     </SafeAreaView>
   );

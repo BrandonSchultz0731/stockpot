@@ -12,6 +12,8 @@ const mockMealPlansService = {
   cookPreview: jest.fn(),
   confirmCook: jest.fn(),
   deletePlan: jest.fn(),
+  getAvailableLeftovers: jest.fn(),
+  addLeftoverEntry: jest.fn(),
 };
 
 describe('MealPlansController', () => {
@@ -77,11 +79,12 @@ describe('MealPlansController', () => {
       };
       mockMealPlansService.cookPreview.mockResolvedValue(previewResult);
 
-      const result = await controller.cookPreview('u1', 'entry-1');
+      const result = await controller.cookPreview('u1', 'entry-1', {});
 
       expect(mockMealPlansService.cookPreview).toHaveBeenCalledWith(
         'u1',
         'entry-1',
+        undefined,
       );
       expect(result).toEqual(previewResult);
     });
@@ -110,6 +113,55 @@ describe('MealPlansController', () => {
         dto,
       );
       expect(result).toEqual(confirmResult);
+    });
+  });
+
+  describe('cookPreview with servingsToCook', () => {
+    it('should pass servingsToCook from body to service', async () => {
+      const previewResult = { entryId: 'entry-1', recipeTitle: 'Test', deductions: [] };
+      mockMealPlansService.cookPreview.mockResolvedValue(previewResult);
+
+      const result = await controller.cookPreview('u1', 'entry-1', { servingsToCook: 6 });
+
+      expect(mockMealPlansService.cookPreview).toHaveBeenCalledWith('u1', 'entry-1', 6);
+      expect(result).toEqual(previewResult);
+    });
+  });
+
+  describe('getAvailableLeftovers', () => {
+    it('should delegate to MealPlansService.getAvailableLeftovers', async () => {
+      const leftovers = [
+        { sourceEntryId: 'e1', recipeId: 'r1', recipeTitle: 'Chicken', recipeImageUrl: null, availableServings: 2 },
+      ];
+      mockMealPlansService.getAvailableLeftovers.mockResolvedValue(leftovers);
+
+      const result = await controller.getAvailableLeftovers('u1', 'plan-1');
+
+      expect(mockMealPlansService.getAvailableLeftovers).toHaveBeenCalledWith('u1', 'plan-1');
+      expect(result).toEqual(leftovers);
+    });
+  });
+
+  describe('addLeftoverEntry', () => {
+    it('should delegate to MealPlansService.addLeftoverEntry', async () => {
+      const dto = {
+        mealPlanId: 'plan-1',
+        sourceEntryId: 'source-1',
+        dayOfWeek: 2,
+        mealType: 'Dinner',
+        servings: 1,
+      };
+      const entryResult = {
+        id: 'leftover-1',
+        recipeId: 'recipe-1',
+        leftoverSourceEntryId: 'source-1',
+      };
+      mockMealPlansService.addLeftoverEntry.mockResolvedValue(entryResult);
+
+      const result = await controller.addLeftoverEntry('u1', dto as any);
+
+      expect(mockMealPlansService.addLeftoverEntry).toHaveBeenCalledWith('u1', dto);
+      expect(result).toEqual(entryResult);
     });
   });
 });

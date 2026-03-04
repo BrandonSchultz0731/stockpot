@@ -15,7 +15,7 @@ import { GenerateRecipeDto } from './dto/generate-recipe.dto';
 import { SaveRecipeDto } from './dto/save-recipe.dto';
 import { UpdateSavedRecipeDto } from './dto/update-saved-recipe.dto';
 import { ACTIVE_MODEL } from '../ai-models';
-import { RecipeSource, MessageType } from '@shared/enums';
+import { PantryStatus, RecipeSource, MessageType } from '@shared/enums';
 import { buildRecipeGenerationPrompt } from '../prompts';
 import { enrichPantryStatus } from '../pantry/enrich-pantry';
 import { extractText, parseArrayFromAI } from '../utils/ai-response';
@@ -45,6 +45,32 @@ export class RecipesService {
       recipe.ingredients = enrichPantryStatus(recipe.ingredients, pantryItems);
     }
     return recipe;
+  }
+
+  async checkPantryStatus(
+    recipeId: string,
+    userId: string,
+    scale: number,
+  ): Promise<Record<string, PantryStatus>> {
+    const recipe = await this.recipeRepo.findOne({ where: { id: recipeId } });
+    if (!recipe) {
+      throw new NotFoundException('Recipe not found');
+    }
+
+    const scaledIngredients = (recipe.ingredients ?? []).map((ing) => ({
+      ...ing,
+      quantity: ing.quantity * scale,
+      baseQuantity: ing.baseQuantity * scale,
+    }));
+
+    const pantryItems = await this.pantryService.findAllForUser(userId);
+    const enriched = enrichPantryStatus(scaledIngredients, pantryItems);
+
+    const result: Record<string, PantryStatus> = {};
+    for (let i = 0; i < enriched.length; i++) {
+      result[i] = enriched[i].pantryStatus ?? PantryStatus.None;
+    }
+    return result;
   }
 
   async generateRecipes(

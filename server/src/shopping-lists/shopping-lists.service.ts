@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { ShoppingList } from './entities/shopping-list.entity';
 import { MealPlanEntry } from '../meal-plans/entities/meal-plan-entry.entity';
@@ -36,9 +36,9 @@ export class ShoppingListsService {
 
   async generateForMealPlan(planId: string, userId: string): Promise<void> {
     try {
-      // 1. Load all entries with recipes for this plan
+      // 1. Load all non-leftover entries with recipes for this plan
       const entries = await this.entryRepo.find({
-        where: { mealPlanId: planId },
+        where: { mealPlanId: planId, leftoverSourceEntryId: IsNull() },
         relations: ['recipe'],
       });
 

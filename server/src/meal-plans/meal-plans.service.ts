@@ -16,6 +16,7 @@ import { UsersService } from '../users/users.service';
 import { GenerateMealPlanDto } from './dto/generate-meal-plan.dto';
 import { UpdateMealPlanEntryDto } from './dto/update-meal-plan-entry.dto';
 import { SwapMealPlanEntryDto } from './dto/swap-meal-plan-entry.dto';
+import { AddLeftoverEntryDto } from './dto/add-leftover-entry.dto';
 import { MealType, RecipeSource, MealScheduleSlot, DAY_NAMES, MessageType } from '@shared/enums';
 import { ACTIVE_MODEL } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
@@ -29,6 +30,7 @@ import { AddMealPlanEntryDto } from './dto/add-meal-plan-entry.dto';
 import { extractText, parseJsonFromAI, parseObjectFromAI } from '../utils/ai-response';
 import { normalizeImageMime } from '../utils/mime';
 import { formatPantryForPrompt, buildPantryFoodItems, mapResolvedIngredients, buildRecipeData, ParsedRecipe } from '../utils/recipe-builder';
+import { IsNull } from 'typeorm';
 
 @Injectable()
 export class MealPlansService {
@@ -51,7 +53,7 @@ export class MealPlansService {
   async getCurrentPlan(userId: string): Promise<MealPlan> {
     const plan = await this.mealPlanRepo.findOne({
       where: { userId },
-      relations: ['entries', 'entries.recipe'],
+      relations: ['entries', 'entries.recipe', 'entries.leftoverEntries'],
       order: { weekStartDate: 'DESC' },
     });
     if (!plan) {
@@ -66,7 +68,7 @@ export class MealPlansService {
   async getPlanByWeek(userId: string, weekStartDate: string): Promise<MealPlan> {
     const plan = await this.mealPlanRepo.findOne({
       where: { userId, weekStartDate },
-      relations: ['entries', 'entries.recipe'],
+      relations: ['entries', 'entries.recipe', 'entries.leftoverEntries'],
     });
 
     if (!plan) {
@@ -286,8 +288,12 @@ export class MealPlansService {
       { source: RecipeSource.AI, mealType: entry.mealType, servings: entry.servings },
     );
 
+    // Remove any leftover entries that reference this source before swapping
+    await this.entryRepo.delete({ leftoverSourceEntryId: entry.id });
+
     entry.recipe = savedRecipe;
     entry.recipeId = savedRecipe.id;
+    entry.servingsToCook = null;
     const savedEntry = await this.entryRepo.save(entry);
 
     const returnedEntry = await this.entryRepo.findOne({
@@ -330,6 +336,7 @@ export class MealPlansService {
         mealPlanId: dto.mealPlanId,
         dayOfWeek: dto.dayOfWeek,
         mealType: dto.mealType,
+        leftoverSourceEntryId: IsNull(),
       },
     });
     if (existingEntry) {
@@ -560,7 +567,7 @@ export class MealPlansService {
     return this.recipeRepo.save(recipe);
   }
 
-  async cookPreview(userId: string, entryId: string) {
+  async cookPreview(userId: string, entryId: string, servingsToCook?: number) {
     const entry = await this.entryRepo.findOne({
       where: { id: entryId },
       relations: ['mealPlan', 'recipe'],
@@ -580,9 +587,18 @@ export class MealPlansService {
       foodCacheId: item.foodCacheId,
     }));
 
+    // Scale ingredients if servingsToCook differs from recipe servings
+    const recipeServings = entry.recipe.servings || 1;
+    const cookServings = servingsToCook ?? entry.servingsToCook ?? recipeServings;
+    const scale = cookServings / recipeServings;
+    const scaledIngredients = (entry.recipe.ingredients ?? []).map((ing) => ({
+      ...ing,
+      quantity: Math.round(ing.quantity * scale * 100) / 100,
+    }));
+
     // 1. Deterministic deductions
     const deductions = computeCookDeductions(
-      entry.recipe.ingredients ?? [],
+      scaledIngredients,
       pantryData,
     );
 
@@ -616,6 +632,12 @@ export class MealPlansService {
 
     const result = await this.pantryService.deductItems(userId, dto.deductions);
 
+    if (dto.servingsToCook != null) {
+      entry.servingsToCook = dto.servingsToCook;
+    }
+    if (dto.servingsToEat != null) {
+      entry.servings = dto.servingsToEat;
+    }
     entry.isCooked = true;
     await this.entryRepo.save(entry);
 
@@ -625,6 +647,101 @@ export class MealPlansService {
       pantryUpdated: result.updatedPantryIds.length,
       pantryRemoved: result.removedPantryIds.length,
     };
+  }
+
+  async getAvailableLeftovers(userId: string, mealPlanId: string) {
+    const plan = await this.mealPlanRepo.findOne({
+      where: { id: mealPlanId, userId },
+    });
+    if (!plan) {
+      throw new NotFoundException('Meal plan not found');
+    }
+
+    // Find entries that have servingsToCook set (i.e. user intends to cook extra)
+    const sourceEntries = await this.entryRepo.find({
+      where: {
+        mealPlanId,
+        leftoverSourceEntryId: IsNull(),
+      },
+      relations: ['recipe', 'leftoverEntries'],
+    });
+
+    const results: {
+      sourceEntryId: string;
+      recipeId: string;
+      recipeTitle: string;
+      recipeImageUrl: string | null;
+      availableServings: number;
+    }[] = [];
+
+    for (const entry of sourceEntries) {
+      if (entry.servingsToCook == null || entry.servingsToCook <= entry.servings) {
+        continue;
+      }
+      const assignedLeftovers = (entry.leftoverEntries ?? []).reduce(
+        (sum, le) => sum + le.servings,
+        0,
+      );
+      const available = entry.servingsToCook - entry.servings - assignedLeftovers;
+      if (available > 0) {
+        results.push({
+          sourceEntryId: entry.id,
+          recipeId: entry.recipeId,
+          recipeTitle: entry.recipe.title,
+          recipeImageUrl: entry.recipe.imageUrl ?? null,
+          availableServings: available,
+        });
+      }
+    }
+
+    return results;
+  }
+
+  async addLeftoverEntry(userId: string, dto: AddLeftoverEntryDto) {
+    const plan = await this.mealPlanRepo.findOne({
+      where: { id: dto.mealPlanId, userId },
+    });
+    if (!plan) {
+      throw new NotFoundException('Meal plan not found');
+    }
+
+    const sourceEntry = await this.entryRepo.findOne({
+      where: { id: dto.sourceEntryId, mealPlanId: dto.mealPlanId },
+      relations: ['leftoverEntries'],
+    });
+    if (!sourceEntry) {
+      throw new NotFoundException('Source entry not found');
+    }
+    if (sourceEntry.servingsToCook == null) {
+      throw new BadRequestException('Source entry has no servings to cook set');
+    }
+
+    const assignedLeftovers = (sourceEntry.leftoverEntries ?? []).reduce(
+      (sum, le) => sum + le.servings,
+      0,
+    );
+    const available = sourceEntry.servingsToCook - sourceEntry.servings - assignedLeftovers;
+    if (dto.servings > available) {
+      throw new BadRequestException(
+        `Only ${available} leftover servings available`,
+      );
+    }
+
+    const entry = this.entryRepo.create({
+      mealPlanId: dto.mealPlanId,
+      recipeId: sourceEntry.recipeId,
+      dayOfWeek: dto.dayOfWeek,
+      mealType: dto.mealType,
+      servings: dto.servings,
+      leftoverSourceEntryId: dto.sourceEntryId,
+      isLocked: true,
+    });
+    const savedEntry = await this.entryRepo.save(entry);
+
+    return this.entryRepo.findOne({
+      where: { id: savedEntry.id },
+      relations: ['recipe'],
+    });
   }
 
   async deletePlan(userId: string, planId: string): Promise<void> {
