@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -14,10 +15,12 @@ import colors from '../theme/colors';
 import { MealPlanStatus, MealType } from '../shared/enums';
 import type { MealScheduleSlot } from '../shared/enums';
 import type { MealsStackParamList } from '../navigation/types';
-import { getCurrentWeekStartDate, getTodayDayOfWeek } from '../utils/dayOfWeek';
+import { getTodayDayOfWeek } from '../utils/dayOfWeek';
 import { captureFromCamera, pickFromGallery } from '../utils/imageCapture';
 
-import { useCurrentMealPlanQuery, getEatServings } from '../hooks/useCurrentMealPlanQuery';
+import { getEatServings } from '../hooks/useCurrentMealPlanQuery';
+import { useMealPlanListQuery } from '../hooks/useMealPlanListQuery';
+import { useMealPlanByWeekQuery } from '../hooks/useMealPlanByWeekQuery';
 import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
 import { useSavedRecipes } from '../hooks/useSavedRecipes';
 import {
@@ -33,7 +36,7 @@ import {
   formatWeekDateRange,
   getWeekDates,
   MealPlanHeader,
-  WeekDateSubtitle,
+  WeekNavigator,
   DaySelector,
   NutritionSummaryBar,
   MealCard,
@@ -44,17 +47,44 @@ import {
 import MealScheduleSelector from './meals/MealScheduleSelector';
 import AddMealActionSheet from './meals/AddMealActionSheet';
 
+/** Find the plan whose week contains today (weekStartDate <= today <= weekStartDate + 6). */
+function findCurrentWeekDate(planDates: string[]): string | null {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  for (const d of planDates) {
+    const start = new Date(d + 'T00:00:00').getTime();
+    const end = start + 6 * 24 * 60 * 60 * 1000;
+    if (today >= start && today <= end) return d;
+  }
+  return null;
+}
+
 export default function MealsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MealsStackParamList>>();
 
   // Data hooks
+  const { data: planList, isLoading: isListLoading } = useMealPlanListQuery();
+  const [viewedWeekStartDate, setViewedWeekStartDate] = useState<string | null>(null);
+
+  // Sorted plan dates (DESC — index 0 = newest)
+  const sortedPlanDates = useMemo(
+    () => (planList ?? []).map((p) => p.weekStartDate),
+    [planList],
+  );
+
+  // Auto-select: find the plan that covers today, else null (shows empty state for current week)
+  const effectiveWeekStartDate = useMemo(() => {
+    if (viewedWeekStartDate != null) return viewedWeekStartDate;
+    return findCurrentWeekDate(sortedPlanDates);
+  }, [viewedWeekStartDate, sortedPlanDates]);
+
   const {
     data: mealPlan,
     isLoading: isPlanLoading,
     refetch,
-  } = useCurrentMealPlanQuery();
+  } = useMealPlanByWeekQuery(effectiveWeekStartDate);
 
-  const weekStart = mealPlan?.weekStartDate ?? getCurrentWeekStartDate();
+  const weekStart = effectiveWeekStartDate;
 
   const { data: userProfile } = useUserProfileQuery();
   const { isSaved, toggleSave } = useSavedRecipes();
@@ -79,9 +109,58 @@ export default function MealsScreen() {
   const [addSheetMealType, setAddSheetMealType] = useState<MealType>(MealType.Breakfast);
   const [loadingMealType, setLoadingMealType] = useState<MealType | null>(null);
 
+  // Week navigation
+  const viewedIndex = useMemo(
+    () => (effectiveWeekStartDate ? sortedPlanDates.indexOf(effectiveWeekStartDate) : -1),
+    [effectiveWeekStartDate, sortedPlanDates],
+  );
+
+  // hasNext = there's a newer plan (lower index). hasPrevious = there's an older plan (higher index).
+  // Special case: if user is viewing current week with no plan (effectiveWeekStartDate is null),
+  // still allow navigating to older plans.
+  const hasNext = viewedIndex > 0;
+  const hasPrevious = effectiveWeekStartDate == null
+    ? sortedPlanDates.length > 0
+    : viewedIndex >= 0 && viewedIndex < sortedPlanDates.length - 1;
+
+  const handlePreviousWeek = useCallback(() => {
+    if (effectiveWeekStartDate == null) {
+      // Viewing current week with no plan — go to newest existing plan
+      if (sortedPlanDates.length > 0) {
+        setViewedWeekStartDate(sortedPlanDates[0]);
+      }
+    } else if (viewedIndex >= 0 && viewedIndex < sortedPlanDates.length - 1) {
+      setViewedWeekStartDate(sortedPlanDates[viewedIndex + 1]);
+    }
+  }, [effectiveWeekStartDate, viewedIndex, sortedPlanDates]);
+
+  const handleNextWeek = useCallback(() => {
+    if (viewedIndex > 0) {
+      setViewedWeekStartDate(sortedPlanDates[viewedIndex - 1]);
+    }
+  }, [viewedIndex, sortedPlanDates]);
+
+  // Reset selectedDay when week changes
+  useEffect(() => {
+    if (!weekStart) return;
+    const today = new Date();
+    const todayDow = today.getDay();
+    const start = new Date(weekStart + 'T00:00:00');
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    if (today >= start && today <= end) {
+      setSelectedDay(todayDow);
+    } else {
+      setSelectedDay(start.getDay());
+    }
+  }, [weekStart]);
+
   // Derived data
-  const weekDates = useMemo(() => getWeekDates(weekStart), [weekStart]);
-  const weekDateRangeLabel = useMemo(() => formatWeekDateRange(weekStart), [weekStart]);
+  const weekDates = useMemo(() => (weekStart ? getWeekDates(weekStart) : []), [weekStart]);
+  const weekDateRangeLabel = useMemo(
+    () => (weekStart ? formatWeekDateRange(weekStart) : ''),
+    [weekStart],
+  );
 
   const selectedDayEntries = useMemo(() => {
     if (!mealPlan?.entries) return [];
@@ -152,10 +231,34 @@ export default function MealsScreen() {
 
   const handleGenerate = useCallback(
     (schedule: MealScheduleSlot[], weekStartDate: string) => {
-      setShowScheduleSelector(false);
-      generateMutation.mutate({ weekStartDate, mealSchedule: schedule });
+      const doGenerate = () => {
+        setShowScheduleSelector(false);
+        generateMutation.mutate(
+          { weekStartDate, mealSchedule: schedule },
+          {
+            onSuccess: () => {
+              setViewedWeekStartDate(weekStartDate);
+            },
+          },
+        );
+      };
+
+      // Check if a plan already exists for this target week
+      const existingPlan = planList?.find((p) => p.weekStartDate === weekStartDate);
+      if (existingPlan) {
+        Alert.alert(
+          'Replace Existing Plan?',
+          `You already have a meal plan for the week of ${formatWeekDateRange(weekStartDate)}. Generating a new one will replace it.`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Replace', style: 'destructive', onPress: doGenerate },
+          ],
+        );
+      } else {
+        doGenerate();
+      }
     },
-    [generateMutation],
+    [generateMutation, planList],
   );
 
   const handleSwap = useCallback(
@@ -175,7 +278,7 @@ export default function MealsScreen() {
   );
 
   const handleCartPress = useCallback(() => {
-    if (mealPlan) {
+    if (mealPlan && weekStart) {
       navigation.navigate('ShoppingList', {
         mealPlanId: mealPlan.id,
         weekStartDate: weekStart,
@@ -256,12 +359,21 @@ export default function MealsScreen() {
     generateMutation.isPending || mealPlan?.status === MealPlanStatus.Draft;
   const isError = mealPlan?.status === MealPlanStatus.Error;
   const isActive = mealPlan?.status === MealPlanStatus.Active;
-  const hasNoPlan = !isPlanLoading && mealPlan == null;
+  const hasNoPlan = !isPlanLoading && !isListLoading && mealPlan == null;
+
+  // Week navigator props shared across render branches
+  const weekNavProps = {
+    label: weekDateRangeLabel,
+    onPrevious: handlePreviousWeek,
+    onNext: handleNextWeek,
+    hasPrevious,
+    hasNext,
+  };
 
   // ---------------------------------------------------------------------------
   // Loading state
   // ---------------------------------------------------------------------------
-  if (isPlanLoading) {
+  if (isListLoading || isPlanLoading) {
     return (
       <SafeAreaView edges={['top']} className="flex-1 items-center justify-center bg-ivory">
         <ActivityIndicator size="large" color={colors.terra.DEFAULT} />
@@ -282,23 +394,28 @@ export default function MealsScreen() {
           cartBadgeCount={shoppingList?.summary ? shoppingList.summary.toBuy + shoppingList.summary.low : undefined}
         />
 
-        {/* ---- Empty state (no plan) ---- */}
+        {/* ---- Empty state (no plan for this week) ---- */}
         {hasNoPlan && !isGenerating && (
-          <View className="flex-1 items-center justify-center px-8 pt-32">
-            <CalendarDays size={48} color={colors.stone} />
-            <Text className="mt-4 text-[18px] font-bold text-espresso">
-              No meal plan yet
-            </Text>
-            <Text className="mt-2 text-center text-[14px] text-stone">
-              Tap Generate to create your weekly meal plan
-            </Text>
-          </View>
+          <>
+            {sortedPlanDates.length > 0 && (
+              <WeekNavigator {...weekNavProps} />
+            )}
+            <View className="flex-1 items-center justify-center px-8 pt-32">
+              <CalendarDays size={48} color={colors.stone} />
+              <Text className="mt-4 text-[18px] font-bold text-espresso">
+                No meal plan yet
+              </Text>
+              <Text className="mt-2 text-center text-[14px] text-stone">
+                Tap Generate to create your weekly meal plan
+              </Text>
+            </View>
+          </>
         )}
 
         {/* ---- Generating state ---- */}
         {isGenerating && (
           <>
-            <WeekDateSubtitle label={weekDateRangeLabel} />
+            <WeekNavigator {...weekNavProps} />
             <View className="items-center justify-center pt-32">
               <ActivityIndicator size="large" color={colors.terra.DEFAULT} />
               <Text className="mt-4 text-[14px] text-stone">
@@ -311,7 +428,7 @@ export default function MealsScreen() {
         {/* ---- Error state ---- */}
         {isError && !isGenerating && (
           <>
-            <WeekDateSubtitle label={weekDateRangeLabel} />
+            <WeekNavigator {...weekNavProps} />
             <View className="mx-4 mt-8 items-center rounded-2xl border border-berry bg-berry-pale p-6">
               <Text className="text-center text-[14px] text-espresso">
                 Something went wrong generating your meal plan.
@@ -328,7 +445,7 @@ export default function MealsScreen() {
         {/* ---- Active plan ---- */}
         {isActive && (
           <>
-            <WeekDateSubtitle label={weekDateRangeLabel} />
+            <WeekNavigator {...weekNavProps} />
             <DaySelector
               weekDates={weekDates}
               selectedDay={selectedDay}
@@ -393,6 +510,7 @@ export default function MealsScreen() {
         visible={showScheduleSelector}
         onClose={() => setShowScheduleSelector(false)}
         onGenerate={handleGenerate}
+        existingPlanWeekStarts={sortedPlanDates}
       />
       <AddMealActionSheet
         visible={showAddSheet}

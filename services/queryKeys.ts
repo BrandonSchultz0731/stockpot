@@ -11,6 +11,7 @@ export const QUERY_KEYS = {
   FOOD_BARCODE: (code: string) => ['food', 'barcode', code],
   MEAL_PLANS: {
     ALL: ['meal-plans'],
+    LIST: ['meal-plans', 'list'],
     CURRENT: ['meal-plans', 'current'],
     WEEK: (date: string) => ['meal-plans', 'week', date],
     COOK_PREVIEW_ALL: ['meal-plans', 'cook-preview'],

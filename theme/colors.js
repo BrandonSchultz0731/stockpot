@@ -20,8 +20,8 @@ const colors = {
 
   // ── Gradients (arrays for LinearGradient `colors` prop) ──
   gradient: {
-    warmHeader: ['#FFF0E8', '#FAF7F2'],   // terra-pale → ivory
-    warmBackground: ['#FFF8F0', '#FAF7F2'], // warm cream → ivory
+    warmHeader: ['#FAF7F2', '#FAF7F2'],   // ivory → ivory
+    warmBackground: ['#FAF7F2', '#FAF7F2'], // ivory → ivory
     avatar: ['#C25B2E', '#E8845A'],        // terra → terra-light
   },
 };
