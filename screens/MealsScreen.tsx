@@ -17,7 +17,7 @@ import type { MealsStackParamList } from '../navigation/types';
 import { getCurrentWeekStartDate, getTodayDayOfWeek } from '../utils/dayOfWeek';
 import { captureFromCamera, pickFromGallery } from '../utils/imageCapture';
 
-import { useCurrentMealPlanQuery } from '../hooks/useCurrentMealPlanQuery';
+import { useCurrentMealPlanQuery, getEatServings } from '../hooks/useCurrentMealPlanQuery';
 import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
 import { useSavedRecipes } from '../hooks/useSavedRecipes';
 import {
@@ -95,7 +95,7 @@ export default function MealsScreen() {
     for (const entry of selectedDayEntries) {
       const n = entry.recipe.nutrition;
       if (n) {
-        const s = entry.servings;
+        const s = getEatServings(entry);
         totals.calories += (n.calories ?? 0) * s;
         totals.protein += (n.protein ?? 0) * s;
         totals.carbs += (n.carbs ?? 0) * s;

@@ -21,7 +21,7 @@ import colors from '../../theme/colors';
 import pluralize from 'pluralize';
 import { MealType, DAY_LABELS } from '../../shared/enums';
 import { countByPantryStatus } from '../../shared/pantryStatusCounts';
-import type { MealPlanEntry } from '../../hooks/useCurrentMealPlanQuery';
+import { getEatServings, type MealPlanEntry } from '../../hooks/useCurrentMealPlanQuery';
 
 export const MEAL_TYPE_ORDER: Record<string, number> = {
   [MealType.Breakfast]: 0,
@@ -316,7 +316,7 @@ export function MealCard({
           </Text>
           <View className="mt-0.5 flex-row items-center">
             <Text className="text-[12px] text-muted">
-              {entry.recipe.nutrition?.calories ?? 0} cal
+              {(entry.recipe.nutrition?.calories ?? 0) * getEatServings(entry)} cal
             </Text>
             {renderPantryBadge()}
           </View>

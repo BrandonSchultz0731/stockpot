@@ -13,7 +13,7 @@ export const QUERY_KEYS = {
     CURRENT: ['meal-plans', 'current'],
     WEEK: (date: string) => ['meal-plans', 'week', date],
     COOK_PREVIEW_ALL: ['meal-plans', 'cook-preview'],
-    COOK_PREVIEW: (entryId: string) => ['meal-plans', 'cook-preview', entryId],
+    COOK_PREVIEW: (entryId: string, servingsToCook?: number) => ['meal-plans', 'cook-preview', entryId, servingsToCook],
     LEFTOVERS: (planId: string) => ['meal-plans', 'leftovers', planId],
   },
   SHOPPING_LISTS: {

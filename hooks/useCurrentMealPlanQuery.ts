@@ -28,6 +28,11 @@ export interface MealPlan {
   entries: MealPlanEntry[];
 }
 
+/** How many servings this person eats — only differs from 1 when the user explicitly adjusted via stepper. */
+export function getEatServings(entry: MealPlanEntry): number {
+  return entry.servingsToCook != null ? entry.servings : 1;
+}
+
 export function useCurrentMealPlanQuery() {
   const { isAuthenticated } = useAuth();
 

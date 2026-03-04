@@ -132,7 +132,7 @@ export interface ConfirmCookResponse {
 
 export function useCookPreviewQuery(entryId: string, servingsToCook?: number) {
   return useQuery({
-    queryKey: [...QUERY_KEYS.MEAL_PLANS.COOK_PREVIEW(entryId), servingsToCook],
+    queryKey: QUERY_KEYS.MEAL_PLANS.COOK_PREVIEW(entryId, servingsToCook),
     queryFn: () =>
       api.post<CookPreviewResponse>(
         ROUTES.MEAL_PLANS.COOK_PREVIEW(entryId),
