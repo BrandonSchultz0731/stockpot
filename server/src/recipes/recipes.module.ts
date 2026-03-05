@@ -7,6 +7,7 @@ import { RecipesController } from './recipes.controller';
 import { PantryModule } from '../pantry/pantry.module';
 import { AnthropicModule } from '../anthropic/anthropic.module';
 import { FoodCacheModule } from '../food-cache/food-cache.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { FoodCacheModule } from '../food-cache/food-cache.module';
     PantryModule,
     AnthropicModule,
     FoodCacheModule,
+    UsersModule,
   ],
   controllers: [RecipesController],
   providers: [RecipesService],

@@ -21,7 +21,7 @@ import { MealType, RecipeSource, MealScheduleSlot, DAY_NAMES, MessageType } from
 import { ACTIVE_MODEL } from '../ai-models';
 import { FoodCacheService } from '../food-cache/food-cache.service';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
-import { buildMealPlanPrompt, buildMealSwapPrompt, buildUrlRecipeImportPrompt, buildPhotoRecipeImportPrompt } from '../prompts';
+import { buildMealPlanPrompt, buildMealSwapPrompt, buildUrlRecipeImportPrompt, buildPhotoRecipeImportPrompt, buildSkillBlock } from '../prompts';
 import { enrichPantryStatus } from '../pantry/enrich-pantry';
 import { computeCookDeductions } from '../pantry/cook-deduction';
 import { resolveAiConversions } from '../pantry/cook-deduction-ai';
@@ -155,6 +155,8 @@ export class MealPlansService {
       if (user?.dietaryProfile?.excludedIngredients?.length) {
         constraints.push(`Excluded ingredients: ${user.dietaryProfile.excludedIngredients.join(', ')}`);
       }
+      const skillLine = buildSkillBlock(user?.dietaryProfile?.cookingSkill);
+      if (skillLine) constraints.push(skillLine);
 
       const constraintBlock = constraints.length > 0
         ? `\nConstraints:\n${constraints.join('\n')}\n`
@@ -254,6 +256,7 @@ export class MealPlansService {
     }
 
     const pantryItems = await this.pantryService.findAllForUser(userId);
+    const user = await this.usersService.findById(userId);
     const ingredientList = formatPantryForPrompt(pantryItems);
 
     const constraints: string[] = [];
@@ -262,6 +265,14 @@ export class MealPlansService {
     if (dto.dietaryFlags?.length) {
       constraints.push(`Dietary requirements: ${dto.dietaryFlags.join(', ')}`);
     }
+    if (user?.dietaryProfile?.diets?.length) {
+      constraints.push(`User dietary preferences: ${user.dietaryProfile.diets.join(', ')}`);
+    }
+    if (user?.dietaryProfile?.excludedIngredients?.length) {
+      constraints.push(`Excluded ingredients: ${user.dietaryProfile.excludedIngredients.join(', ')}`);
+    }
+    const skillLine = buildSkillBlock(user?.dietaryProfile?.cookingSkill);
+    if (skillLine) constraints.push(skillLine);
 
     const constraintBlock = constraints.length > 0
       ? `\nConstraints:\n${constraints.join('\n')}\n`

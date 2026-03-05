@@ -17,6 +17,7 @@ import { useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
 import { useUsageQuery } from '../hooks/useUsageQuery';
+import { useSavedRecipes } from '../hooks/useSavedRecipes';
 import { useCurrentMealPlanQuery } from '../hooks/useCurrentMealPlanQuery';
 import { getTodayDayOfWeek } from '../utils/dayOfWeek';
 import { SubscriptionTier, MessageType } from '../shared/enums';
@@ -240,8 +241,7 @@ function DailyGoalsCard({
   );
 }
 
-const LINK_ITEMS = [
-  { label: 'Saved Recipes', icon: Heart, value: '12' },
+const STATIC_LINK_ITEMS = [
   { label: 'Templates', icon: CalendarDays, value: '3' },
   { label: 'Notifications', icon: Bell },
 ] as const;
@@ -254,6 +254,7 @@ export default function ProfileScreen() {
   const { data: profile, isLoading: profileLoading } = useUserProfileQuery();
   const { data: usage } = useUsageQuery();
   const { data: mealPlan } = useCurrentMealPlanQuery();
+  const { savedRecipes } = useSavedRecipes();
 
   const todayTotals = useMemo(() => {
     const totals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
@@ -359,12 +360,28 @@ export default function ProfileScreen() {
 
         {/* Links — divider style */}
         <View className="mx-6 mb-6">
-          {LINK_ITEMS.map((item, idx) => {
+          {/* Saved Recipes — navigable */}
+          <Pressable
+            onPress={() => navigation.navigate('SavedRecipes')}
+            className="flex-row items-center gap-3 py-3.5 border-b border-line"
+          >
+            <Heart size={18} color={colors.stone} />
+            <AppText className="flex-1 text-[14px] text-espresso">
+              Saved Recipes
+            </AppText>
+            <AppText font="sansSemiBold" className="text-[12px] text-stone">
+              {String(savedRecipes?.length ?? 0)}
+            </AppText>
+            <ChevronRight size={16} color={colors.dust} />
+          </Pressable>
+
+          {/* Remaining static links */}
+          {STATIC_LINK_ITEMS.map((item, idx) => {
             const Icon = item.icon;
             return (
               <View
                 key={item.label}
-                className={`flex-row items-center gap-3 py-3.5 ${idx < LINK_ITEMS.length - 1 ? 'border-b border-line' : ''}`}
+                className={`flex-row items-center gap-3 py-3.5 ${idx < STATIC_LINK_ITEMS.length - 1 ? 'border-b border-line' : ''}`}
               >
                 <Icon size={18} color={colors.stone} />
                 <AppText className="flex-1 text-[14px] text-espresso">

@@ -7,6 +7,7 @@ import { SavedRecipe } from './entities/saved-recipe.entity';
 import { PantryService } from '../pantry/pantry.service';
 import { AnthropicService } from '../anthropic/anthropic.service';
 import { FoodCacheService } from '../food-cache/food-cache.service';
+import { UsersService } from '../users/users.service';
 import { PantryStatus } from '@shared/enums';
 
 const mockRecipeRepo = {
@@ -21,6 +22,9 @@ const mockPantryService = {
 
 const mockAnthropicService = {};
 const mockFoodCacheService = {};
+const mockUsersService = {
+  findById: jest.fn(),
+};
 
 describe('RecipesService', () => {
   let service: RecipesService;
@@ -36,6 +40,7 @@ describe('RecipesService', () => {
         { provide: PantryService, useValue: mockPantryService },
         { provide: AnthropicService, useValue: mockAnthropicService },
         { provide: FoodCacheService, useValue: mockFoodCacheService },
+        { provide: UsersService, useValue: mockUsersService },
       ],
     }).compile();
 

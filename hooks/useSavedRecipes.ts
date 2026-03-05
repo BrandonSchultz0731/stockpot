@@ -8,15 +8,27 @@ import {
   useSaveRecipeMutation,
   useUnsaveRecipeMutation,
 } from './useMealPlanMutations';
+import type { Recipe } from '../shared/enums';
 
-interface SavedRecipeItem {
+export interface SavedRecipeItem {
+  id: string;
   recipeId: string;
+  isFavorite: boolean;
+  rating: number | null;
+  notes: string | null;
+  savedAt: string;
+  recipe: Recipe;
 }
 
 export function useSavedRecipes() {
   const { isAuthenticated } = useAuth();
 
-  const { data: savedRecipes } = useQuery({
+  const {
+    data: savedRecipes,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: QUERY_KEYS.RECIPES.SAVED,
     queryFn: () => api.get<SavedRecipeItem[]>(ROUTES.RECIPES.SAVED),
     enabled: isAuthenticated,
@@ -46,5 +58,5 @@ export function useSavedRecipes() {
     [savedRecipeIds, saveMutation, unsaveMutation],
   );
 
-  return { savedRecipeIds, isSaved, toggleSave };
+  return { savedRecipes, savedRecipeIds, isSaved, toggleSave, isLoading, refetch, isRefetching };
 }
