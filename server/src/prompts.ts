@@ -1,4 +1,28 @@
-import { UnitOfMeasure, StorageLocation, FOOD_CATEGORIES, DAY_NAMES, MealScheduleSlot } from '@shared/enums';
+import { UnitOfMeasure, StorageLocation, FOOD_CATEGORIES, DAY_NAMES, MealScheduleSlot, CookingSkill } from '@shared/enums';
+
+const FLAVOR_GUIDANCE = `
+FLAVOR & TASTE GUIDELINES:
+- Balance the five elements of flavor: salt, acid, fat, heat, and umami — every savory recipe should consider all five.
+- Layer seasoning at multiple cooking stages, not just at the end. Include aromatics (garlic, onion, ginger, herbs) as a foundation.
+- Choose ingredients that complement each other within the dish's cuisine tradition. Avoid clashing flavors.
+- Include a finishing element — a brightness component (citrus zest, fresh herbs, vinegar, pickled elements) to lift flat dishes.
+- Use cooking techniques that develop flavor: searing/browning for Maillard reaction, toasting spices, deglazing pans, caramelizing onions. Mention these in recipe steps when appropriate.
+- Recipes should be restaurant-quality — bold, well-seasoned, flavorful food that people would be excited to eat.
+- Order ingredients by usage: list ingredients in the order they are used in the recipe steps.
+`;
+
+export function buildSkillBlock(cookingSkill?: CookingSkill | string): string {
+  switch (cookingSkill) {
+    case CookingSkill.Beginner:
+      return 'Cooking skill: Beginner — favor straightforward techniques (one-pot, sheet pan, stir-fry), fewer ingredients, and clear step-by-step instructions. Still season well.';
+    case CookingSkill.Intermediate:
+      return 'Cooking skill: Intermediate — comfortable with most techniques. Use compound flavors and moderate complexity.';
+    case CookingSkill.Advanced:
+      return 'Cooking skill: Advanced — embrace multi-step techniques (braising, making pan sauces, homemade spice blends, fermented ingredients). Maximize flavor depth.';
+    default:
+      return '';
+  }
+}
 
 const INGREDIENT_NAMING_INSTRUCTION = `
 IMPORTANT: Use simple, consistent ingredient names. Use the base food name without unnecessary qualifiers:
@@ -14,11 +38,12 @@ export function buildRecipeGenerationPrompt(
   numberOfRecipes: number,
   filterBlock: string,
 ): string {
-  return `You are a creative chef. Based on the following pantry ingredients, suggest ${numberOfRecipes} recipes that can be made primarily with these items. It's okay to include a few common ingredients not in the pantry.
+  return `You are a creative, flavor-focused chef. Based on the following pantry ingredients, suggest ${numberOfRecipes} delicious recipes. Use pantry items when they fit well, but prioritize flavor and ingredient compatibility over strict pantry usage. It's okay to include ingredients not in the pantry.
 
 Pantry ingredients:
 ${ingredientList}
 ${filterBlock}
+${FLAVOR_GUIDANCE}
 Return ONLY a JSON array of ${numberOfRecipes} recipe objects with these fields:
 - "title": string (recipe name)
 - "description": string (1-2 sentence description)
@@ -76,6 +101,9 @@ IMPORTANT: Generate exactly ${totalMeals} meals matching the schedule above. Do 
 
 Servings per meal: ${servings}
 ${constraintBlock}
+${FLAVOR_GUIDANCE}
+Vary cuisines, protein sources, and flavor profiles across days to avoid repetitive meals throughout the week.
+
 Return ONLY a JSON object with a "meals" array where each item has:
 - "dayOfWeek": number (0=Sunday, 1=Monday, ..., 6=Saturday)
 - "mealType": "${uniqueMealTypes.join('" | "')}"
@@ -114,6 +142,7 @@ The current meal is: "${currentTitle}" — please suggest something different.
 Pantry ingredients:
 ${ingredientList || 'No pantry items available — suggest a common recipe.'}
 ${constraintBlock}
+${FLAVOR_GUIDANCE}
 Return ONLY a JSON object with:
 - "title": string (recipe name)
 - "description": string (1-2 sentence description)
@@ -225,6 +254,7 @@ Today's date is ${currentDate}.
 - Encouraging — celebrate their efforts, never judge their skill level
 - Concise — keep responses focused and practical, avoid walls of text
 - Adapt your language to the user's cooking skill level (check their profile)
+- When suggesting or describing recipes, prioritize bold, well-balanced flavors — consider salt, acid, fat, heat, and umami
 
 ## Tool Usage Rules
 - ALWAYS check the user's pantry before suggesting what they can cook

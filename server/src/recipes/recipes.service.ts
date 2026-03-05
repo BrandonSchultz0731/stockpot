@@ -11,12 +11,13 @@ import { SavedRecipe } from './entities/saved-recipe.entity';
 import { PantryService } from '../pantry/pantry.service';
 import { AnthropicService } from '../anthropic/anthropic.service';
 import { FoodCacheService } from '../food-cache/food-cache.service';
+import { UsersService } from '../users/users.service';
 import { GenerateRecipeDto } from './dto/generate-recipe.dto';
 import { SaveRecipeDto } from './dto/save-recipe.dto';
 import { UpdateSavedRecipeDto } from './dto/update-saved-recipe.dto';
 import { ACTIVE_MODEL } from '../ai-models';
 import { PantryStatus, RecipeSource, MessageType } from '@shared/enums';
-import { buildRecipeGenerationPrompt } from '../prompts';
+import { buildRecipeGenerationPrompt, buildSkillBlock } from '../prompts';
 import { enrichPantryStatus } from '../pantry/enrich-pantry';
 import { extractText, parseArrayFromAI } from '../utils/ai-response';
 import { formatPantryForPrompt, buildPantryFoodItems, mapResolvedIngredients, buildRecipeData, ParsedRecipe } from '../utils/recipe-builder';
@@ -33,6 +34,7 @@ export class RecipesService {
     private readonly pantryService: PantryService,
     private readonly anthropicService: AnthropicService,
     private readonly foodCacheService: FoodCacheService,
+    private readonly usersService: UsersService,
   ) {}
 
   async findById(recipeId: string, userId?: string): Promise<Recipe> {
@@ -78,6 +80,7 @@ export class RecipesService {
     dto: GenerateRecipeDto,
   ): Promise<Recipe[]> {
     const pantryItems = await this.pantryService.findAllForUser(userId);
+    const user = await this.usersService.findById(userId);
     const ingredientList = formatPantryForPrompt(pantryItems);
 
     const filters: string[] = [];
@@ -89,6 +92,14 @@ export class RecipesService {
     if (dto.servings) filters.push(`Servings: ${dto.servings}`);
     if (dto.dietaryFlags?.length)
       filters.push(`Dietary requirements: ${dto.dietaryFlags.join(', ')}`);
+    if (user?.dietaryProfile?.diets?.length) {
+      filters.push(`User dietary preferences: ${user.dietaryProfile.diets.join(', ')}`);
+    }
+    if (user?.dietaryProfile?.excludedIngredients?.length) {
+      filters.push(`Excluded ingredients: ${user.dietaryProfile.excludedIngredients.join(', ')}`);
+    }
+    const skillLine = buildSkillBlock(user?.dietaryProfile?.cookingSkill);
+    if (skillLine) filters.push(skillLine);
 
     const numberOfRecipes = dto.numberOfRecipes ?? 3;
     const filterBlock =
