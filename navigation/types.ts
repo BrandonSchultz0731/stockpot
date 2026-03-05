@@ -39,6 +39,8 @@ export type ProfileStackParamList = {
   ProfileHome: undefined;
   EditDietaryProfile: undefined;
   EditNutritionGoals: undefined;
+  SavedRecipes: undefined;
+  RecipeDetail: RecipeDetailParams;
 };
 
 export type AIChefStackParamList = {
