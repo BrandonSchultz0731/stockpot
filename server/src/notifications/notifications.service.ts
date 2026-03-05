@@ -8,7 +8,6 @@ import { UserSession } from '../users/entities/user-session.entity';
 import { RegisterTokenDto } from './dto/register-token.dto';
 import { UpdateNotificationPrefsDto } from './dto/update-notification-prefs.dto';
 import type { NotificationPrefs } from '@shared/enums';
-import { DEFAULT_NOTIFICATION_PREFS } from '@shared/enums';
 
 @Injectable()
 export class NotificationsService {
@@ -66,11 +65,7 @@ export class NotificationsService {
     dto: UpdateNotificationPrefsDto,
   ): Promise<NotificationPrefs> {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
-    const current = {
-      ...DEFAULT_NOTIFICATION_PREFS,
-      ...(user?.notificationPrefs as Partial<NotificationPrefs>),
-    };
-    const updated = { ...current, ...dto };
+    const updated = { ...user.notificationPrefs, ...dto };
     await this.usersRepo
       .createQueryBuilder()
       .update(User)

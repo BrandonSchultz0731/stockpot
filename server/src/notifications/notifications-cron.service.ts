@@ -7,8 +7,7 @@ import { MealPlan } from '../meal-plans/entities/meal-plan.entity';
 import { MealPlanEntry } from '../meal-plans/entities/meal-plan-entry.entity';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from './notifications.service';
-import type { NotificationPrefs } from '@shared/enums';
-import { DEFAULT_NOTIFICATION_PREFS, MealType, NotificationType } from '@shared/enums';
+import { MealType, NotificationType } from '@shared/enums';
 
 @Injectable()
 export class NotificationsCronService {
@@ -25,13 +24,6 @@ export class NotificationsCronService {
     private readonly usersRepo: Repository<User>,
     private readonly notificationsService: NotificationsService,
   ) {}
-
-  private getUserPrefs(user: User): NotificationPrefs {
-    return {
-      ...DEFAULT_NOTIFICATION_PREFS,
-      ...(user.notificationPrefs as Partial<NotificationPrefs>),
-    };
-  }
 
   // 9 AM ET = 14:00 UTC
   @Cron('0 14 * * *')
@@ -62,8 +54,7 @@ export class NotificationsCronService {
       const user = await this.usersRepo.findOne({ where: { id: userId } });
       if (!user) continue;
 
-      const prefs = this.getUserPrefs(user);
-      if (!prefs.expiringItems) continue;
+      if (!user.notificationPrefs.expiringItems) continue;
 
       const tokens = await this.notificationsService.getTokensForUser(userId);
       if (tokens.length === 0) continue;
@@ -114,8 +105,7 @@ export class NotificationsCronService {
       const user = await this.usersRepo.findOne({ where: { id: userId } });
       if (!user) continue;
 
-      const prefs = this.getUserPrefs(user);
-      if (!prefs.mealReminders) continue;
+      if (!user.notificationPrefs.mealReminders) continue;
 
       const tokens = await this.notificationsService.getTokensForUser(userId);
       if (tokens.length === 0) continue;
@@ -150,8 +140,7 @@ export class NotificationsCronService {
       const user = await this.usersRepo.findOne({ where: { id: userId } });
       if (!user) continue;
 
-      const prefs = this.getUserPrefs(user);
-      if (!prefs.mealPlanNudge) continue;
+      if (!user.notificationPrefs.mealPlanNudge) continue;
 
       // Check if they already have a meal plan for next week
       const existingPlan = await this.mealPlansRepo.findOne({

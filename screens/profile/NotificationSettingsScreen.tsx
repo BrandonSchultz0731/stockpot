@@ -11,7 +11,6 @@ import { useUserProfileQuery } from '../../hooks/useUserProfileQuery';
 import { useUpdateNotificationPrefsMutation } from '../../hooks/useUpdateNotificationPrefsMutation';
 import colors from '../../theme/colors';
 import type { ProfileStackParamList } from '../../navigation/types';
-import { DEFAULT_NOTIFICATION_PREFS } from '../../shared/enums';
 import type { NotificationPrefs } from '../../shared/enums';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'NotificationSettings'>;
@@ -176,10 +175,5 @@ export default function NotificationSettingsScreen() {
     return <LoadingScreen color={colors.espresso} />;
   }
 
-  const prefs: NotificationPrefs = {
-    ...DEFAULT_NOTIFICATION_PREFS,
-    ...profile.notificationPrefs,
-  };
-
-  return <NotificationSettingsForm initial={prefs} />;
+  return <NotificationSettingsForm initial={profile.notificationPrefs} />;
 }

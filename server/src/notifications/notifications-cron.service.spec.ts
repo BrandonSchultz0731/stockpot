@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { NotificationsCronService } from './notifications-cron.service';
 import { NotificationsService } from './notifications.service';
-import { NotificationType } from '@shared/enums';
+import { DEFAULT_NOTIFICATION_PREFS, NotificationType } from '@shared/enums';
 import { PantryItem } from '../pantry/entities/pantry-item.entity';
 import { MealPlan } from '../meal-plans/entities/meal-plan.entity';
 import { MealPlanEntry } from '../meal-plans/entities/meal-plan-entry.entity';
@@ -93,7 +93,7 @@ describe('NotificationsCronService', () => {
       );
       mockUsersRepo.findOne.mockResolvedValue({
         id: 'u1',
-        notificationPrefs: null,
+        notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
       });
       mockNotificationsService.getTokensForUser.mockResolvedValue([
         'token-1',
@@ -119,7 +119,7 @@ describe('NotificationsCronService', () => {
       );
       mockUsersRepo.findOne.mockResolvedValue({
         id: 'u1',
-        notificationPrefs: null,
+        notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
       });
       mockNotificationsService.getTokensForUser.mockResolvedValue([
         'token-1',
@@ -141,7 +141,7 @@ describe('NotificationsCronService', () => {
       );
       mockUsersRepo.findOne.mockResolvedValue({
         id: 'u1',
-        notificationPrefs: { expiringItems: false },
+        notificationPrefs: { ...DEFAULT_NOTIFICATION_PREFS, expiringItems: false },
       });
 
       await service.handleExpiringItems();
@@ -165,7 +165,7 @@ describe('NotificationsCronService', () => {
       );
       mockUsersRepo.findOne.mockResolvedValue({
         id: 'u1',
-        notificationPrefs: null,
+        notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
       });
       mockNotificationsService.getTokensForUser.mockResolvedValue([]);
 
@@ -188,7 +188,7 @@ describe('NotificationsCronService', () => {
       );
       mockUsersRepo.findOne.mockResolvedValue({
         id: 'u1',
-        notificationPrefs: null,
+        notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
       });
       mockNotificationsService.getTokensForUser.mockResolvedValue([
         'token-1',
@@ -216,7 +216,7 @@ describe('NotificationsCronService', () => {
       );
       mockUsersRepo.findOne.mockResolvedValue({
         id: 'u1',
-        notificationPrefs: { mealReminders: false },
+        notificationPrefs: { ...DEFAULT_NOTIFICATION_PREFS, mealReminders: false },
       });
 
       await service.handleDinnerReminder();
@@ -240,7 +240,7 @@ describe('NotificationsCronService', () => {
       mockNotificationsService.getUsersWithTokens.mockResolvedValue(['u1']);
       mockUsersRepo.findOne.mockResolvedValue({
         id: 'u1',
-        notificationPrefs: null,
+        notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
       });
       mockMealPlansRepo.findOne.mockResolvedValue(null);
       mockNotificationsService.getTokensForUser.mockResolvedValue([
@@ -261,7 +261,7 @@ describe('NotificationsCronService', () => {
       mockNotificationsService.getUsersWithTokens.mockResolvedValue(['u1']);
       mockUsersRepo.findOne.mockResolvedValue({
         id: 'u1',
-        notificationPrefs: null,
+        notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
       });
       mockMealPlansRepo.findOne.mockResolvedValue({ id: 'plan-1' });
 
@@ -274,7 +274,7 @@ describe('NotificationsCronService', () => {
       mockNotificationsService.getUsersWithTokens.mockResolvedValue(['u1']);
       mockUsersRepo.findOne.mockResolvedValue({
         id: 'u1',
-        notificationPrefs: { mealPlanNudge: false },
+        notificationPrefs: { ...DEFAULT_NOTIFICATION_PREFS, mealPlanNudge: false },
       });
 
       await service.handleMealPlanNudge();

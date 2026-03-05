@@ -73,7 +73,7 @@ describe('NotificationsService', () => {
     it('should update and return merged preferences', async () => {
       mockUsersRepo.findOne.mockResolvedValue({
         id: 'user-1',
-        notificationPrefs: null,
+        notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
       });
       const result = await service.updatePreferences('user-1', {
         mealReminders: false,

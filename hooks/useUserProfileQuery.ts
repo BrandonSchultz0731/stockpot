@@ -15,7 +15,7 @@ export interface UserProfile {
   subscriptionTier: SubscriptionTier;
   dietaryProfile: DietaryProfile | null;
   nutritionalGoals: NutritionalGoals | null;
-  notificationPrefs: NotificationPrefs | null;
+  notificationPrefs: NotificationPrefs;
   createdAt: string;
 }
 
