@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import { ROUTES } from '../services/routes';
 import { QUERY_KEYS } from '../services/queryKeys';
 import { useAuth } from '../contexts/AuthContext';
-import { DietaryProfile, NutritionalGoals, SubscriptionTier } from '../shared/enums';
+import { DietaryProfile, NutritionalGoals, NotificationPrefs, SubscriptionTier } from '../shared/enums';
 
 export interface UserProfile {
   id: string;
@@ -15,6 +15,7 @@ export interface UserProfile {
   subscriptionTier: SubscriptionTier;
   dietaryProfile: DietaryProfile | null;
   nutritionalGoals: NutritionalGoals | null;
+  notificationPrefs: NotificationPrefs;
   createdAt: string;
 }
 

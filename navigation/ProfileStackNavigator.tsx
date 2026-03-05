@@ -3,6 +3,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import EditDietaryProfileScreen from '../screens/profile/EditDietaryProfileScreen';
 import EditNutritionGoalsScreen from '../screens/profile/EditNutritionGoalsScreen';
 import SavedRecipesScreen from '../screens/profile/SavedRecipesScreen';
+import NotificationSettingsScreen from '../screens/profile/NotificationSettingsScreen';
 import RecipeDetailScreen from '../screens/meals/RecipeDetailScreen';
 import type { ProfileStackParamList } from './types';
 
@@ -15,6 +16,7 @@ export default function ProfileStackNavigator() {
       <Stack.Screen name="EditDietaryProfile" component={EditDietaryProfileScreen} />
       <Stack.Screen name="EditNutritionGoals" component={EditNutritionGoalsScreen} />
       <Stack.Screen name="SavedRecipes" component={SavedRecipesScreen} />
+      <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
       <Stack.Screen name="RecipeDetail" component={RecipeDetailScreen} />
     </Stack.Navigator>
   );

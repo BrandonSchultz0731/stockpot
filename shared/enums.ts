@@ -279,3 +279,23 @@ export const FOOD_CATEGORIES: string[] = [
   'Baking',
   'Other',
 ];
+
+export enum NotificationType {
+  ExpiringItems = 'expiring_items',
+  MealReminder = 'meal_reminder',
+  MealPlanNudge = 'meal_plan_nudge',
+}
+
+export interface NotificationPrefs {
+  expiringItems: boolean;
+  mealReminders: boolean;
+  mealPlanNudge: boolean;
+  mealReminderTime: string; // HH:mm 24h format
+}
+
+export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
+  expiringItems: true,
+  mealReminders: true,
+  mealPlanNudge: true,
+  mealReminderTime: '17:00',
+};

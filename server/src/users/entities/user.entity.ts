@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { UserSession } from './user-session.entity';
 import { SubscriptionTier } from '@shared/enums';
-import type { DietaryProfile, NutritionalGoals } from '@shared/enums';
+import type { DietaryProfile, NotificationPrefs, NutritionalGoals } from '@shared/enums';
 
 @Entity('users')
 export class User {
@@ -61,7 +61,7 @@ export class User {
   nutritionalGoals: NutritionalGoals;
 
   @Column({ type: 'jsonb', name: 'notification_prefs', nullable: true })
-  notificationPrefs: Record<string, any>;
+  notificationPrefs: NotificationPrefs;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

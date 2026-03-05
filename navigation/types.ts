@@ -6,7 +6,7 @@ export type RootStackParamList = {
   Login: undefined;
   SignUp: undefined;
   Onboarding: undefined;
-  MainTabs: undefined;
+  MainTabs: NavigatorScreenParams<TabParamList> | undefined;
 };
 
 export type OnboardingParamList = {
@@ -40,6 +40,7 @@ export type ProfileStackParamList = {
   EditDietaryProfile: undefined;
   EditNutritionGoals: undefined;
   SavedRecipes: undefined;
+  NotificationSettings: undefined;
   RecipeDetail: RecipeDetailParams;
 };
 

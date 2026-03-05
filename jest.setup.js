@@ -90,6 +90,22 @@ jest.mock('@react-native-google-signin/google-signin', () => ({
   },
 }));
 
+// Mock @react-native-firebase/messaging (native module not available in Jest)
+jest.mock('@react-native-firebase/messaging', () => ({
+  __esModule: true,
+  default: () => ({
+    requestPermission: jest.fn(() => Promise.resolve(1)),
+    getToken: jest.fn(() => Promise.resolve('mock-fcm-token')),
+    onTokenRefresh: jest.fn(() => jest.fn()),
+    onNotificationOpenedApp: jest.fn(() => jest.fn()),
+    getInitialNotification: jest.fn(() => Promise.resolve(null)),
+  }),
+  AuthorizationStatus: { AUTHORIZED: 1 },
+}));
+
+// Mock @react-native-firebase/app (native module not available in Jest)
+jest.mock('@react-native-firebase/app', () => ({}));
+
 // Silence console.warn from NativeWind / React Navigation in tests
 const originalWarn = console.warn;
 console.warn = (...args) => {

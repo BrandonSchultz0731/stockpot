@@ -63,4 +63,8 @@ export const ROUTES = {
     CONVERSATION_MESSAGES: (id: string) => `/ai-chat/conversations/${id}/messages`,
     DELETE_CONVERSATION: (id: string) => `/ai-chat/conversations/${id}`,
   },
+  NOTIFICATIONS: {
+    REGISTER_TOKEN: '/notifications/register-token',
+    PREFERENCES: '/notifications/preferences',
+  },
 } as const;
