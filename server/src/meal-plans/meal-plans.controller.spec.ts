@@ -3,6 +3,7 @@ import { MealPlansController } from './meal-plans.controller';
 import { MealPlansService } from './meal-plans.service';
 
 const mockMealPlansService = {
+  listPlans: jest.fn(),
   generatePlan: jest.fn(),
   getCurrentPlan: jest.fn(),
   getPlanByWeek: jest.fn(),
@@ -34,6 +35,21 @@ describe('MealPlansController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe('listPlans', () => {
+    it('should delegate to MealPlansService.listPlans', async () => {
+      const plans = [
+        { id: 'p1', weekStartDate: '2026-03-02', status: 'active' },
+        { id: 'p2', weekStartDate: '2026-02-23', status: 'active' },
+      ];
+      mockMealPlansService.listPlans.mockResolvedValue(plans);
+
+      const result = await controller.listPlans('u1');
+
+      expect(mockMealPlansService.listPlans).toHaveBeenCalledWith('u1');
+      expect(result).toEqual(plans);
+    });
   });
 
   describe('addEntry', () => {

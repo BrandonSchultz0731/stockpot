@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -11,7 +11,8 @@ import clsx from 'clsx';
 import colors from '../../theme/colors';
 import { MealType, DAY_LABELS } from '../../shared/enums';
 import type { MealScheduleSlot } from '../../shared/enums';
-import { getWeekStartDateForDay, orderedDaysFrom } from '../../utils/dayOfWeek';
+import { getNextAvailableWeekStart, orderedDaysFrom } from '../../utils/dayOfWeek';
+import { formatWeekDateRange } from './MealPlanComponents';
 import Button from '../../components/Button';
 
 const MEAL_TYPES = [MealType.Breakfast, MealType.Lunch, MealType.Dinner] as const;
@@ -79,18 +80,28 @@ export interface MealScheduleSelectorProps {
   visible: boolean;
   onClose: () => void;
   onGenerate: (schedule: MealScheduleSlot[], weekStartDate: string) => void;
+  existingPlanWeekStarts: string[];
 }
 
 export default function MealScheduleSelector({
   visible,
   onClose,
   onGenerate,
+  existingPlanWeekStarts,
 }: MealScheduleSelectorProps) {
   const [selected, setSelected] = useState<Set<string>>(allKeys);
   const [startDay, setStartDay] = useState(1); // default Monday
 
   const orderedDays = orderedDaysFrom(startDay);
   const count = selected.size;
+  const resolvedWeekStart = useMemo(
+    () => getNextAvailableWeekStart(startDay, existingPlanWeekStarts),
+    [startDay, existingPlanWeekStarts],
+  );
+  const weekRangePreview = useMemo(
+    () => formatWeekDateRange(resolvedWeekStart),
+    [resolvedWeekStart],
+  );
 
   const toggleCell = useCallback((key: string) => {
     setSelected((prev) => {
@@ -149,9 +160,8 @@ export default function MealScheduleSelector({
         }
       }
     }
-    const weekStartDate = getWeekStartDateForDay(startDay);
-    onGenerate(schedule, weekStartDate);
-  }, [selected, orderedDays, startDay, onGenerate]);
+    onGenerate(schedule, resolvedWeekStart);
+  }, [selected, orderedDays, resolvedWeekStart, onGenerate]);
 
   // Reset when modal opens
   useEffect(() => {
@@ -214,6 +224,9 @@ export default function MealScheduleSelector({
               );
             })}
           </View>
+          <AppText className="mt-2 text-[12px] text-stone">
+            Week of {weekRangePreview}
+          </AppText>
         </View>
 
         {/* Preset pills */}

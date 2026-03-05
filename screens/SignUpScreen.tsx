@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Mail, Lock, Eye, EyeOff, User, Check } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import colors from '../theme/colors';
 import { fonts } from '../theme/typography';
@@ -40,7 +40,6 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const { mutateAsync, isPending, error } = useRegisterMutation();
@@ -67,10 +66,6 @@ export default function SignUpScreen() {
     }
     if (password !== confirmPassword) {
       setValidationError('Passwords do not match');
-      return;
-    }
-    if (!agreedToTerms) {
-      setValidationError('You must agree to the Terms of Service');
       return;
     }
 
@@ -214,28 +209,8 @@ export default function SignUpScreen() {
               onChangeText={setConfirmPassword}
               secureTextEntry={!showPassword}
               variant="underline"
-              className="mb-4.5"
+              className="mb-5"
             />
-
-            {/* Terms */}
-            <Pressable
-              className="flex-row items-start gap-2.5 mb-4.5"
-              onPress={() => setAgreedToTerms(!agreedToTerms)}>
-              <View
-                className={`w-5 h-5 rounded-[6px] items-center justify-center mt-0.5 border-[1.5px] border-terra ${agreedToTerms ? 'bg-terra-pale' : 'bg-transparent'}`}>
-                {agreedToTerms && <Check size={12} color={colors.terra.DEFAULT} />}
-              </View>
-              <Text className="text-[11px] text-stone flex-1 leading-4">
-                I agree to the{' '}
-                <Text className="font-semibold text-terra">
-                  Terms of Service
-                </Text>{' '}
-                and{' '}
-                <Text className="font-semibold text-terra">
-                  Privacy Policy
-                </Text>
-              </Text>
-            </Pressable>
 
             <Button
               label={isPending ? 'Creating account...' : 'Create Account'}

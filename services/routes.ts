@@ -38,6 +38,7 @@ export const ROUTES = {
     DELETE: (id: string) => `/pantry/${id}`,
   },
   MEAL_PLANS: {
+    LIST: '/meal-plans',
     GENERATE: '/meal-plans/generate',
     CURRENT: '/meal-plans/current',
     WEEK: (date: string) => `/meal-plans/week/${date}`,

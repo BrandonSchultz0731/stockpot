@@ -50,6 +50,14 @@ export class MealPlansService {
     private readonly shoppingListsService: ShoppingListsService,
   ) { }
 
+  async listPlans(userId: string): Promise<Pick<MealPlan, 'id' | 'weekStartDate' | 'status'>[]> {
+    return this.mealPlanRepo.find({
+      where: { userId },
+      select: ['id', 'weekStartDate', 'status'],
+      order: { weekStartDate: 'DESC' },
+    });
+  }
+
   async getCurrentPlan(userId: string): Promise<MealPlan> {
     const plan = await this.mealPlanRepo.findOne({
       where: { userId },

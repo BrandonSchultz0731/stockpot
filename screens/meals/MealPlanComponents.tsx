@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   Bookmark,
   Check,
+  ChevronLeft,
   ChevronRight,
   Heart,
   Plus,
@@ -128,6 +129,42 @@ export function MealPlanHeader({
 export function WeekDateSubtitle({ label }: { label: string }) {
   return (
     <AppText className="mt-1 px-5 text-[13px] text-stone">{label}</AppText>
+  );
+}
+
+export function WeekNavigator({
+  label,
+  onPrevious,
+  onNext,
+  hasPrevious,
+  hasNext,
+}: {
+  label: string;
+  onPrevious: () => void;
+  onNext: () => void;
+  hasPrevious: boolean;
+  hasNext: boolean;
+}) {
+  return (
+    <View className="mt-1 flex-row items-center justify-between px-5">
+      <Pressable
+        onPress={onPrevious}
+        hitSlop={10}
+        className={`h-8 w-8 items-center justify-center rounded-full ${hasPrevious ? '' : 'opacity-0'}`}
+        disabled={!hasPrevious}
+      >
+        <ChevronLeft size={18} color={colors.stone} />
+      </Pressable>
+      <AppText className="text-[13px] text-stone">{label}</AppText>
+      <Pressable
+        onPress={onNext}
+        hitSlop={10}
+        className={`h-8 w-8 items-center justify-center rounded-full ${hasNext ? '' : 'opacity-0'}`}
+        disabled={!hasNext}
+      >
+        <ChevronRight size={18} color={colors.stone} />
+      </Pressable>
+    </View>
   );
 }
 

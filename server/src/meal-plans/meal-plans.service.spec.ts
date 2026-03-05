@@ -17,6 +17,7 @@ import { MessageType } from '@shared/enums';
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
 
 const mockMealPlanRepo = {
+  find: jest.fn(),
   findOne: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
@@ -83,6 +84,33 @@ describe('MealPlansService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('listPlans', () => {
+    it('should return lightweight plan summaries sorted by weekStartDate DESC', async () => {
+      const plans = [
+        { id: 'p1', weekStartDate: '2026-03-02', status: 'active' },
+        { id: 'p2', weekStartDate: '2026-02-23', status: 'active' },
+      ];
+      mockMealPlanRepo.find.mockResolvedValue(plans);
+
+      const result = await service.listPlans('u1');
+
+      expect(mockMealPlanRepo.find).toHaveBeenCalledWith({
+        where: { userId: 'u1' },
+        select: ['id', 'weekStartDate', 'status'],
+        order: { weekStartDate: 'DESC' },
+      });
+      expect(result).toEqual(plans);
+    });
+
+    it('should return an empty array when user has no plans', async () => {
+      mockMealPlanRepo.find.mockResolvedValue([]);
+
+      const result = await service.listPlans('u1');
+
+      expect(result).toEqual([]);
+    });
   });
 
   describe('addEntry', () => {

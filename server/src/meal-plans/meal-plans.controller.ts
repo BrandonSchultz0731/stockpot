@@ -33,6 +33,11 @@ export class MealPlansController {
     return this.mealPlansService.generatePlan(userId, dto);
   }
 
+  @Get()
+  listPlans(@GetUser('id') userId: string) {
+    return this.mealPlansService.listPlans(userId);
+  }
+
   @Get('current')
   getCurrentPlan(@GetUser('id') userId: string) {
     return this.mealPlansService.getCurrentPlan(userId);

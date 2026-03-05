@@ -36,6 +36,53 @@ export function getWeekStartDateForDay(startDayOfWeek: number): string {
 }
 
 /**
+ * Returns the first occurrence of `startDayOfWeek` on or after today whose 7-day range
+ * [start, start+6] does not overlap with any existing plan's 7-day range.
+ * Bumps forward by 7 days until a non-overlapping slot is found.
+ */
+export function getNextAvailableWeekStart(
+  startDayOfWeek: number,
+  existingPlanWeekStarts: string[],
+): string {
+  const now = new Date();
+  const todayDow = now.getDay();
+  const daysUntil = (startDayOfWeek - todayDow + 7) % 7;
+  const candidate = new Date(now);
+  candidate.setDate(now.getDate() + daysUntil);
+
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const existingRanges = existingPlanWeekStarts.map((d) => {
+    const start = new Date(d + 'T00:00:00').getTime();
+    return { start, end: start + 6 * MS_PER_DAY };
+  });
+
+  for (let i = 0; i < 52; i++) {
+    const cStart = new Date(
+      candidate.getFullYear(),
+      candidate.getMonth(),
+      candidate.getDate(),
+    ).getTime();
+    const cEnd = cStart + 6 * MS_PER_DAY;
+
+    const hasOverlap = existingRanges.some(
+      (r) => cStart <= r.end && r.start <= cEnd,
+    );
+
+    if (!hasOverlap) {
+      const y = candidate.getFullYear();
+      const m = String(candidate.getMonth() + 1).padStart(2, '0');
+      const d = String(candidate.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    candidate.setDate(candidate.getDate() + 7);
+  }
+
+  // Fallback — should never happen
+  return getWeekStartDateForDay(startDayOfWeek);
+}
+
+/**
  * Returns an array of 7 day-of-week indices starting from `startDayOfWeek`, each mod 7.
  * E.g. orderedDaysFrom(3) → [3, 4, 5, 6, 0, 1, 2]  (Wed → Tue)
  */

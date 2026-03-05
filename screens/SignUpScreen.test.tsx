@@ -91,21 +91,6 @@ describe('SignUpScreen', () => {
     expect(mockMutateAsync).not.toHaveBeenCalled();
   });
 
-  it('should show validation error when terms unchecked', () => {
-    const utils = render(<SignUpScreen />);
-
-    fireEvent.changeText(utils.getByPlaceholderText('First name'), 'Test');
-    fireEvent.changeText(utils.getByPlaceholderText('Email address'), 'a@b.com');
-    fireEvent.changeText(utils.getByPlaceholderText('Password'), 'password123');
-    fireEvent.changeText(utils.getByPlaceholderText('Confirm password'), 'password123');
-    pressCreateAccount(utils);
-
-    expect(
-      utils.getByText('You must agree to the Terms of Service'),
-    ).toBeTruthy();
-    expect(mockMutateAsync).not.toHaveBeenCalled();
-  });
-
   it('should call mutateAsync on successful submission', async () => {
     const utils = render(<SignUpScreen />);
 
@@ -114,9 +99,6 @@ describe('SignUpScreen', () => {
     fireEvent.changeText(utils.getByPlaceholderText('Email address'), 'a@b.com');
     fireEvent.changeText(utils.getByPlaceholderText('Password'), 'password123');
     fireEvent.changeText(utils.getByPlaceholderText('Confirm password'), 'password123');
-
-    // Check the terms checkbox
-    fireEvent.press(utils.getByText(/I agree to the/));
     pressCreateAccount(utils);
 
     expect(mockMutateAsync).toHaveBeenCalledWith({
