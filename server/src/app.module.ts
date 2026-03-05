@@ -14,6 +14,7 @@ import { RecipesModule } from './recipes/recipes.module';
 import { MealPlansModule } from './meal-plans/meal-plans.module';
 import { ShoppingListsModule } from './shopping-lists/shopping-lists.module';
 import { AiChatModule } from './ai-chat/ai-chat.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { AiChatModule } from './ai-chat/ai-chat.module';
     MealPlansModule,
     ShoppingListsModule,
     AiChatModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

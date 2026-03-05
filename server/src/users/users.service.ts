@@ -10,6 +10,7 @@ import { User } from './entities/user.entity';
 import { UserSession } from './entities/user-session.entity';
 import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { DEFAULT_NOTIFICATION_PREFS } from '@shared/enums';
 
 @Injectable()
 export class UsersService {
@@ -18,7 +19,7 @@ export class UsersService {
     private readonly usersRepo: Repository<User>,
     @InjectRepository(UserSession)
     private readonly sessionsRepo: Repository<UserSession>,
-  ) {}
+  ) { }
 
   async createUser(data: {
     email: string;
@@ -39,6 +40,7 @@ export class UsersService {
       passwordHash,
       firstName: data.firstName,
       lastName: data.lastName,
+      notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
     });
     return this.usersRepo.save(user);
   }
@@ -84,6 +86,7 @@ export class UsersService {
       avatarUrl: data.avatarUrl,
       authProvider: data.authProvider,
       providerUserId: data.providerUserId,
+      notificationPrefs: { ...DEFAULT_NOTIFICATION_PREFS },
     });
     return this.usersRepo.save(user);
   }

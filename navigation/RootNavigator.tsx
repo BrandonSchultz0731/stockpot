@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { navigationRef } from './navigationRef';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BootSplash from 'react-native-bootsplash';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,7 +34,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer onReady={() => BootSplash.hide({ fade: true })}>
+    <NavigationContainer ref={navigationRef} onReady={() => BootSplash.hide({ fade: true })}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           <>

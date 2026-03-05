@@ -243,7 +243,6 @@ function DailyGoalsCard({
 
 const STATIC_LINK_ITEMS = [
   { label: 'Templates', icon: CalendarDays, value: '3' },
-  { label: 'Notifications', icon: Bell },
 ] as const;
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
@@ -371,6 +370,18 @@ export default function ProfileScreen() {
             </AppText>
             <AppText font="sansSemiBold" className="text-[12px] text-stone">
               {String(savedRecipes?.length ?? 0)}
+            </AppText>
+            <ChevronRight size={16} color={colors.dust} />
+          </Pressable>
+
+          {/* Notifications — navigable */}
+          <Pressable
+            onPress={() => navigation.navigate('NotificationSettings')}
+            className="flex-row items-center gap-3 py-3.5 border-b border-line"
+          >
+            <Bell size={18} color={colors.stone} />
+            <AppText className="flex-1 text-[14px] text-espresso">
+              Notifications
             </AppText>
             <ChevronRight size={16} color={colors.dust} />
           </Pressable>

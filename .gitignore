@@ -68,6 +68,11 @@ documents
 # testing
 /coverage
 
+# Firebase config (contains API keys)
+android/app/google-services.json
+ios/StockPot/GoogleService-Info.plist
+ios/GoogleService-Info.plist
+
 # NestJS server
 server/dist/
 server/.env

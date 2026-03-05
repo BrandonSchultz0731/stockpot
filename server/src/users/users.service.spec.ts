@@ -61,12 +61,15 @@ describe('UsersService', () => {
       });
 
       expect(bcrypt.hash).toHaveBeenCalledWith('password123', 12);
-      expect(mockUsersRepo.create).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        passwordHash: 'hashed-pw',
-        firstName: 'Test',
-        lastName: undefined,
-      });
+      expect(mockUsersRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: 'test@example.com',
+          passwordHash: 'hashed-pw',
+          firstName: 'Test',
+          lastName: undefined,
+          notificationPrefs: expect.objectContaining({ expiringItems: true }),
+        }),
+      );
       expect(result).toEqual(createdUser);
     });
 
@@ -208,15 +211,17 @@ describe('UsersService', () => {
 
       const result = await service.createSocialUser(userData);
 
-      expect(mockUsersRepo.create).toHaveBeenCalledWith({
-        email: 'social@example.com',
-        passwordHash: null,
-        firstName: 'Social',
-        lastName: 'User',
-        avatarUrl: undefined,
-        authProvider: 'google',
-        providerUserId: 'g-123',
-      });
+      expect(mockUsersRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: 'social@example.com',
+          passwordHash: null,
+          firstName: 'Social',
+          lastName: 'User',
+          authProvider: 'google',
+          providerUserId: 'g-123',
+          notificationPrefs: expect.objectContaining({ expiringItems: true }),
+        }),
+      );
       expect(result).toEqual(createdUser);
     });
 
