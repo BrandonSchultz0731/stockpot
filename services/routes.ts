@@ -6,6 +6,8 @@ export const ROUTES = {
     LOGOUT: '/auth/logout',
     APPLE: '/auth/apple',
     GOOGLE: '/auth/google',
+    FORGOT_PASSWORD: '/auth/forgot-password',
+    RESET_PASSWORD: '/auth/reset-password',
   },
   USERS: {
     ME: '/users/me',

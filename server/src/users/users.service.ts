@@ -157,6 +157,10 @@ export class UsersService {
     return { success: true, appleRefreshToken: user.appleRefreshToken };
   }
 
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    await this.usersRepo.update(userId, { passwordHash });
+  }
+
   async storeAppleRefreshToken(userId: string, token: string): Promise<void> {
     await this.usersRepo.update(userId, { appleRefreshToken: token });
   }

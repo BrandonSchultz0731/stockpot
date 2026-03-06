@@ -5,6 +5,8 @@ import type { PantryItem } from '../hooks/usePantryQuery';
 export type RootStackParamList = {
   Login: undefined;
   SignUp: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { email: string };
   Onboarding: undefined;
   MainTabs: NavigatorScreenParams<TabParamList> | undefined;
 };
