@@ -1,4 +1,4 @@
-package com.stockpot
+package app.chefpixel.ChefPixel
 
 import android.os.Bundle
 import com.facebook.react.ReactActivity

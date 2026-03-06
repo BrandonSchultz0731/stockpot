@@ -17,8 +17,8 @@ describe('AppService', () => {
   });
 
   describe('getHello', () => {
-    it('should return "StockPot API"', () => {
-      expect(service.getHello()).toBe('StockPot API');
+    it('should return "ChefPixel API"', () => {
+      expect(service.getHello()).toBe('ChefPixel API');
     });
   });
 

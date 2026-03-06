@@ -76,7 +76,7 @@ export default function LoginScreen() {
               <Text
                 className="text-[32px] tracking-[-0.5px] text-espresso mb-1"
                 style={{ fontFamily: fonts.serif }}>
-                StockPot
+                ChefPixel
               </Text>
               <Text className="text-[13px] text-stone">
                 Your AI-powered kitchen companion

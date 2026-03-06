@@ -27,7 +27,7 @@ export default function WelcomeView({ onSuggestionPress }: WelcomeViewProps) {
         className="mb-2 text-center text-xl text-espresso"
         style={{ fontFamily: fonts.serif }}
       >
-        Hi, I'm Chef StockPot
+        Hi, I'm Chef Pixel
       </AppText>
       <AppText className="mb-8 text-center text-[15px] text-ink">
         Ask me anything about cooking, your pantry, meal ideas, or what to do with ingredients

@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>StockPot</string>
+	<string>ChefPixel</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -34,11 +34,11 @@
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>StockPot does not use your location. This permission is required by a third-party library.</string>
+	<string>ChefPixel does not use your location. This permission is required by a third-party library.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>StockPot needs camera access to scan barcodes and receipt photos</string>
+	<string>ChefPixel needs camera access to scan barcodes and receipt photos</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>StockPot needs access to your photo library to select receipt images</string>
+	<string>ChefPixel needs access to your photo library to select receipt images</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>CFBundleURLTypes</key>

@@ -251,7 +251,7 @@ export enum MessageType {
   FoodCategory = 'food-category',
   /** AI unit conversion fallback for cook deductions (e.g. cloves → heads) */
   CookDeduction = 'cook-deduction',
-  /** Interactive Chef StockPot chat conversation */
+  /** Interactive Chef Pixel chat conversation */
   AiChat = 'ai-chat',
   /** Deduplicate pantry items by matching similar food names */
   FoodMatch = 'food-match',

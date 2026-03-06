@@ -11,7 +11,7 @@ export interface Recipe {
 @Injectable()
 export class AppService {
   getHello(): string {
-    return 'StockPot API';
+    return 'ChefPixel API';
   }
 
   getRecipes(): Recipe[] {

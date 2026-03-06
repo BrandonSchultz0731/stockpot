@@ -99,7 +99,7 @@ export default function BarcodeScanScreen() {
             Camera Permission Required
           </Text>
           <Text className="text-white/50 text-[14px] mt-2 text-center">
-            StockPot needs camera access to scan product barcodes.
+            ChefPixel needs camera access to scan product barcodes.
           </Text>
           <Pressable
             onPress={() => Linking.openSettings()}

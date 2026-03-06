@@ -115,7 +115,7 @@ export default function ReceiptScanScreen() {
             Camera Permission Required
           </Text>
           <Text className="text-white/50 text-[14px] mt-2 text-center">
-            StockPot needs camera access to scan receipts.
+            ChefPixel needs camera access to scan receipts.
           </Text>
           <Pressable
             onPress={() => Linking.openSettings()}

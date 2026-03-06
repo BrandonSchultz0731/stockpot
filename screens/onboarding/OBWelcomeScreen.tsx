@@ -23,7 +23,7 @@ export default function OBWelcomeScreen() {
         <AppText
           className="text-2xl text-espresso text-center mb-3"
           style={{ fontFamily: fonts.serif }}>
-          Welcome to StockPot
+          Welcome to ChefPixel
         </AppText>
         <AppText className="text-base leading-[22px] text-stone text-center px-6">
           Let's personalize your experience so our AI chef can suggest meals

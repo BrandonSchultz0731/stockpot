@@ -21,8 +21,8 @@ describe('AppController', () => {
   });
 
   describe('getHello', () => {
-    it('should return "StockPot API"', () => {
-      expect(controller.getHello()).toBe('StockPot API');
+    it('should return "ChefPixel API"', () => {
+      expect(controller.getHello()).toBe('ChefPixel API');
     });
   });
 
