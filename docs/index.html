@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StockPot - Your AI Kitchen Companion</title>
+  <meta name="description" content="StockPot is an AI-powered kitchen companion that tracks your pantry, generates recipes, plans meals, and reduces food waste.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --terra: #C25B2E;
+      --terra-light: #E8845A;
+      --terra-pale: #FFF0E8;
+      --ivory: #FAF7F2;
+      --cream: #F3EDE4;
+      --espresso: #1C1512;
+      --ink: #3D322C;
+      --stone: #8A7F78;
+      --dust: #C4BBB3;
+      --sage: #6B7F5E;
+      --sage-pale: #EDF3EA;
+      --line: #E8E2DA;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--ivory);
+      color: var(--ink);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 256px;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.4s, backdrop-filter 0.4s;
+    }
+
+    nav.scrolled {
+      background: rgba(250, 247, 242, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: var(--espresso);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-logo span { color: var(--terra); }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--stone);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover { color: var(--terra); }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+      position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      right: -10%;
+      width: 60vw;
+      height: 60vw;
+      max-width: 700px;
+      max-height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--terra-pale) 0%, transparent 70%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      left: -10%;
+      width: 40vw;
+      height: 40vw;
+      max-width: 500px;
+      max-height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--sage-pale) 0%, transparent 70%);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      border: 1px solid var(--line);
+      background: white;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--stone);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .hero-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--sage);
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      color: var(--espresso);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.8s ease 0.1s both;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--terra);
+      font-weight: 400;
+    }
+
+    .hero-sub {
+      font-size: clamp(1.05rem, 2vw, 1.25rem);
+      font-weight: 300;
+      color: var(--stone);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.8s ease 0.2s both;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 1rem 2.25rem;
+      background: var(--espresso);
+      color: white;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border: none;
+      border-radius: 100px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.3s, box-shadow 0.3s;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.8s ease 0.3s both;
+    }
+
+    .hero-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(28, 21, 18, 0.2);
+    }
+
+    .hero-cta svg {
+      transition: transform 0.3s;
+    }
+
+    .hero-cta:hover svg {
+      transform: translateX(3px);
+    }
+
+    /* ── Divider ── */
+    .section-divider {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 1px;
+      background: var(--line);
+    }
+
+    /* ── Features ── */
+    .features {
+      padding: 7rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: 5rem;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--terra);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+    }
+
+    .features-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: var(--espresso);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      padding: 2.25rem;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: white;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--terra), var(--terra-light));
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(28, 21, 18, 0.08);
+    }
+
+    .feature-card:hover::after {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      font-size: 1.4rem;
+    }
+
+    .feature-icon.pantry { background: var(--sage-pale); }
+    .feature-icon.recipe { background: var(--terra-pale); }
+    .feature-icon.meal { background: #F0EBE4; }
+    .feature-icon.scan { background: #E8F2F8; }
+    .feature-icon.chat { background: #FFF8E6; }
+    .feature-icon.shop { background: #FDEAEA; }
+
+    .feature-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--espresso);
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-card p {
+      font-size: 0.925rem;
+      line-height: 1.65;
+      color: var(--stone);
+      font-weight: 400;
+    }
+
+    /* ── How it works ── */
+    .how-it-works {
+      padding: 7rem 2rem;
+      background: var(--cream);
+      position: relative;
+    }
+
+    .how-it-works-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .how-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .how-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: var(--espresso);
+      letter-spacing: -0.02em;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      left: 27px;
+      top: 28px;
+      bottom: 28px;
+      width: 2px;
+      background: var(--line);
+    }
+
+    .step {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+      padding: 1.75rem 0;
+    }
+
+    .step-num {
+      width: 56px;
+      height: 56px;
+      min-width: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.25rem;
+      color: white;
+      background: var(--espresso);
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-content h3 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--espresso);
+      margin-bottom: 0.4rem;
+    }
+
+    .step-content p {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--stone);
+    }
+
+    /* ── CTA Banner ── */
+    .cta-banner {
+      padding: 7rem 2rem;
+      text-align: center;
+    }
+
+    .cta-banner-inner {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .cta-banner h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(2.25rem, 5vw, 3.5rem);
+      color: var(--espresso);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .cta-banner h2 em {
+      font-style: italic;
+      color: var(--terra);
+      font-weight: 400;
+    }
+
+    .cta-banner p {
+      font-size: 1.1rem;
+      color: var(--stone);
+      font-weight: 300;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--line);
+      background: var(--ivory);
+    }
+
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-brand {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: var(--espresso);
+    }
+
+    .footer-brand span { color: var(--terra); }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-size: 0.85rem;
+      color: var(--stone);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .footer-links a:hover { color: var(--terra); }
+
+    .footer-copy {
+      font-size: 0.8rem;
+      color: var(--dust);
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .nav-links { display: none; }
+
+      .hero { padding: 7rem 1.5rem 3rem; }
+
+      .footer-inner {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+      }
+
+      .steps::before { left: 23px; }
+
+      .step-num {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        font-size: 1.1rem;
+      }
+
+      .step { gap: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav id="nav">
+    <a href="/" class="nav-logo">Stock<span>Pot</span></a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+      <li><a href="terms.html">Terms</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      AI-Powered Kitchen Companion
+    </div>
+    <h1>Cook smarter,<br><em>waste less.</em></h1>
+    <p class="hero-sub">
+      StockPot tracks your pantry, generates recipes from what you have,
+      plans your meals, and builds your shopping list &mdash; all powered by AI.
+    </p>
+    <a href="#features" class="hero-cta">
+      Explore Features
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="features-header reveal">
+      <span class="section-label">Features</span>
+      <h2>Everything your kitchen needs,<br>nothing it doesn't.</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon pantry">&#x1F96C;</div>
+        <h3>Smart Pantry</h3>
+        <p>Track ingredients with expiration dates and storage locations. Scan receipts or barcodes to add items instantly.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon recipe">&#x1F373;</div>
+        <h3>AI Recipes</h3>
+        <p>Generate personalized recipes based on what's in your pantry, your dietary preferences, and nutritional goals.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon meal">&#x1F4C5;</div>
+        <h3>Meal Planning</h3>
+        <p>Build weekly meal plans automatically. Swap dishes, add leftovers, and stay on track with your nutrition targets.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon scan">&#x1F4F7;</div>
+        <h3>Receipt & Barcode Scan</h3>
+        <p>Snap a photo of your grocery receipt or scan a barcode to populate your pantry in seconds.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon chat">&#x1F4AC;</div>
+        <h3>AI Kitchen Chat</h3>
+        <p>Ask anything about cooking, substitutions, or nutrition. Your AI sous chef knows your pantry and preferences.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon shop">&#x1F6D2;</div>
+        <h3>Shopping Lists</h3>
+        <p>Auto-generated shopping lists from your meal plan, with pantry-aware item checking so you never overbuy.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- How It Works -->
+  <section class="how-it-works" id="how">
+    <div class="how-it-works-inner">
+      <div class="how-header reveal">
+        <span class="section-label">How It Works</span>
+        <h2>From pantry to plate<br>in three steps.</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h3>Stock your pantry</h3>
+            <p>Add items manually, scan a receipt, or use the barcode scanner. StockPot tracks quantities, expiration dates, and storage locations.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h3>Generate your plan</h3>
+            <p>Tell StockPot your dietary needs and goals. It builds a full week of meals using ingredients you already have, minimizing waste and trips to the store.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h3>Cook & track</h3>
+            <p>Follow step-by-step recipes, mark meals as cooked to auto-deduct from your pantry, and let StockPot handle the shopping list for what's missing.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-banner">
+    <div class="cta-banner-inner reveal">
+      <h2>Ready to stop<br><em>wasting food?</em></h2>
+      <p>StockPot is available on iOS. Download it today and let AI take the guesswork out of your kitchen.</p>
+      <a href="#" class="hero-cta">
+        Coming Soon to the App Store
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">Stock<span>Pot</span></div>
+      <ul class="footer-links">
+        <li><a href="privacy.html">Privacy Policy</a></li>
+        <li><a href="terms.html">Terms of Service</a></li>
+      </ul>
+      <span class="footer-copy">&copy; 2026 StockPot. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script>
+    // Nav scroll effect
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), i * 80);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+
+</body>
+</html>

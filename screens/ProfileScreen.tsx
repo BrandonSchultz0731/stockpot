@@ -1,6 +1,7 @@
 import {
   Alert,
   Image,
+  Linking,
   Pressable,
   ScrollView,
   View,
@@ -13,6 +14,8 @@ import {
   Heart,
   CalendarDays,
   Bell,
+  Shield,
+  FileText,
 } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -408,6 +411,30 @@ export default function ProfileScreen() {
               </View>
             );
           })}
+
+          {/* Privacy Policy */}
+          <Pressable
+            onPress={() => Linking.openURL('https://brandonschultz0731.github.io/stockpot/privacy.html')}
+            className="flex-row items-center gap-3 py-3.5 border-t border-line"
+          >
+            <Shield size={18} color={colors.stone} />
+            <AppText className="flex-1 text-[14px] text-espresso">
+              Privacy Policy
+            </AppText>
+            <ChevronRight size={16} color={colors.dust} />
+          </Pressable>
+
+          {/* Terms of Service */}
+          <Pressable
+            onPress={() => Linking.openURL('https://brandonschultz0731.github.io/stockpot/terms.html')}
+            className="flex-row items-center gap-3 py-3.5"
+          >
+            <FileText size={18} color={colors.stone} />
+            <AppText className="flex-1 text-[14px] text-espresso">
+              Terms of Service
+            </AppText>
+            <ChevronRight size={16} color={colors.dust} />
+          </Pressable>
         </View>
 
         {/* Sign Out */}
