@@ -11,6 +11,7 @@ interface ButtonProps {
   variant?: ButtonVariant;
   disabled?: boolean;
   className?: string;
+  labelClassName?: string;
   icon?: React.ReactNode;
   serif?: boolean;
 }
@@ -39,6 +40,7 @@ export default function Button({
   variant = 'primary',
   disabled = false,
   className = '',
+  labelClassName = '',
   icon,
   serif = false,
 }: ButtonProps) {
@@ -51,7 +53,7 @@ export default function Button({
       onPress={onPress}>
       {icon && <View className="mr-2">{icon}</View>}
       <AppText
-        className={v.text}
+        className={`${v.text} ${labelClassName}`}
         style={serif ? { fontFamily: fonts.serif } : undefined}
       >
         {label}

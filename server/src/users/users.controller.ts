@@ -1,6 +1,8 @@
 import {
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Patch,
   Body,
   UseGuards,
@@ -27,6 +29,12 @@ export class UsersController {
     @Body() dto: CompleteOnboardingDto,
   ) {
     return this.usersService.completeOnboarding(userId, dto);
+  }
+
+  @Delete('me')
+  @HttpCode(204)
+  deleteAccount(@GetUser('id') userId: string) {
+    return this.usersService.deleteAccount(userId);
   }
 
   @Patch('me/profile')

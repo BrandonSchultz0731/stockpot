@@ -6,6 +6,7 @@ const mockUsersService = {
   getProfile: jest.fn(),
   completeOnboarding: jest.fn(),
   updateProfile: jest.fn(),
+  deleteAccount: jest.fn(),
 };
 
 describe('UsersController', () => {
@@ -50,6 +51,16 @@ describe('UsersController', () => {
 
       expect(mockUsersService.completeOnboarding).toHaveBeenCalledWith('u1', dto);
       expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('deleteAccount', () => {
+    it('should delegate to UsersService.deleteAccount with userId', async () => {
+      mockUsersService.deleteAccount.mockResolvedValue({ success: true });
+
+      await controller.deleteAccount('u1');
+
+      expect(mockUsersService.deleteAccount).toHaveBeenCalledWith('u1');
     });
   });
 

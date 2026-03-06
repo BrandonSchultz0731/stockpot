@@ -147,6 +147,16 @@ export class UsersService {
     return { success: true };
   }
 
+  async deleteAccount(userId: string) {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    await this.sessionsRepo.delete({ userId });
+    await this.usersRepo.delete(userId);
+    return { success: true };
+  }
+
   async updateProfile(userId: string, dto: UpdateProfileDto) {
     const update: Record<string, any> = {};
     if (dto.dietaryProfile) {

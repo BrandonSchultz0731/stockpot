@@ -1,4 +1,5 @@
 import {
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -412,6 +413,37 @@ export default function ProfileScreen() {
         {/* Sign Out */}
         <View className="mx-6">
           <Button label="Sign Out" variant="outline" onPress={handleSignOut} />
+        </View>
+
+        {/* Delete Account */}
+        <View className="mx-6 mt-3">
+          <Button
+            label="Delete Account"
+            variant="outline"
+            className="border-red-400"
+            labelClassName="text-red-500"
+            onPress={() => {
+              Alert.alert(
+                'Delete Account?',
+                'This will permanently delete your account and all your data, including your pantry, meal plans, saved recipes, and chat history. This action cannot be undone.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Delete My Account',
+                    style: 'destructive',
+                    onPress: async () => {
+                      try {
+                        await api.delete(ROUTES.USERS.DELETE_ACCOUNT);
+                        await clearTokens();
+                      } catch {
+                        Alert.alert('Error', 'Failed to delete account. Please try again.');
+                      }
+                    },
+                  },
+                ],
+              );
+            }}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

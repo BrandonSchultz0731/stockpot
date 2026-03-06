@@ -14,6 +14,7 @@ const mockUsersRepo = {
   create: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),
+  delete: jest.fn(),
 };
 
 const mockSessionsRepo = {
@@ -353,6 +354,31 @@ describe('UsersService', () => {
         onboardingComplete: true,
       });
       expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('deleteAccount', () => {
+    it('should delete all sessions then delete user', async () => {
+      mockUsersRepo.findOne.mockResolvedValue({ id: 'u1', email: 'a@b.com' });
+      mockSessionsRepo.delete.mockResolvedValue({ affected: 2 });
+      mockUsersRepo.delete.mockResolvedValue({ affected: 1 });
+
+      const result = await service.deleteAccount('u1');
+
+      expect(mockUsersRepo.findOne).toHaveBeenCalledWith({ where: { id: 'u1' } });
+      expect(mockSessionsRepo.delete).toHaveBeenCalledWith({ userId: 'u1' });
+      expect(mockUsersRepo.delete).toHaveBeenCalledWith('u1');
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should throw NotFoundException if user does not exist', async () => {
+      mockUsersRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.deleteAccount('nope')).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockSessionsRepo.delete).not.toHaveBeenCalled();
+      expect(mockUsersRepo.delete).not.toHaveBeenCalled();
     });
   });
 
