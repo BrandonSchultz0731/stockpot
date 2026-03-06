@@ -9,6 +9,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
+import { AppleAuthService } from './apple-auth.service';
 
 jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
@@ -25,11 +26,17 @@ const mockUsersService = {
   deleteAllUserSessions: jest.fn(),
   findByProviderUserId: jest.fn(),
   createSocialUser: jest.fn(),
+  storeAppleRefreshToken: jest.fn(),
 };
 
 const mockJwtService = {
   sign: jest.fn(),
   verify: jest.fn(),
+};
+
+const mockAppleAuthService = {
+  exchangeCode: jest.fn(),
+  revokeToken: jest.fn(),
 };
 
 const mockConfigService = {
@@ -56,6 +63,7 @@ describe('AuthService', () => {
         { provide: UsersService, useValue: mockUsersService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: AppleAuthService, useValue: mockAppleAuthService },
       ],
     }).compile();
 

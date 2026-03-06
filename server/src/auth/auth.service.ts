@@ -11,6 +11,7 @@ import { OAuth2Client } from 'google-auth-library';
 import * as jwt from 'jsonwebtoken';
 import { JwksClient } from 'jwks-rsa';
 import { UsersService } from '../users/users.service';
+import { AppleAuthService } from './apple-auth.service';
 import { AppleAuthDto, GoogleAuthDto } from './dto/social-auth.dto';
 
 export interface TokenPair {
@@ -25,6 +26,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly appleAuthService: AppleAuthService,
   ) { }
 
   async register(data: {
@@ -119,13 +121,28 @@ export class AuthService {
 
   async appleAuth(dto: AppleAuthDto): Promise<TokenPair> {
     const { sub, email } = await this.verifyAppleToken(dto.identityToken);
-    return this.socialAuth({
+    const tokenPair = await this.socialAuth({
       provider: 'apple',
       providerUserId: sub,
       email,
       firstName: dto.firstName || email.split('@')[0],
       lastName: dto.lastName,
     });
+
+    // Exchange authorization code for Apple refresh token (best-effort)
+    if (dto.authorizationCode) {
+      try {
+        const appleRefreshToken = await this.appleAuthService.exchangeCode(dto.authorizationCode);
+        const user = await this.usersService.findByProviderUserId('apple', sub);
+        if (user && appleRefreshToken) {
+          await this.usersService.storeAppleRefreshToken(user.id, appleRefreshToken);
+        }
+      } catch {
+        // Non-fatal — user can still use the app
+      }
+    }
+
+    return tokenPair;
   }
 
   async googleAuth(dto: GoogleAuthDto): Promise<TokenPair> {

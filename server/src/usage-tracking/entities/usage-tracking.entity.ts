@@ -33,7 +33,7 @@ export class UsageTracking {
   @Column({ type: 'int', name: 'estimated_cost_cents', default: 0 })
   estimatedCostCents: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 }

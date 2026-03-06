@@ -11,6 +11,7 @@ export const ROUTES = {
     ME: '/users/me',
     COMPLETE_ONBOARDING: '/users/me/onboarding',
     UPDATE_PROFILE: '/users/me/profile',
+    DELETE_ACCOUNT: '/users/me',
   },
   USAGE: {
     CURRENT: '/usage/current',

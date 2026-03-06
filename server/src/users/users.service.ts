@@ -147,6 +147,20 @@ export class UsersService {
     return { success: true };
   }
 
+  async deleteAccount(userId: string) {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    await this.sessionsRepo.delete({ userId });
+    await this.usersRepo.delete(userId);
+    return { success: true, appleRefreshToken: user.appleRefreshToken };
+  }
+
+  async storeAppleRefreshToken(userId: string, token: string): Promise<void> {
+    await this.usersRepo.update(userId, { appleRefreshToken: token });
+  }
+
   async updateProfile(userId: string, dto: UpdateProfileDto) {
     const update: Record<string, any> = {};
     if (dto.dietaryProfile) {
