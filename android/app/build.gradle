@@ -78,7 +78,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.stockpot"
+    namespace "app.chefpixel.ChefPixel"
     defaultConfig {
         applicationId "com.stockpot"
         minSdkVersion rootProject.ext.minSdkVersion

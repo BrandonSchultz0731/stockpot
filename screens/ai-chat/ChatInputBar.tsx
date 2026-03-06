@@ -21,7 +21,7 @@ export default function ChatInputBar({ onSend, disabled }: ChatInputBarProps) {
     <View className="flex-row items-end border-t border-line bg-ivory px-4 pb-10 pt-2">
       <TextInput
         className="mr-2 max-h-[100px] min-h-[40px] flex-1 rounded-full bg-cream px-4 py-2.5 text-[15px] text-espresso"
-        placeholder="Ask Chef StockPot..."
+        placeholder="Ask Chef Pixel..."
         placeholderTextColor={colors.stone}
         value={text}
         onChangeText={setText}
