@@ -154,7 +154,11 @@ export class UsersService {
     }
     await this.sessionsRepo.delete({ userId });
     await this.usersRepo.delete(userId);
-    return { success: true };
+    return { success: true, appleRefreshToken: user.appleRefreshToken };
+  }
+
+  async storeAppleRefreshToken(userId: string, token: string): Promise<void> {
+    await this.usersRepo.update(userId, { appleRefreshToken: token });
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {

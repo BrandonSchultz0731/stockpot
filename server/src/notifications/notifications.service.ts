@@ -53,6 +53,11 @@ export class NotificationsService {
     userId: string,
     dto: RegisterTokenDto,
   ): Promise<{ success: boolean }> {
+    // Clear this push token from any other user's sessions (device can only belong to one user)
+    await this.sessionsRepo.update(
+      { pushToken: dto.pushToken },
+      { pushToken: null, pushPlatform: null },
+    );
     await this.sessionsRepo.update(
       { userId, expiresAt: MoreThan(new Date()) },
       { pushToken: dto.pushToken, pushPlatform: dto.pushPlatform },

@@ -358,8 +358,12 @@ describe('UsersService', () => {
   });
 
   describe('deleteAccount', () => {
-    it('should delete all sessions then delete user', async () => {
-      mockUsersRepo.findOne.mockResolvedValue({ id: 'u1', email: 'a@b.com' });
+    it('should delete all sessions then delete user and return appleRefreshToken', async () => {
+      mockUsersRepo.findOne.mockResolvedValue({
+        id: 'u1',
+        email: 'a@b.com',
+        appleRefreshToken: 'apple-rt',
+      });
       mockSessionsRepo.delete.mockResolvedValue({ affected: 2 });
       mockUsersRepo.delete.mockResolvedValue({ affected: 1 });
 
@@ -368,7 +372,21 @@ describe('UsersService', () => {
       expect(mockUsersRepo.findOne).toHaveBeenCalledWith({ where: { id: 'u1' } });
       expect(mockSessionsRepo.delete).toHaveBeenCalledWith({ userId: 'u1' });
       expect(mockUsersRepo.delete).toHaveBeenCalledWith('u1');
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, appleRefreshToken: 'apple-rt' });
+    });
+
+    it('should return null appleRefreshToken for non-Apple users', async () => {
+      mockUsersRepo.findOne.mockResolvedValue({
+        id: 'u1',
+        email: 'a@b.com',
+        appleRefreshToken: null,
+      });
+      mockSessionsRepo.delete.mockResolvedValue({ affected: 0 });
+      mockUsersRepo.delete.mockResolvedValue({ affected: 1 });
+
+      const result = await service.deleteAccount('u1');
+
+      expect(result).toEqual({ success: true, appleRefreshToken: null });
     });
 
     it('should throw NotFoundException if user does not exist', async () => {

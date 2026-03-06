@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
+import { AppleAuthService } from '../auth/apple-auth.service';
 import { UsersService } from './users.service';
 import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -16,7 +17,10 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly appleAuthService: AppleAuthService,
+  ) {}
 
   @Get('me')
   getProfile(@GetUser('id') userId: string) {
@@ -33,8 +37,9 @@ export class UsersController {
 
   @Delete('me')
   @HttpCode(204)
-  deleteAccount(@GetUser('id') userId: string) {
-    return this.usersService.deleteAccount(userId);
+  async deleteAccount(@GetUser('id') userId: string) {
+    const { appleRefreshToken } = await this.usersService.deleteAccount(userId);
+    await this.appleAuthService.revokeToken(appleRefreshToken);
   }
 
   @Patch('me/profile')

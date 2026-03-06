@@ -1,12 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { AppleAuthService } from '../auth/apple-auth.service';
 
 const mockUsersService = {
   getProfile: jest.fn(),
   completeOnboarding: jest.fn(),
   updateProfile: jest.fn(),
   deleteAccount: jest.fn(),
+};
+
+const mockAppleAuthService = {
+  revokeToken: jest.fn(),
 };
 
 describe('UsersController', () => {
@@ -17,7 +22,10 @@ describe('UsersController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [{ provide: UsersService, useValue: mockUsersService }],
+      providers: [
+        { provide: UsersService, useValue: mockUsersService },
+        { provide: AppleAuthService, useValue: mockAppleAuthService },
+      ],
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
@@ -55,12 +63,29 @@ describe('UsersController', () => {
   });
 
   describe('deleteAccount', () => {
-    it('should delegate to UsersService.deleteAccount with userId', async () => {
-      mockUsersService.deleteAccount.mockResolvedValue({ success: true });
+    it('should delete account and revoke Apple token', async () => {
+      mockUsersService.deleteAccount.mockResolvedValue({
+        success: true,
+        appleRefreshToken: 'apple-rt',
+      });
+      mockAppleAuthService.revokeToken.mockResolvedValue(undefined);
 
       await controller.deleteAccount('u1');
 
       expect(mockUsersService.deleteAccount).toHaveBeenCalledWith('u1');
+      expect(mockAppleAuthService.revokeToken).toHaveBeenCalledWith('apple-rt');
+    });
+
+    it('should pass null to revokeToken for non-Apple users', async () => {
+      mockUsersService.deleteAccount.mockResolvedValue({
+        success: true,
+        appleRefreshToken: null,
+      });
+      mockAppleAuthService.revokeToken.mockResolvedValue(undefined);
+
+      await controller.deleteAccount('u1');
+
+      expect(mockAppleAuthService.revokeToken).toHaveBeenCalledWith(null);
     });
   });
 

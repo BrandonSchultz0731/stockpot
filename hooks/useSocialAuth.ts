@@ -27,6 +27,7 @@ export function useSocialAuth() {
   const appleMutation = useMutation({
     mutationFn: (params: {
       identityToken: string;
+      authorizationCode?: string;
       firstName?: string;
       lastName?: string;
     }) => api.post<TokenPair>(ROUTES.AUTH.APPLE, params),
@@ -52,6 +53,7 @@ export function useSocialAuth() {
 
       await appleMutation.mutateAsync({
         identityToken: response.identityToken,
+        authorizationCode: response.authorizationCode ?? undefined,
         firstName: response.fullName?.givenName ?? undefined,
         lastName: response.fullName?.familyName ?? undefined,
       });

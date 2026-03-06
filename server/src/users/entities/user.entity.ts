@@ -63,6 +63,9 @@ export class User {
   @Column({ type: 'jsonb', name: 'notification_prefs', nullable: true })
   notificationPrefs: NotificationPrefs;
 
+  @Column({ type: 'text', name: 'apple_refresh_token', nullable: true })
+  appleRefreshToken: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
