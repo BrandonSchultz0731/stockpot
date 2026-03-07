@@ -7,7 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { UserSession } from './user-session.entity';
-import { SubscriptionTier } from '@shared/enums';
+import { SubscriptionTier, UserRole } from '@shared/enums';
 import type { DietaryProfile, NotificationPrefs, NutritionalGoals } from '@shared/enums';
 
 @Entity('users')
@@ -53,6 +53,13 @@ export class User {
     default: SubscriptionTier.Free,
   })
   subscriptionTier: SubscriptionTier;
+
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: UserRole.Customer,
+  })
+  role: UserRole;
 
   @Column({ type: 'jsonb', name: 'dietary_profile', nullable: true })
   dietaryProfile: DietaryProfile;

@@ -3,7 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsageTracking } from './entities/usage-tracking.entity';
 import { formatISODate } from '@shared/dates';
-import { MessageType } from '@shared/enums';
+import { MessageType, SubscriptionTier } from '@shared/enums';
+import {
+  INTERNAL_MESSAGE_TYPES,
+  MONTHLY_QUOTA_LIMITS,
+} from '../common/config/quota-limits';
 
 type CounterField =
   | 'totalInputTokens'
@@ -64,6 +68,31 @@ export class UsageTrackingService {
       })
       .where('id = :id', { id: record.id })
       .execute();
+  }
+
+  async checkQuota(
+    userId: string,
+    messageType: MessageType,
+    tier: SubscriptionTier,
+  ): Promise<{ allowed: boolean; currentCount: number; limit: number | null }> {
+    if (INTERNAL_MESSAGE_TYPES.has(messageType)) {
+      return { allowed: true, currentCount: 0, limit: null };
+    }
+
+    const tierLimits = MONTHLY_QUOTA_LIMITS[tier];
+    if (!tierLimits) {
+      return { allowed: true, currentCount: 0, limit: null };
+    }
+
+    const limit = tierLimits[messageType];
+    if (limit === undefined) {
+      return { allowed: true, currentCount: 0, limit: null };
+    }
+
+    const record = await this.getCurrentPeriod(userId);
+    const currentCount = record.featureCounts[messageType] ?? 0;
+
+    return { allowed: currentCount < limit, currentCount, limit };
   }
 
   private columnName(field: CounterField): string {

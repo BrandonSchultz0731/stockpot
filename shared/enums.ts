@@ -12,6 +12,11 @@ export enum SubscriptionTier {
   Pro = 'Pro',
 }
 
+export enum UserRole {
+  Customer = 'customer',
+  Admin = 'admin',
+}
+
 export enum DietaryPreference {
   Vegetarian = 'Vegetarian',
   Vegan = 'Vegan',

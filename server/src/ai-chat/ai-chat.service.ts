@@ -93,6 +93,9 @@ export class AiChatService {
     subject: Subject<SSEEvent>,
     abortSignal?: AbortSignal,
   ): Promise<void> {
+    // 0. Enforce monthly usage quota before any work
+    await this.anthropicService.enforceQuota(userId, MessageType.AiChat);
+
     // 1. Get or create conversation
     let conversation: Conversation;
     const isNew = !conversationId;

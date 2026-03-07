@@ -9,6 +9,7 @@ export interface UsageRecord {
   id: string;
   periodStart: string;
   featureCounts: Partial<Record<MessageType, number>>;
+  limits: Partial<Record<MessageType, number>> | null;
 }
 
 export function useUsageQuery() {

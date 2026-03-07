@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { UsageTrackingService } from './usage-tracking.service';
 import { UsageTracking } from './entities/usage-tracking.entity';
 import { formatISODate } from '@shared/dates';
-import { MessageType } from '@shared/enums';
+import { MessageType, SubscriptionTier } from '@shared/enums';
 
 const mockRepo = {
   findOne: jest.fn(),
@@ -128,6 +128,83 @@ describe('UsageTrackingService', () => {
         id: 'ut-1',
       });
       expect(mockQueryBuilder.execute).toHaveBeenCalled();
+    });
+  });
+
+  describe('checkQuota', () => {
+    it('should allow internal message types unconditionally', async () => {
+      const result = await service.checkQuota(
+        'u1',
+        MessageType.ShelfLife,
+        SubscriptionTier.Free,
+      );
+
+      expect(result).toEqual({ allowed: true, currentCount: 0, limit: null });
+      expect(mockRepo.findOne).not.toHaveBeenCalled();
+    });
+
+    it('should allow Pro tier with generous limits', async () => {
+      mockRepo.findOne.mockResolvedValue({
+        id: 'ut-1',
+        userId: 'u1',
+        featureCounts: { [MessageType.ReceiptScan]: 20 },
+      });
+
+      const result = await service.checkQuota(
+        'u1',
+        MessageType.ReceiptScan,
+        SubscriptionTier.Pro,
+      );
+
+      expect(result).toEqual({ allowed: true, currentCount: 20, limit: 40 });
+    });
+
+    it('should allow when under limit', async () => {
+      mockRepo.findOne.mockResolvedValue({
+        id: 'ut-1',
+        userId: 'u1',
+        featureCounts: { [MessageType.ReceiptScan]: 2 },
+      });
+
+      const result = await service.checkQuota(
+        'u1',
+        MessageType.ReceiptScan,
+        SubscriptionTier.Free,
+      );
+
+      expect(result).toEqual({ allowed: true, currentCount: 2, limit: 3 });
+    });
+
+    it('should deny when at or over limit', async () => {
+      mockRepo.findOne.mockResolvedValue({
+        id: 'ut-1',
+        userId: 'u1',
+        featureCounts: { [MessageType.ReceiptScan]: 3 },
+      });
+
+      const result = await service.checkQuota(
+        'u1',
+        MessageType.ReceiptScan,
+        SubscriptionTier.Free,
+      );
+
+      expect(result).toEqual({ allowed: false, currentCount: 3, limit: 3 });
+    });
+
+    it('should treat missing feature count as zero', async () => {
+      mockRepo.findOne.mockResolvedValue({
+        id: 'ut-1',
+        userId: 'u1',
+        featureCounts: {},
+      });
+
+      const result = await service.checkQuota(
+        'u1',
+        MessageType.AiChat,
+        SubscriptionTier.Free,
+      );
+
+      expect(result).toEqual({ allowed: true, currentCount: 0, limit: 8 });
     });
   });
 });
