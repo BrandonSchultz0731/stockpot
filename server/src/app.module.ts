@@ -18,6 +18,7 @@ import { MealPlansModule } from './meal-plans/meal-plans.module';
 import { ShoppingListsModule } from './shopping-lists/shopping-lists.module';
 import { AiChatModule } from './ai-chat/ai-chat.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     ShoppingListsModule,
     AiChatModule,
     NotificationsModule,
+    SubscriptionsModule,
   ],
   controllers: [AppController],
   providers: [

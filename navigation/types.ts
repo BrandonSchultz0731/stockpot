@@ -9,6 +9,7 @@ export type RootStackParamList = {
   ResetPassword: { email: string };
   Onboarding: undefined;
   MainTabs: NavigatorScreenParams<TabParamList> | undefined;
+  Paywall: undefined;
 };
 
 export type OnboardingParamList = {

@@ -34,11 +34,13 @@ export function setOnUnauthorized(callback: (() => void) | null) {
 
 export class ApiError extends Error {
   status: number;
+  code?: string;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -113,13 +115,15 @@ async function apiFetch<T>(
     }
 
     let message = `Request failed (${res.status})`;
+    let code: string | undefined;
     try {
       const body = await res.json();
+      code = body.code;
       // NestJS returns message as string or string[]
       const msg = body.message;
       message = Array.isArray(msg) ? msg.join(', ') : msg || message;
     } catch {}
-    throw new ApiError(res.status, message);
+    throw new ApiError(res.status, message, code);
   }
 
   // Handle 204 No Content

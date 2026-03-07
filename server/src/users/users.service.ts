@@ -10,7 +10,7 @@ import { User } from './entities/user.entity';
 import { UserSession } from './entities/user-session.entity';
 import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { DEFAULT_NOTIFICATION_PREFS } from '@shared/enums';
+import { DEFAULT_NOTIFICATION_PREFS, SubscriptionTier } from '@shared/enums';
 
 @Injectable()
 export class UsersService {
@@ -163,6 +163,10 @@ export class UsersService {
 
   async storeAppleRefreshToken(userId: string, token: string): Promise<void> {
     await this.usersRepo.update(userId, { appleRefreshToken: token });
+  }
+
+  async updateSubscriptionTier(userId: string, tier: SubscriptionTier): Promise<void> {
+    await this.usersRepo.update(userId, { subscriptionTier: tier });
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
