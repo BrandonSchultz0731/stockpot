@@ -10,6 +10,7 @@ import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
+import EmailVerificationScreen from '../screens/EmailVerificationScreen';
 import OnboardingNavigator from './OnboardingNavigator';
 import TabNavigator from './TabNavigator';
 import PaywallScreen from '../screens/PaywallScreen';
@@ -46,6 +47,8 @@ export default function RootNavigator() {
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
             <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           </>
+        ) : !profile?.emailVerified ? (
+          <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
         ) : !profile?.onboardingComplete ? (
           <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
         ) : (

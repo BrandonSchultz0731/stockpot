@@ -21,6 +21,7 @@ export class EmailService {
     this.templates = {
       passwordReset: this.loadTemplate(join(templatesDir, 'password-reset.hbs')),
       socialReminder: this.loadTemplate(join(templatesDir, 'social-provider-reminder.hbs')),
+      emailVerification: this.loadTemplate(join(templatesDir, 'email-verification.hbs')),
     };
   }
 
@@ -39,6 +40,19 @@ export class EmailService {
       from: { email: this.fromEmail, name: this.fromName },
       subject: 'Reset your ChefPixel password',
       html: this.templates.passwordReset({ firstName, resetCode }),
+    });
+  }
+
+  async sendEmailVerificationEmail(
+    to: string,
+    firstName: string,
+    verificationCode: string,
+  ): Promise<void> {
+    await sgMail.send({
+      to,
+      from: { email: this.fromEmail, name: this.fromName },
+      subject: 'Verify your ChefPixel email',
+      html: this.templates.emailVerification({ firstName, verificationCode }),
     });
   }
 

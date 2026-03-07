@@ -12,6 +12,12 @@ import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { DEFAULT_NOTIFICATION_PREFS, SubscriptionTier } from '@shared/enums';
 
+function normalizeEmail(email: string): string {
+  const [local, domain] = email.toLowerCase().split('@');
+  const stripped = local.split('+')[0];
+  return `${stripped}@${domain}`;
+}
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -27,8 +33,9 @@ export class UsersService {
     firstName: string;
     lastName?: string;
   }): Promise<User> {
+    const email = normalizeEmail(data.email);
     const existing = await this.usersRepo.findOne({
-      where: { email: data.email },
+      where: { email },
     });
     if (existing) {
       throw new ConflictException('Email already in use');
@@ -36,17 +43,18 @@ export class UsersService {
 
     const passwordHash = await bcrypt.hash(data.password, 12);
     const user = this.usersRepo.create({
-      email: data.email,
+      email,
       passwordHash,
       firstName: data.firstName,
       lastName: data.lastName,
+      emailVerified: false,
       notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
     });
     return this.usersRepo.save(user);
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepo.findOne({ where: { email } });
+    return this.usersRepo.findOne({ where: { email: normalizeEmail(email) } });
   }
 
   async findById(id: string): Promise<User | null> {
@@ -79,7 +87,7 @@ export class UsersService {
     providerUserId: string;
   }): Promise<User> {
     const user = this.usersRepo.create({
-      email: data.email,
+      email: normalizeEmail(data.email),
       passwordHash: null,
       firstName: data.firstName,
       lastName: data.lastName,
@@ -155,6 +163,10 @@ export class UsersService {
     await this.sessionsRepo.delete({ userId });
     await this.usersRepo.delete(userId);
     return { success: true, appleRefreshToken: user.appleRefreshToken };
+  }
+
+  async markEmailVerified(userId: string): Promise<void> {
+    await this.usersRepo.update(userId, { emailVerified: true });
   }
 
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {

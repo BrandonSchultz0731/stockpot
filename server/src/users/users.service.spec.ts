@@ -86,6 +86,26 @@ describe('UsersService', () => {
       ).rejects.toThrow(ConflictException);
     });
 
+    it('should normalize email by stripping + suffix', async () => {
+      mockUsersRepo.findOne.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-pw');
+      mockUsersRepo.create.mockReturnValue({});
+      mockUsersRepo.save.mockResolvedValue({});
+
+      await service.createUser({
+        email: 'Test+alias@Example.com',
+        password: 'password123',
+        firstName: 'Test',
+      });
+
+      expect(mockUsersRepo.findOne).toHaveBeenCalledWith({
+        where: { email: 'test@example.com' },
+      });
+      expect(mockUsersRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'test@example.com' }),
+      );
+    });
+
     it('should store optional lastName', async () => {
       mockUsersRepo.findOne.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('h');
@@ -124,6 +144,16 @@ describe('UsersService', () => {
       const result = await service.findByEmail('nope@b.com');
 
       expect(result).toBeNull();
+    });
+
+    it('should normalize email by stripping + suffix and lowercasing', async () => {
+      mockUsersRepo.findOne.mockResolvedValue(null);
+
+      await service.findByEmail('User+test@Example.com');
+
+      expect(mockUsersRepo.findOne).toHaveBeenCalledWith({
+        where: { email: 'user@example.com' },
+      });
     });
   });
 
