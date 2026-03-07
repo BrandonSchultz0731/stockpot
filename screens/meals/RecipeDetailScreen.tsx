@@ -154,6 +154,8 @@ function ServingStepper({
         onPress={onDecrement}
         disabled={value <= min}
         className={`h-8 w-8 items-center justify-center rounded-lg border border-line ${value <= min ? 'opacity-30' : ''}`}
+        accessibilityRole="button"
+        accessibilityLabel={`Decrease ${label.toLowerCase()}`}
       >
         <Minus size={14} color={colors.espresso} />
       </Pressable>
@@ -163,6 +165,8 @@ function ServingStepper({
       <Pressable
         onPress={onIncrement}
         className="h-8 w-8 items-center justify-center rounded-lg border border-line"
+        accessibilityRole="button"
+        accessibilityLabel={`Increase ${label.toLowerCase()}`}
       >
         <Plus size={14} color={colors.espresso} />
       </Pressable>
@@ -421,7 +425,7 @@ export default function RecipeDetailScreen() {
     <SafeAreaView edges={['top']} className="flex-1 bg-ivory">
       <ScreenHeader
         rightAction={
-          <Pressable onPress={() => toggleSave(recipeId)} hitSlop={8}>
+          <Pressable onPress={() => toggleSave(recipeId)} hitSlop={8} accessibilityRole="button" accessibilityLabel={saved ? 'Unsave recipe' : 'Save recipe'}>
             <Heart
               size={22}
               color={saved ? colors.terra.DEFAULT : colors.stone}
@@ -465,6 +469,8 @@ export default function RecipeDetailScreen() {
               })
             }
             className="mx-5 mt-6 flex-row items-center justify-center rounded-full bg-sage py-3.5"
+            accessibilityRole="button"
+            accessibilityLabel="Mark as cooked"
           >
             <CookingPot size={18} color="#fff" />
             <AppText className="ml-2 text-[15px] font-bold text-white">

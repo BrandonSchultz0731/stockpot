@@ -19,6 +19,8 @@ export default function RichActionButton({ data, onAction }: RichActionButtonPro
       onPress={() => action && onAction?.(action, params)}
       className="my-1 self-start rounded-full bg-terra-pale px-4 py-2"
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      accessibilityRole="button"
+      accessibilityLabel={label ?? 'Action'}
     >
       <AppText className="text-sm font-semibold" style={{ color: colors.terra.DEFAULT }}>
         {label ?? 'Action'}

@@ -36,7 +36,7 @@ export default function ScreenHeader({
   const handleBack = onBack ?? (() => navigation.goBack());
 
   const saveElement = onSave ? (
-    <Pressable onPress={onSave} disabled={isSaving} hitSlop={12}>
+    <Pressable onPress={onSave} disabled={isSaving} hitSlop={12} accessibilityRole="button" accessibilityLabel="Save">
       {isSaving ? (
         <ActivityIndicator size="small" color={colors.terra.DEFAULT} />
       ) : (
@@ -50,7 +50,7 @@ export default function ScreenHeader({
   if (centerTitle) {
     return (
       <View className="flex-row items-center justify-between px-5 py-3">
-        <Pressable onPress={handleBack} hitSlop={12}>
+        <Pressable onPress={handleBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
           <ChevronLeft size={24} color={colors.espresso} />
         </Pressable>
         {title ? (
@@ -71,7 +71,7 @@ export default function ScreenHeader({
   return (
     <View className="flex-row items-center justify-between px-5 py-3">
       <View className="flex-row items-center flex-1">
-        <Pressable onPress={handleBack} hitSlop={8}>
+        <Pressable onPress={handleBack} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
           <ChevronLeft size={22} color={colors.espresso} />
         </Pressable>
         {title ? (

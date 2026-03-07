@@ -68,6 +68,8 @@ function PantryRow({
     <Pressable
       onPress={onPress}
       className={`flex-row items-center gap-3.5 py-3.5 ${showBorder ? 'border-b border-line' : ''}`}
+      accessibilityRole="button"
+      accessibilityLabel={item.displayName}
     >
       {/* Emoji / initial circle */}
       <View className="items-center justify-center bg-cream w-[46px] h-[46px] rounded-[14px] shrink-0">
@@ -178,6 +180,8 @@ export default function PantryListScreen() {
           <Pressable
             onPress={() => navigation.navigate('AddItemPicker')}
             className="items-center justify-center bg-terra w-10 h-10 rounded-[20px]"
+            accessibilityRole="button"
+            accessibilityLabel="Add item"
             style={{
               shadowColor: '#C25B2E',
               shadowOffset: { width: 0, height: 4 },
@@ -214,6 +218,8 @@ export default function PantryListScreen() {
                 onPress={() => setSelectedFilter(f.value)}
                 className={`items-center justify-center py-2 px-4 rounded-full ${isActive ? 'bg-espresso' : 'bg-white'}`}
                 style={!isActive ? cardShadow : undefined}
+                accessibilityRole="button"
+                accessibilityLabel={`Filter by ${f.label}`}
               >
                 <AppText
                   font="sansSemiBold"

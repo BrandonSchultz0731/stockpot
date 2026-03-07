@@ -52,7 +52,9 @@ export default function ExpirationDateInput({
       <View>
         <Pressable
           onPress={() => setShowPicker(true)}
-          className="flex-row items-center bg-white rounded-input border border-line px-3.5 py-3 gap-2.5">
+          className="flex-row items-center bg-white rounded-input border border-line px-3.5 py-3 gap-2.5"
+          accessibilityRole="button"
+          accessibilityLabel="Select expiration date">
           <Calendar size={18} color={colors.stone} />
           <AppText
             className={`text-[14px] ${date ? 'text-espresso' : 'text-stone'}`}>
@@ -76,7 +78,9 @@ export default function ExpirationDateInput({
     <View>
       <Pressable
         onPress={handleOpen}
-        className="flex-row items-center bg-white rounded-input border border-line px-3.5 py-3 gap-2.5">
+        className="flex-row items-center bg-white rounded-input border border-line px-3.5 py-3 gap-2.5"
+        accessibilityRole="button"
+        accessibilityLabel="Select expiration date">
         <Calendar size={18} color={colors.stone} />
         <AppText
           className={`text-[14px] ${date ? 'text-espresso' : 'text-stone'}`}>
@@ -89,10 +93,12 @@ export default function ExpirationDateInput({
           <Pressable
             className="flex-1"
             onPress={() => setShowPicker(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Close date picker"
           />
           <View className="bg-white rounded-t-2xl pb-[34px]">
             <View className="flex-row items-center justify-between px-4 py-3 border-b border-line">
-              <Pressable onPress={handleClear}>
+              <Pressable onPress={handleClear} accessibilityRole="button" accessibilityLabel="Clear date">
                 <AppText className="text-[14px] text-stone font-semibold">
                   Clear
                 </AppText>
@@ -100,7 +106,7 @@ export default function ExpirationDateInput({
               <AppText className="text-[16px] text-espresso font-bold">
                 Expiration Date
               </AppText>
-              <Pressable onPress={handleConfirm}>
+              <Pressable onPress={handleConfirm} accessibilityRole="button" accessibilityLabel="Confirm date">
                 <AppText className="text-[14px] text-terra font-semibold">
                   Done
                 </AppText>

@@ -67,6 +67,8 @@ function AnimatedTab({
       onPress={onPress}
       onLayout={onLayout}
       className="items-center gap-[1px] rounded-[22px] py-2 px-3.5"
+      accessibilityRole="tab"
+      accessibilityLabel={config.label}
     >
       <View className="h-5 w-5 items-center justify-center">
         <Animated.View className="absolute" style={inactiveOpacity}>

@@ -117,7 +117,9 @@ export default function LoginScreen() {
               right={
                 <Pressable
                   onPress={() => setShowPassword(!showPassword)}
-                  hitSlop={8}>
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Toggle password visibility">
                   {showPassword ? (
                     <EyeOff size={18} color={colors.stone} />
                   ) : (
@@ -130,7 +132,9 @@ export default function LoginScreen() {
             {/* Forgot password */}
             <Pressable
               className="self-end mb-5"
-              onPress={() => navigation.navigate('ForgotPassword')}>
+              onPress={() => navigation.navigate('ForgotPassword')}
+              accessibilityRole="link"
+              accessibilityLabel="Forgot password">
               <Text className="text-xs font-semibold text-terra">
                 Forgot password?
               </Text>
@@ -172,7 +176,9 @@ export default function LoginScreen() {
                 className="font-bold text-terra"
                 onPress={() =>
                   navigation.navigate('SignUp')
-                }>
+                }
+                accessibilityRole="link"
+                accessibilityLabel="Sign up">
                 Sign Up
               </Text>
             </Text>

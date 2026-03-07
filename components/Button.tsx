@@ -50,7 +50,10 @@ export default function Button({
     <Pressable
       className={`flex-row items-center justify-center rounded-button ${v.container} ${disabled ? 'opacity-50' : ''} ${className}`}
       disabled={disabled}
-      onPress={onPress}>
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled }}>
       {icon && <View className="mr-2">{icon}</View>}
       <AppText
         className={`${v.text} ${labelClassName}`}

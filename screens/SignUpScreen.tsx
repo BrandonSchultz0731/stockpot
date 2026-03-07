@@ -140,6 +140,7 @@ export default function SignUpScreen() {
                   value={firstName}
                   onChangeText={setFirstName}
                   autoCorrect={false}
+                  accessibilityLabel="First name"
                 />
               </View>
               <View className="flex-1 flex-row items-center border-b border-line bg-transparent px-1 py-3">
@@ -150,6 +151,7 @@ export default function SignUpScreen() {
                   value={lastName}
                   onChangeText={setLastName}
                   autoCorrect={false}
+                  accessibilityLabel="Last name"
                 />
               </View>
             </View>
@@ -178,7 +180,9 @@ export default function SignUpScreen() {
                 right={
                   <Pressable
                     onPress={() => setShowPassword(!showPassword)}
-                    hitSlop={8}>
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Toggle password visibility">
                     {showPassword ? (
                       <EyeOff size={18} color={colors.stone} />
                     ) : (
@@ -248,7 +252,9 @@ export default function SignUpScreen() {
               Already have an account?{' '}
               <Text
                 className="font-bold text-terra"
-                onPress={() => navigation.goBack()}>
+                onPress={() => navigation.goBack()}
+                accessibilityRole="link"
+                accessibilityLabel="Log in">
                 Log In
               </Text>
             </Text>

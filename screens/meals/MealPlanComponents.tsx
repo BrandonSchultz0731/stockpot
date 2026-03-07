@@ -99,6 +99,8 @@ export function MealPlanHeader({
           <Pressable
             onPress={onCartPress}
             className="relative h-10 w-10 items-center justify-center rounded-full bg-sage-pale"
+            accessibilityRole="button"
+            accessibilityLabel="Shopping list"
           >
             <ShoppingCart size={20} color={colors.sage.DEFAULT} />
             {cartBadgeCount != null && cartBadgeCount > 0 && (
@@ -115,6 +117,8 @@ export function MealPlanHeader({
           disabled={disabled}
           className={`flex-row items-center rounded-full bg-terra px-3.5 py-2 ${disabled ? 'opacity-50' : ''
             }`}
+          accessibilityRole="button"
+          accessibilityLabel="Generate meal plan"
         >
           <Zap size={14} color="#fff" fill="#fff" />
           <AppText className="ml-1.5 text-xs font-bold text-white">
@@ -152,6 +156,8 @@ export function WeekNavigator({
         hitSlop={10}
         className={`h-8 w-8 items-center justify-center rounded-full ${hasPrevious ? '' : 'opacity-0'}`}
         disabled={!hasPrevious}
+        accessibilityRole="button"
+        accessibilityLabel="Previous week"
       >
         <ChevronLeft size={18} color={colors.stone} />
       </Pressable>
@@ -161,6 +167,8 @@ export function WeekNavigator({
         hitSlop={10}
         className={`h-8 w-8 items-center justify-center rounded-full ${hasNext ? '' : 'opacity-0'}`}
         disabled={!hasNext}
+        accessibilityRole="button"
+        accessibilityLabel="Next week"
       >
         <ChevronRight size={18} color={colors.stone} />
       </Pressable>
@@ -193,6 +201,8 @@ export function DaySelector({
             onPress={() => onSelectDay(d.dayOfWeek)}
             className={`h-[62px] w-[42px] items-center justify-center rounded-[14px] ${active ? 'bg-espresso' : 'bg-transparent'
               }`}
+            accessibilityRole="button"
+            accessibilityLabel={d.dayLabel}
           >
             <AppText
               className={`text-[10px] font-semibold ${active ? 'text-white/70' : isToday ? 'text-terra' : 'text-stone'
@@ -322,6 +332,8 @@ export function MealCard({
       onPress={onPress}
       className="mx-4 mb-2.5 overflow-hidden rounded-2xl bg-white"
       style={cardShadow}
+      accessibilityRole="button"
+      accessibilityLabel={entry.recipe.title}
     >
       {/* Top row: content + favorite */}
       <View className="flex-row items-start p-3.5 pb-2.5">
@@ -363,6 +375,8 @@ export function MealCard({
           onPress={onToggleSave}
           hitSlop={10}
           className="ml-3 mt-0.5 h-8 w-8 items-center justify-center rounded-full bg-cream"
+          accessibilityRole="button"
+          accessibilityLabel={isSaved ? 'Unsave recipe' : 'Save recipe'}
         >
           <Heart
             size={16}
@@ -380,6 +394,8 @@ export function MealCard({
             disabled={isSwapping}
             hitSlop={6}
             className="flex-row items-center rounded-lg bg-cream px-2.5 py-1.5"
+            accessibilityRole="button"
+            accessibilityLabel="Swap recipe"
           >
             {isSwapping ? (
               <ActivityIndicator size="small" color={colors.stone} />
@@ -416,6 +432,8 @@ export function ShoppingListBanner({
     <Pressable
       onPress={onPress}
       className="mx-4 mb-3 flex-row items-center rounded-[14px] bg-sage-pale px-4 py-3.5"
+      accessibilityRole="button"
+      accessibilityLabel="Shopping list"
     >
       <ShoppingCart size={18} color={colors.sage.DEFAULT} />
       <View className="ml-3 flex-1">
@@ -445,6 +463,8 @@ export function MealPlaceholder({
       onPress={onPress}
       disabled={isLoading}
       className="mx-4 mb-2.5 flex-row items-center justify-center rounded-[14px] border-2 border-dashed border-line py-3.5"
+      accessibilityRole="button"
+      accessibilityLabel={`Add ${mealType}`}
     >
       {isLoading ? (
         <ActivityIndicator size="small" color={colors.terra.DEFAULT} />

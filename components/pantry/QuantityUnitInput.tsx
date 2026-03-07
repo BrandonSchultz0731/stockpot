@@ -38,12 +38,15 @@ export default function QuantityUnitInput({
           placeholder="Qty"
           placeholderTextColor={colors.stone}
           keyboardType="decimal-pad"
+          accessibilityLabel="Quantity"
         />
       </View>
 
       <Pressable
         onPress={() => setShowPicker(true)}
-        className="flex-1 flex-row items-center justify-between bg-white rounded-input border border-line px-3.5 py-3">
+        className="flex-1 flex-row items-center justify-between bg-white rounded-input border border-line px-3.5 py-3"
+        accessibilityRole="button"
+        accessibilityLabel={`Unit: ${unit}`}>
         <Text className="text-[14px] text-espresso">{unit}</Text>
         <ChevronDown size={16} color={colors.stone} />
       </Pressable>
@@ -52,6 +55,8 @@ export default function QuantityUnitInput({
         <Pressable
           className="flex-1 bg-black/40"
           onPress={() => setShowPicker(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Close unit picker"
         />
         <View className="bg-white rounded-t-2xl pb-8 max-h-[50%]">
           <View className="flex-row items-center justify-between px-4 py-3 border-b border-line">
@@ -59,7 +64,7 @@ export default function QuantityUnitInput({
               className="text-[16px] text-espresso font-bold">
               Select Unit
             </Text>
-            <Pressable onPress={() => setShowPicker(false)}>
+            <Pressable onPress={() => setShowPicker(false)} accessibilityRole="button" accessibilityLabel="Done">
               <Text className="text-[14px] text-terra font-semibold">
                 Done
               </Text>
@@ -76,7 +81,10 @@ export default function QuantityUnitInput({
                 }}
                 className={`px-4 py-3 border-b border-line ${
                   item === unit ? 'bg-terra-pale' : ''
-                }`}>
+                }`}
+                accessibilityRole="radio"
+                accessibilityLabel={item}
+                accessibilityState={{ selected: item === unit }}>
                 <Text
                   className={`text-[14px] ${
                     item === unit

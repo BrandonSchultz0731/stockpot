@@ -64,11 +64,12 @@ function AvatarButton({
   const initial = (firstName ?? '?')[0].toUpperCase();
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel="Open profile">
       {avatarUrl ? (
         <Image
           source={{ uri: avatarUrl }}
           style={{ width: 44, height: 44, borderRadius: 22 }}
+          accessibilityLabel="Profile picture"
         />
       ) : (
         <LinearGradient
@@ -117,6 +118,8 @@ function QuickActions() {
         <Pressable
           key={action.label}
           onPress={action.onPress}
+          accessibilityRole="button"
+          accessibilityLabel={action.label}
           className="flex-1 items-center gap-2 rounded-[18px] bg-white py-4 px-2"
           style={cardShadow}
         >
@@ -198,7 +201,7 @@ function ExpiringList({
         <AppText font="serif" className="text-[18px] text-espresso">
           Expiring Soon
         </AppText>
-        <Pressable onPress={onPress}>
+        <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel="View all expiring items">
           <AppText font="sansSemiBold" className="text-[13px] text-terra">
             View all
           </AppText>
@@ -231,6 +234,8 @@ function MealRow({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${entry.mealType}: ${recipe.title}`}
       className={`flex-row items-center gap-3.5 py-3.5 ${showBorder ? 'border-b border-line' : ''}`}
     >
       {/* Emoji / initial circle */}
@@ -325,7 +330,7 @@ function TodaysMeals() {
       return (
         <View className="mx-6 items-center rounded-[18px] bg-white py-6" style={cardShadow}>
           <Text className="text-sm text-stone">No meal plan yet</Text>
-          <Pressable onPress={() => tabNav.navigate('MealsStack')}>
+          <Pressable onPress={() => tabNav.navigate('MealsStack')} accessibilityRole="button" accessibilityLabel="Generate meal plan">
             <AppText font="sansSemiBold" className="mt-2 text-sm text-terra">
               Generate Plan
             </AppText>
@@ -361,7 +366,7 @@ function TodaysMeals() {
         <AppText font="serif" className="text-[18px] text-espresso">
           Today's Meals
         </AppText>
-        <Pressable onPress={() => tabNav.navigate('MealsStack')}>
+        <Pressable onPress={() => tabNav.navigate('MealsStack')} accessibilityRole="button" accessibilityLabel="View full meal plan">
           <AppText font="sansSemiBold" className="text-[13px] text-terra">
             Full plan
           </AppText>
@@ -398,7 +403,7 @@ function PantrySnapshot({
         <AppText font="serif" className="text-[16px] text-espresso">
           Pantry
         </AppText>
-        <Pressable onPress={onOpen}>
+        <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel="Open pantry">
           <AppText font="sansSemiBold" className="text-[13px] text-terra">
             Open
           </AppText>

@@ -22,7 +22,10 @@ export default function SelectableCard({
         'flex-row items-center rounded-2xl px-4 py-4 mb-3 border',
         selected ? 'bg-terra-pale border-terra' : 'bg-white border-line',
       )}
-      onPress={onPress}>
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ selected }}>
       <View className="flex-1">
         <AppText className="text-[15px] font-semibold text-espresso">
           {title}

@@ -33,7 +33,7 @@ export default function SectionHeader({
         </View>
       ) : null}
       {rightAction ? (
-        <Pressable onPress={rightAction.onPress} hitSlop={8}>
+        <Pressable onPress={rightAction.onPress} hitSlop={8} accessibilityRole="button" accessibilityLabel={rightAction.label}>
           <AppText className="text-xs font-semibold text-terra">
             {rightAction.label}
           </AppText>

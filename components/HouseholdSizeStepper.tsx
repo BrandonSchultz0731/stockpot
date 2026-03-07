@@ -22,6 +22,8 @@ export default function HouseholdSizeStepper({
           className={`w-12 h-12 rounded-full border border-line items-center justify-center bg-white ${value <= min ? 'opacity-30' : ''}`}
           disabled={value <= min}
           onPress={() => onChange(value - 1)}
+          accessibilityRole="button"
+          accessibilityLabel="Decrease household size"
         >
           <AppText className="text-2xl font-semibold -mt-0.5 text-espresso">−</AppText>
         </Pressable>
@@ -42,6 +44,8 @@ export default function HouseholdSizeStepper({
           className={`w-12 h-12 rounded-full border border-line items-center justify-center bg-white ${value >= max ? 'opacity-30' : ''}`}
           disabled={value >= max}
           onPress={() => onChange(value + 1)}
+          accessibilityRole="button"
+          accessibilityLabel="Increase household size"
         >
           <AppText className="text-2xl font-semibold -mt-0.5 text-espresso">+</AppText>
         </Pressable>

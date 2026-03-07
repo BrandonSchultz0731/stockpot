@@ -127,7 +127,9 @@ export default function ResetPasswordScreen() {
             right={
               <Pressable
                 onPress={() => setShowPassword(!showPassword)}
-                hitSlop={8}>
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Toggle password visibility">
                 {showPassword ? (
                   <EyeOff size={18} color={colors.stone} />
                 ) : (
@@ -162,7 +164,7 @@ export default function ResetPasswordScreen() {
             className="mb-4"
           />
 
-          <Pressable onPress={handleResend} className="self-center">
+          <Pressable onPress={handleResend} className="self-center" accessibilityRole="button" accessibilityLabel="Resend code">
             <Text className="text-xs font-semibold text-terra">
               Resend code
             </Text>

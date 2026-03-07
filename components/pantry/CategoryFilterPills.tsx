@@ -54,7 +54,10 @@ function Pill({
         active
           ? 'bg-espresso'
           : 'bg-cream border border-line'
-      }`}>
+      }`}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}>
       <AppText
         className={`text-[13px] ${
           active ? 'text-white font-semibold' : 'text-espresso'

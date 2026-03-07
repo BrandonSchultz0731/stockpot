@@ -51,7 +51,7 @@ function UpgradeCard({ recipesUsed }: { recipesUsed: number }) {
   const progress = Math.min(recipesUsed / FREE_TIER_RECIPE_LIMIT, 1);
 
   return (
-    <Pressable className="mx-6 mt-4 mb-4 p-[18px] px-5 bg-espresso rounded-[22px] overflow-hidden">
+    <Pressable className="mx-6 mt-4 mb-4 p-[18px] px-5 bg-espresso rounded-[22px] overflow-hidden" accessibilityRole="button" accessibilityLabel="Upgrade to Pro">
       {/* Decorative circle */}
       <View className="absolute -top-5 -right-5 w-20 h-20 rounded-full bg-terra/15" />
 
@@ -110,7 +110,7 @@ function DietaryProfileSection({
         <AppText font="serif" className="text-[16px] text-espresso">
           Dietary Profile
         </AppText>
-        <Pressable onPress={onEdit} hitSlop={8}>
+        <Pressable onPress={onEdit} hitSlop={8} accessibilityRole="button" accessibilityLabel="Edit dietary profile">
           <AppText font="sansSemiBold" className="text-[13px] text-terra">
             Edit
           </AppText>
@@ -164,7 +164,7 @@ function DailyGoalsCard({
           <AppText font="serif" className="text-[16px] text-espresso">
             Daily Goals
           </AppText>
-          <Pressable onPress={onEdit} hitSlop={8}>
+          <Pressable onPress={onEdit} hitSlop={8} accessibilityRole="button" accessibilityLabel="Edit daily goals">
             <AppText font="sansSemiBold" className="text-[13px] text-terra">
               Edit
             </AppText>
@@ -217,7 +217,7 @@ function DailyGoalsCard({
         <AppText font="serif" className="text-[16px] text-espresso">
           Daily Goals
         </AppText>
-        <Pressable onPress={onEdit} hitSlop={8}>
+        <Pressable onPress={onEdit} hitSlop={8} accessibilityRole="button" accessibilityLabel="Edit daily goals">
           <AppText font="sansSemiBold" className="text-[13px] text-terra">
             Edit
           </AppText>
@@ -313,6 +313,7 @@ export default function ProfileScreen() {
                 <Image
                   source={{ uri: profile.avatarUrl }}
                   className="w-[60px] h-[60px] rounded-[20px]"
+                  accessibilityLabel="Profile picture"
                 />
               ) : (
                 <View className="w-[60px] h-[60px] rounded-[20px] overflow-hidden">
@@ -366,6 +367,8 @@ export default function ProfileScreen() {
           {/* Saved Recipes — navigable */}
           <Pressable
             onPress={() => navigation.navigate('SavedRecipes')}
+            accessibilityRole="button"
+            accessibilityLabel="Saved Recipes"
             className="flex-row items-center gap-3 py-3.5 border-b border-line"
           >
             <Heart size={18} color={colors.stone} />
@@ -381,6 +384,8 @@ export default function ProfileScreen() {
           {/* Notifications — navigable */}
           <Pressable
             onPress={() => navigation.navigate('NotificationSettings')}
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
             className="flex-row items-center gap-3 py-3.5 border-b border-line"
           >
             <Bell size={18} color={colors.stone} />
@@ -415,6 +420,8 @@ export default function ProfileScreen() {
           {/* Privacy Policy */}
           <Pressable
             onPress={() => Linking.openURL('https://brandonschultz0731.github.io/stockpot/privacy.html')}
+            accessibilityRole="button"
+            accessibilityLabel="Privacy Policy"
             className="flex-row items-center gap-3 py-3.5 border-t border-line"
           >
             <Shield size={18} color={colors.stone} />
@@ -427,6 +434,8 @@ export default function ProfileScreen() {
           {/* Terms of Service */}
           <Pressable
             onPress={() => Linking.openURL('https://brandonschultz0731.github.io/stockpot/terms.html')}
+            accessibilityRole="button"
+            accessibilityLabel="Terms of Service"
             className="flex-row items-center gap-3 py-3.5"
           >
             <FileText size={18} color={colors.stone} />
