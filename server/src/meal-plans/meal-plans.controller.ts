@@ -9,6 +9,7 @@ import {
   UseGuards,
   HttpCode,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { MealPlansService } from './meal-plans.service';
@@ -21,6 +22,7 @@ import { AddLeftoverEntryDto } from './dto/add-leftover-entry.dto';
 
 @Controller('meal-plans')
 @UseGuards(JwtAuthGuard)
+@Throttle({ ai: { ttl: 60_000, limit: 10 } })
 export class MealPlansController {
   constructor(private readonly mealPlansService: MealPlansService) { }
 

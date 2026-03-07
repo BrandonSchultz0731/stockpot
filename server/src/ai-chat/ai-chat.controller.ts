@@ -10,6 +10,7 @@ import {
   Res,
   HttpCode,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Response, Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -18,6 +19,7 @@ import { SendMessageDto } from './dto/send-message.dto';
 
 @Controller('ai-chat')
 @UseGuards(JwtAuthGuard)
+@Throttle({ ai: { ttl: 60_000, limit: 10 } })
 export class AiChatController {
   constructor(private readonly aiChatService: AiChatService) {}
 

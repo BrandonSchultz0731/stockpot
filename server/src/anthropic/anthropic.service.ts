@@ -1,10 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { MessageStream } from '@anthropic-ai/sdk/lib/MessageStream';
 import { UsageTrackingService } from '../usage-tracking/usage-tracking.service';
+import { UsersService } from '../users/users.service';
 import { ModelConfig, ACTIVE_MODEL, estimateCostCents } from '../ai-models';
-import { MessageType } from '@shared/enums';
+import { MessageType, UserRole } from '@shared/enums';
+import { INTERNAL_MESSAGE_TYPES } from '../common/config/quota-limits';
 
 @Injectable()
 export class AnthropicService {
@@ -14,10 +16,40 @@ export class AnthropicService {
   constructor(
     private readonly configService: ConfigService,
     private readonly usageTrackingService: UsageTrackingService,
+    private readonly usersService: UsersService,
   ) {
     this.anthropic = new Anthropic({
       apiKey: this.configService.get<string>('ANTHROPIC_API_KEY'),
     });
+  }
+
+  async enforceQuota(userId: string, messageType: MessageType): Promise<void> {
+    if (INTERNAL_MESSAGE_TYPES.has(messageType)) {
+      return;
+    }
+
+    const user = await this.usersService.findById(userId);
+    if (!user || user.role === UserRole.Admin) {
+      return;
+    }
+
+    const result = await this.usageTrackingService.checkQuota(
+      userId,
+      messageType,
+      user.subscriptionTier,
+    );
+
+    if (!result.allowed) {
+      throw new HttpException(
+        {
+          code: 'QUOTA_EXCEEDED',
+          messageType,
+          currentCount: result.currentCount,
+          limit: result.limit,
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
   }
 
   async sendMessage(
@@ -29,6 +61,8 @@ export class AnthropicService {
       messageType: MessageType;
     },
   ): Promise<Anthropic.Message> {
+    await this.enforceQuota(userId, params.messageType);
+
     const model = params.model ?? ACTIVE_MODEL;
 
     const response = await this.anthropic.messages.create({

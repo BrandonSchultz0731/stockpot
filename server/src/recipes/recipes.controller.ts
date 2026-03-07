@@ -9,6 +9,7 @@ import {
   UseGuards,
   HttpCode,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { RecipesService } from './recipes.service';
@@ -18,6 +19,7 @@ import { UpdateSavedRecipeDto } from './dto/update-saved-recipe.dto';
 
 @Controller('recipes')
 @UseGuards(JwtAuthGuard)
+@Throttle({ ai: { ttl: 60_000, limit: 10 } })
 export class RecipesController {
   constructor(private readonly recipesService: RecipesService) {}
 

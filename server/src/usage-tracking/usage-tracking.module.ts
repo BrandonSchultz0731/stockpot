@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsageTracking } from './entities/usage-tracking.entity';
+import { UsersModule } from '../users/users.module';
 import { UsageTrackingController } from './usage-tracking.controller';
 import { UsageTrackingService } from './usage-tracking.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UsageTracking])],
+  imports: [TypeOrmModule.forFeature([UsageTracking]), UsersModule],
   controllers: [UsageTrackingController],
   providers: [UsageTrackingService],
   exports: [UsageTrackingService],
