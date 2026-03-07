@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import {
   Zap,
+  Crown,
   ChevronRight,
   Heart,
   CalendarDays,
@@ -36,6 +37,7 @@ import AppText from '../components/AppText';
 import Button from '../components/Button';
 import LoadingScreen from '../components/LoadingScreen';
 import MacroProgressBar from '../components/MacroProgressBar';
+import { navigationRef } from '../navigation/navigationRef';
 import type { ProfileStackParamList } from '../navigation/types';
 
 const FREE_TIER_RECIPE_LIMIT = 5;
@@ -47,11 +49,11 @@ function formatMemberSince(dateStr: string): string {
   return `Member since ${month} ${year}`;
 }
 
-function UpgradeCard({ recipesUsed }: { recipesUsed: number }) {
+function UpgradeCard({ recipesUsed, onPress }: { recipesUsed: number; onPress?: () => void }) {
   const progress = Math.min(recipesUsed / FREE_TIER_RECIPE_LIMIT, 1);
 
   return (
-    <Pressable className="mx-6 mt-4 mb-4 p-[18px] px-5 bg-espresso rounded-[22px] overflow-hidden" accessibilityRole="button" accessibilityLabel="Upgrade to Pro">
+    <Pressable onPress={onPress} className="mx-6 mt-4 mb-4 p-[18px] px-5 bg-espresso rounded-[22px] overflow-hidden" accessibilityRole="button" accessibilityLabel="Upgrade to Pro">
       {/* Decorative circle */}
       <View className="absolute -top-5 -right-5 w-20 h-20 rounded-full bg-terra/15" />
 
@@ -82,6 +84,37 @@ function UpgradeCard({ recipesUsed }: { recipesUsed: number }) {
         </View>
       </View>
     </Pressable>
+  );
+}
+
+function SubscriptionCard({ tier, onManage }: { tier: SubscriptionTier; onManage: () => void }) {
+  return (
+    <View className="mx-6 mt-4 mb-4 p-[18px] px-5 bg-espresso rounded-[22px] overflow-hidden">
+      <View className="absolute -top-5 -right-5 w-20 h-20 rounded-full bg-terra/15" />
+
+      <View className="flex-row items-center gap-3">
+        <Crown size={18} color={colors.terra.DEFAULT} />
+        <View className="flex-1">
+          <AppText font="sansBold" className="text-[15px] text-white">
+            {tier} Plan
+          </AppText>
+          <AppText className="mt-0.5 text-[12px] text-white/50">
+            Your subscription is active
+          </AppText>
+        </View>
+      </View>
+
+      <Pressable
+        onPress={onManage}
+        className="mt-3 py-2 rounded-full border border-white/20 items-center"
+        accessibilityRole="button"
+        accessibilityLabel="Manage subscription"
+      >
+        <AppText font="sansSemiBold" className="text-[13px] text-white/70">
+          Manage Subscription
+        </AppText>
+      </Pressable>
+    </View>
   );
 }
 
@@ -344,9 +377,17 @@ export default function ProfileScreen() {
           </View>
         </LinearGradient>
 
-        {/* Upgrade card (Free tier only) */}
-        {tier === SubscriptionTier.Free && (
-          <UpgradeCard recipesUsed={usage?.featureCounts?.[MessageType.RecipeGeneration] ?? 0} />
+        {/* Subscription card */}
+        {tier === SubscriptionTier.Free ? (
+          <UpgradeCard
+            recipesUsed={usage?.featureCounts?.[MessageType.RecipeGeneration] ?? 0}
+            onPress={() => navigationRef.navigate('Paywall')}
+          />
+        ) : (
+          <SubscriptionCard
+            tier={tier}
+            onManage={() => Linking.openURL('https://apps.apple.com/account/subscriptions')}
+          />
         )}
 
         {/* Dietary Profile */}

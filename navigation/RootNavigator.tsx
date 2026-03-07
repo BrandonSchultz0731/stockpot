@@ -12,6 +12,7 @@ import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import OnboardingNavigator from './OnboardingNavigator';
 import TabNavigator from './TabNavigator';
+import PaywallScreen from '../screens/PaywallScreen';
 import colors from '../theme/colors';
 import type { RootStackParamList } from './types';
 
@@ -48,7 +49,14 @@ export default function RootNavigator() {
         ) : !profile?.onboardingComplete ? (
           <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
         ) : (
-          <Stack.Screen name="MainTabs" component={TabNavigator} />
+          <>
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+            <Stack.Screen
+              name="Paywall"
+              component={PaywallScreen}
+              options={{ presentation: 'modal', headerShown: false }}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
