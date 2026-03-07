@@ -7,6 +7,7 @@ export type RootStackParamList = {
   SignUp: undefined;
   ForgotPassword: undefined;
   ResetPassword: { email: string };
+  EmailVerification: undefined;
   Onboarding: undefined;
   MainTabs: NavigatorScreenParams<TabParamList> | undefined;
   Paywall: undefined;

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -7,7 +7,9 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AppleAuthDto, GoogleAuthDto } from './dto/social-auth.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GetUser } from './decorators/get-user.decorator';
 
 @Controller('auth')
 @Throttle({ auth: { ttl: 900_000, limit: 10 } })
@@ -44,6 +46,25 @@ export class AuthController {
   async logout(@Body() dto: RefreshTokenDto) {
     await this.authService.logout(dto.refreshToken);
     return { message: 'Logged out' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(
+    @GetUser('id') userId: string,
+    @Body() dto: VerifyEmailDto,
+  ) {
+    await this.authService.verifyEmail(userId, dto.code);
+    return { message: 'Email verified successfully.' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  async resendVerification(@GetUser('id') userId: string) {
+    await this.authService.resendVerificationEmail(userId);
+    return { message: 'Verification code sent.' };
   }
 
   @Post('forgot-password')

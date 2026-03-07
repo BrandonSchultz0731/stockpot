@@ -11,6 +11,7 @@ export interface UserProfile {
   firstName: string;
   lastName: string | null;
   avatarUrl: string | null;
+  emailVerified: boolean;
   onboardingComplete: boolean;
   subscriptionTier: SubscriptionTier;
   dietaryProfile: DietaryProfile | null;

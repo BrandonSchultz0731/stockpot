@@ -13,6 +13,7 @@ import { UsersService } from '../users/users.service';
 import { AppleAuthService } from './apple-auth.service';
 import { EmailService } from './email.service';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { EmailVerificationToken } from './entities/email-verification-token.entity';
 
 jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
@@ -30,6 +31,7 @@ const mockUsersService = {
   findByProviderUserId: jest.fn(),
   createSocialUser: jest.fn(),
   storeAppleRefreshToken: jest.fn(),
+  markEmailVerified: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockJwtService = {
@@ -45,11 +47,18 @@ const mockAppleAuthService = {
 const mockEmailService = {
   sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
   sendSocialProviderReminder: jest.fn().mockResolvedValue(undefined),
+  sendEmailVerificationEmail: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockResetTokenRepo = {
   update: jest.fn().mockResolvedValue(undefined),
   save: jest.fn().mockResolvedValue({ id: 'reset-1' }),
+  find: jest.fn().mockResolvedValue([]),
+};
+
+const mockVerificationTokenRepo = {
+  update: jest.fn().mockResolvedValue(undefined),
+  save: jest.fn().mockResolvedValue({ id: 'verify-1' }),
   find: jest.fn().mockResolvedValue([]),
 };
 
@@ -80,6 +89,7 @@ describe('AuthService', () => {
         { provide: AppleAuthService, useValue: mockAppleAuthService },
         { provide: EmailService, useValue: mockEmailService },
         { provide: getRepositoryToken(PasswordResetToken), useValue: mockResetTokenRepo },
+        { provide: getRepositoryToken(EmailVerificationToken), useValue: mockVerificationTokenRepo },
       ],
     }).compile();
 
@@ -93,10 +103,11 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    it('should create user and return token pair', async () => {
+    it('should create user, send verification email, and return token pair', async () => {
       mockUsersService.createUser.mockResolvedValue({
         id: 'user-1',
         email: 'test@example.com',
+        firstName: 'Test',
       });
 
       const result = await service.register({
@@ -110,6 +121,12 @@ describe('AuthService', () => {
         password: 'password123',
         firstName: 'Test',
       });
+      expect(mockEmailService.sendEmailVerificationEmail).toHaveBeenCalledWith(
+        'test@example.com',
+        'Test',
+        expect.any(String),
+      );
+      expect(mockVerificationTokenRepo.save).toHaveBeenCalled();
       expect(result).toEqual({
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
@@ -338,11 +355,112 @@ describe('AuthService', () => {
     });
   });
 
+  describe('verifyEmail', () => {
+    it('should verify email with valid code', async () => {
+      const futureDate = new Date(Date.now() + 10 * 60 * 1000);
+      mockVerificationTokenRepo.find.mockResolvedValue([
+        {
+          id: 'token-1',
+          userId: 'user-1',
+          tokenHash: 'hashed-code',
+          expiresAt: futureDate,
+          used: false,
+        },
+      ]);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      await service.verifyEmail('user-1', '123456');
+
+      expect(mockVerificationTokenRepo.update).toHaveBeenCalledWith('token-1', { used: true });
+      expect(mockUsersService.markEmailVerified).toHaveBeenCalledWith('user-1');
+    });
+
+    it('should throw for expired code', async () => {
+      const pastDate = new Date(Date.now() - 10 * 60 * 1000);
+      mockVerificationTokenRepo.find.mockResolvedValue([
+        {
+          id: 'token-1',
+          userId: 'user-1',
+          tokenHash: 'hashed-code',
+          expiresAt: pastDate,
+          used: false,
+        },
+      ]);
+
+      await expect(service.verifyEmail('user-1', '123456')).rejects.toThrow(
+        'Invalid or expired verification code',
+      );
+    });
+
+    it('should throw for invalid code', async () => {
+      const futureDate = new Date(Date.now() + 10 * 60 * 1000);
+      mockVerificationTokenRepo.find.mockResolvedValue([
+        {
+          id: 'token-1',
+          userId: 'user-1',
+          tokenHash: 'hashed-code',
+          expiresAt: futureDate,
+          used: false,
+        },
+      ]);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      await expect(service.verifyEmail('user-1', '000000')).rejects.toThrow(
+        'Invalid or expired verification code',
+      );
+    });
+
+    it('should throw when no tokens exist', async () => {
+      mockVerificationTokenRepo.find.mockResolvedValue([]);
+
+      await expect(service.verifyEmail('user-1', '123456')).rejects.toThrow(
+        'Invalid or expired verification code',
+      );
+    });
+  });
+
+  describe('resendVerificationEmail', () => {
+    it('should send a new verification code', async () => {
+      mockUsersService.findById.mockResolvedValue({
+        id: 'user-1',
+        email: 'test@example.com',
+        firstName: 'Test',
+        emailVerified: false,
+      });
+
+      await service.resendVerificationEmail('user-1');
+
+      expect(mockVerificationTokenRepo.update).toHaveBeenCalledWith(
+        { userId: 'user-1', used: false },
+        { used: true },
+      );
+      expect(mockEmailService.sendEmailVerificationEmail).toHaveBeenCalledWith(
+        'test@example.com',
+        'Test',
+        expect.any(String),
+      );
+    });
+
+    it('should throw if email is already verified', async () => {
+      mockUsersService.findById.mockResolvedValue({
+        id: 'user-1',
+        email: 'test@example.com',
+        firstName: 'Test',
+        emailVerified: true,
+      });
+
+      await expect(service.resendVerificationEmail('user-1')).rejects.toThrow(
+        'Email already verified',
+      );
+    });
+  });
+
   describe('issueTokenPair (via register)', () => {
     it('should create session, sign tokens, and hash refresh token', async () => {
       mockUsersService.createUser.mockResolvedValue({
         id: 'user-1',
         email: 'test@example.com',
+        firstName: 'T',
       });
 
       await service.register({
@@ -477,6 +595,7 @@ describe('AuthService', () => {
       mockUsersService.createUser.mockResolvedValue({
         id: 'u1',
         email: 'e@e.com',
+        firstName: 'F',
       });
 
       const before = Date.now();
@@ -497,6 +616,7 @@ describe('AuthService', () => {
       mockUsersService.createUser.mockResolvedValue({
         id: 'u1',
         email: 'e@e.com',
+        firstName: 'F',
       });
 
       const before = Date.now();
@@ -516,6 +636,7 @@ describe('AuthService', () => {
       mockUsersService.createUser.mockResolvedValue({
         id: 'u1',
         email: 'e@e.com',
+        firstName: 'F',
       });
 
       const before = Date.now();

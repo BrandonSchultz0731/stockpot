@@ -8,6 +8,8 @@ export const ROUTES = {
     GOOGLE: '/auth/google',
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
+    VERIFY_EMAIL: '/auth/verify-email',
+    RESEND_VERIFICATION: '/auth/resend-verification',
   },
   USERS: {
     ME: '/users/me',

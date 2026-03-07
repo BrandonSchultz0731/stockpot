@@ -19,6 +19,7 @@ import { AppleAuthService } from './apple-auth.service';
 import { EmailService } from './email.service';
 import { AppleAuthDto, GoogleAuthDto } from './dto/social-auth.dto';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { EmailVerificationToken } from './entities/email-verification-token.entity';
 
 export interface TokenPair {
   accessToken: string;
@@ -36,6 +37,8 @@ export class AuthService {
     private readonly emailService: EmailService,
     @InjectRepository(PasswordResetToken)
     private readonly resetTokenRepo: Repository<PasswordResetToken>,
+    @InjectRepository(EmailVerificationToken)
+    private readonly verificationTokenRepo: Repository<EmailVerificationToken>,
   ) { }
 
   async register(data: {
@@ -45,6 +48,7 @@ export class AuthService {
     lastName?: string;
   }): Promise<TokenPair> {
     const user = await this.usersService.createUser(data);
+    await this.sendVerificationCode(user.id, user.email, user.firstName);
     return this.issueTokenPair(user.id, user.email);
   }
 
@@ -309,6 +313,66 @@ export class AuthService {
       refreshToken,
       expiresIn: accessExpiry,
     };
+  }
+
+  async verifyEmail(userId: string, code: string): Promise<void> {
+    const candidates = await this.verificationTokenRepo.find({
+      where: { userId, used: false },
+      order: { createdAt: 'DESC' },
+    });
+
+    const now = new Date();
+    let matchedToken: EmailVerificationToken | null = null;
+
+    for (const candidate of candidates) {
+      if (candidate.expiresAt < now) continue;
+      const isMatch = await bcrypt.compare(code, candidate.tokenHash);
+      if (isMatch) {
+        matchedToken = candidate;
+        break;
+      }
+    }
+
+    if (!matchedToken) {
+      throw new BadRequestException('Invalid or expired verification code');
+    }
+
+    await this.verificationTokenRepo.update(matchedToken.id, { used: true });
+    await this.usersService.markEmailVerified(userId);
+  }
+
+  async resendVerificationEmail(userId: string): Promise<void> {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    if (user.emailVerified) {
+      throw new BadRequestException('Email already verified');
+    }
+    await this.sendVerificationCode(user.id, user.email, user.firstName);
+  }
+
+  private async sendVerificationCode(
+    userId: string,
+    email: string,
+    firstName: string,
+  ): Promise<void> {
+    // Invalidate existing unused tokens
+    await this.verificationTokenRepo.update(
+      { userId, used: false },
+      { used: true },
+    );
+
+    const code = crypto.randomInt(100000, 999999).toString();
+    const tokenHash = await bcrypt.hash(code, 12);
+
+    await this.verificationTokenRepo.save({
+      userId,
+      tokenHash,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    });
+
+    await this.emailService.sendEmailVerificationEmail(email, firstName, code);
   }
 
   async forgotPassword(email: string): Promise<void> {

@@ -39,6 +39,9 @@ export class User {
   @Column({ type: 'varchar', length: 50, nullable: true })
   timezone: string;
 
+  @Column({ type: 'boolean', name: 'email_verified', default: true })
+  emailVerified: boolean;
+
   @Column({
     type: 'boolean',
     name: 'onboarding_complete',

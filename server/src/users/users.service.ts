@@ -40,6 +40,7 @@ export class UsersService {
       passwordHash,
       firstName: data.firstName,
       lastName: data.lastName,
+      emailVerified: false,
       notificationPrefs: DEFAULT_NOTIFICATION_PREFS,
     });
     return this.usersRepo.save(user);
@@ -155,6 +156,10 @@ export class UsersService {
     await this.sessionsRepo.delete({ userId });
     await this.usersRepo.delete(userId);
     return { success: true, appleRefreshToken: user.appleRefreshToken };
+  }
+
+  async markEmailVerified(userId: string): Promise<void> {
+    await this.usersRepo.update(userId, { emailVerified: true });
   }
 
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
