@@ -3,16 +3,22 @@ import {
   UnauthorizedException,
   ForbiddenException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import * as jwt from 'jsonwebtoken';
 import { JwksClient } from 'jwks-rsa';
 import { UsersService } from '../users/users.service';
 import { AppleAuthService } from './apple-auth.service';
+import { EmailService } from './email.service';
 import { AppleAuthDto, GoogleAuthDto } from './dto/social-auth.dto';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
 
 export interface TokenPair {
   accessToken: string;
@@ -27,6 +33,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly appleAuthService: AppleAuthService,
+    private readonly emailService: EmailService,
+    @InjectRepository(PasswordResetToken)
+    private readonly resetTokenRepo: Repository<PasswordResetToken>,
   ) { }
 
   async register(data: {
@@ -46,7 +55,7 @@ export class AuthService {
     }
 
     if (user.authProvider !== 'email') {
-      const providerLabel = user.authProvider === 'apple' ? 'Apple' : 'Google';
+      const providerLabel = user.authProvider.charAt(0).toUpperCase() + user.authProvider.slice(1);
       throw new ConflictException(
         `An account with this email already exists. Please log in with ${providerLabel}.`,
       );
@@ -181,9 +190,7 @@ export class AuthService {
       const providerLabel =
         existingEmail.authProvider === 'email'
           ? 'email and password'
-          : existingEmail.authProvider === 'apple'
-            ? 'Apple'
-            : 'Google';
+          : existingEmail.authProvider.charAt(0).toUpperCase() + existingEmail.authProvider.slice(1);
       throw new ConflictException(
         `An account with this email already exists. Please log in with ${providerLabel}.`,
       );
@@ -302,6 +309,78 @@ export class AuthService {
       refreshToken,
       expiresIn: accessExpiry,
     };
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email);
+    // Always return success to prevent email enumeration
+    if (!user) return;
+
+    if (user.authProvider !== 'email') {
+      const providerLabel = user.authProvider.charAt(0).toUpperCase() + user.authProvider.slice(1);
+      await this.emailService.sendSocialProviderReminder(
+        user.email,
+        user.firstName,
+        providerLabel,
+      );
+      return;
+    }
+
+    // Invalidate any existing unused tokens for this user
+    await this.resetTokenRepo.update(
+      { userId: user.id, used: false },
+      { used: true },
+    );
+
+    // Generate 6-digit code
+    const code = crypto.randomInt(100000, 999999).toString();
+    const tokenHash = await bcrypt.hash(code, 12);
+
+    await this.resetTokenRepo.save({
+      userId: user.id,
+      tokenHash,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+    });
+
+    await this.emailService.sendPasswordResetEmail(
+      user.email,
+      user.firstName,
+      code,
+    );
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    // Find all unexpired, unused tokens (ordered newest first)
+    const candidates = await this.resetTokenRepo.find({
+      where: { used: false },
+      order: { createdAt: 'DESC' },
+    });
+
+    const now = new Date();
+    let matchedToken: PasswordResetToken | null = null;
+
+    for (const candidate of candidates) {
+      if (candidate.expiresAt < now) continue;
+      const isMatch = await bcrypt.compare(token, candidate.tokenHash);
+      if (isMatch) {
+        matchedToken = candidate;
+        break;
+      }
+    }
+
+    if (!matchedToken) {
+      throw new BadRequestException('Invalid or expired reset code');
+    }
+
+    // Update password
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await this.usersService.updatePasswordHash(matchedToken.userId, passwordHash);
+
+    // Mark token as used
+    await this.resetTokenRepo.update(matchedToken.id, { used: true });
+
+    // Revoke all sessions so user must log in with new password
+    await this.usersService.deleteAllUserSessions(matchedToken.userId);
   }
 
   private calculateExpiry(duration: string): Date {

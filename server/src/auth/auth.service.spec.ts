@@ -7,9 +7,12 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { AppleAuthService } from './apple-auth.service';
+import { EmailService } from './email.service';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
 
 jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
@@ -39,6 +42,17 @@ const mockAppleAuthService = {
   revokeToken: jest.fn(),
 };
 
+const mockEmailService = {
+  sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+  sendSocialProviderReminder: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockResetTokenRepo = {
+  update: jest.fn().mockResolvedValue(undefined),
+  save: jest.fn().mockResolvedValue({ id: 'reset-1' }),
+  find: jest.fn().mockResolvedValue([]),
+};
+
 const mockConfigService = {
   get: jest.fn((key: string) => {
     const map: Record<string, string> = {
@@ -64,6 +78,8 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: AppleAuthService, useValue: mockAppleAuthService },
+        { provide: EmailService, useValue: mockEmailService },
+        { provide: getRepositoryToken(PasswordResetToken), useValue: mockResetTokenRepo },
       ],
     }).compile();
 

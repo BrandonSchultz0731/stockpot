@@ -8,6 +8,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileQuery } from '../hooks/useUserProfileQuery';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import OnboardingNavigator from './OnboardingNavigator';
 import TabNavigator from './TabNavigator';
 import colors from '../theme/colors';
@@ -40,6 +42,8 @@ export default function RootNavigator() {
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           </>
         ) : !profile?.onboardingComplete ? (
           <Stack.Screen name="Onboarding" component={OnboardingNavigator} />

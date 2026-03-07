@@ -4,6 +4,8 @@
   "sourceRoot": "src",
   "entryFile": "server/src/main",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "assets": ["auth/templates/**/*.hbs"],
+    "watchAssets": true
   }
 }
