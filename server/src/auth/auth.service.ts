@@ -55,7 +55,7 @@ export class AuthService {
     }
 
     if (user.authProvider !== 'email') {
-      const providerLabel = user.authProvider === 'apple' ? 'Apple' : 'Google';
+      const providerLabel = user.authProvider.charAt(0).toUpperCase() + user.authProvider.slice(1);
       throw new ConflictException(
         `An account with this email already exists. Please log in with ${providerLabel}.`,
       );
@@ -190,9 +190,7 @@ export class AuthService {
       const providerLabel =
         existingEmail.authProvider === 'email'
           ? 'email and password'
-          : existingEmail.authProvider === 'apple'
-            ? 'Apple'
-            : 'Google';
+          : existingEmail.authProvider.charAt(0).toUpperCase() + existingEmail.authProvider.slice(1);
       throw new ConflictException(
         `An account with this email already exists. Please log in with ${providerLabel}.`,
       );
@@ -319,7 +317,7 @@ export class AuthService {
     if (!user) return;
 
     if (user.authProvider !== 'email') {
-      const providerLabel = user.authProvider === 'apple' ? 'Apple' : 'Google';
+      const providerLabel = user.authProvider.charAt(0).toUpperCase() + user.authProvider.slice(1);
       await this.emailService.sendSocialProviderReminder(
         user.email,
         user.firstName,
