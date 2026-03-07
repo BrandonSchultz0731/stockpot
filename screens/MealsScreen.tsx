@@ -433,7 +433,7 @@ export default function MealsScreen() {
               <Text className="text-center text-[14px] text-espresso">
                 Something went wrong generating your meal plan.
               </Text>
-              <Pressable onPress={handleOpenSelector} className="mt-3">
+              <Pressable onPress={handleOpenSelector} className="mt-3" accessibilityRole="button" accessibilityLabel="Try again">
                 <Text className="text-[14px] font-semibold text-terra">
                   Try Again
                 </Text>

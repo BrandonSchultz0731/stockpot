@@ -40,6 +40,8 @@ export default function WelcomeView({ onSuggestionPress }: WelcomeViewProps) {
             onPress={() => onSuggestionPress(suggestion.text)}
             className={`mb-2 rounded-2xl px-4 py-3 ${suggestion.bg}`}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            accessibilityRole="button"
+            accessibilityLabel={suggestion.text}
           >
             <AppText className="text-[15px] text-espresso">{suggestion.text}</AppText>
           </Pressable>

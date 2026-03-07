@@ -16,7 +16,7 @@ export default function ErrorState({
     <View className="flex-1 items-center justify-center px-8">
       <AppText className="text-center text-[14px] text-stone">{message}</AppText>
       {onGoBack && (
-        <Pressable onPress={onGoBack} className="mt-3">
+        <Pressable onPress={onGoBack} className="mt-3" accessibilityRole="button" accessibilityLabel={actionLabel}>
           <AppText className="text-[14px] font-semibold text-terra">
             {actionLabel}
           </AppText>

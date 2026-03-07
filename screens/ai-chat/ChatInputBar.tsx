@@ -28,11 +28,14 @@ export default function ChatInputBar({ onSend, disabled }: ChatInputBarProps) {
         multiline
         editable={!disabled}
         submitBehavior="newline"
+        accessibilityLabel="Message"
       />
       <Pressable
         onPress={handleSend}
         disabled={disabled || !text.trim()}
         className="mb-0.5 h-10 w-10 items-center justify-center rounded-full"
+        accessibilityRole="button"
+        accessibilityLabel="Send message"
         style={{
           backgroundColor:
             disabled || !text.trim() ? colors.dust : colors.terra.DEFAULT,

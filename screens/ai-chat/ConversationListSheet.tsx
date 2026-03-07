@@ -48,6 +48,8 @@ export default function ConversationListSheet({
       <Pressable
         className="flex-1 bg-black/40"
         onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close"
       >
         <View className="mt-auto h-3/4 rounded-t-3xl bg-ivory">
           {/* Header */}
@@ -57,10 +59,12 @@ export default function ConversationListSheet({
               <Pressable
                 onPress={() => { onNewChat(); onClose(); }}
                 className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-terra-pale"
+                accessibilityRole="button"
+                accessibilityLabel="New conversation"
               >
                 <Plus size={18} color={colors.terra.DEFAULT} />
               </Pressable>
-              <Pressable onPress={onClose} className="h-8 w-8 items-center justify-center">
+              <Pressable onPress={onClose} className="h-8 w-8 items-center justify-center" accessibilityRole="button" accessibilityLabel="Close">
                 <X size={20} color={colors.stone} />
               </Pressable>
             </View>
@@ -88,6 +92,8 @@ export default function ConversationListSheet({
                     className={`mb-2 flex-row items-center rounded-xl px-4 py-3 ${isActive ? 'bg-terra-pale' : 'bg-cream'
                       }`}
                     style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                    accessibilityRole="button"
+                    accessibilityLabel={item.title ?? 'New conversation'}
                   >
                     <View className="flex-1">
                       <AppText
@@ -105,6 +111,8 @@ export default function ConversationListSheet({
                       onPress={() => onDelete(item.id)}
                       hitSlop={8}
                       className="ml-2 p-1"
+                      accessibilityRole="button"
+                      accessibilityLabel="Delete conversation"
                     >
                       <Trash2 size={16} color={colors.stone} />
                     </Pressable>

@@ -18,6 +18,7 @@ interface TextInputRowProps
   className?: string;
   /** 'default' bordered box or 'underline' bottom-border-only style */
   variant?: 'default' | 'underline';
+  accessibilityLabel?: string;
 }
 
 export default function TextInputRow({
@@ -25,6 +26,7 @@ export default function TextInputRow({
   right,
   className = '',
   variant = 'default',
+  accessibilityLabel,
   ...inputProps
 }: TextInputRowProps) {
   const isUnderline = variant === 'underline';
@@ -40,6 +42,7 @@ export default function TextInputRow({
       <TextInput
         className="flex-1 text-[14px] leading-[18px] text-espresso"
         placeholderTextColor={colors.stone}
+        accessibilityLabel={accessibilityLabel ?? inputProps.placeholder}
         {...inputProps}
       />
       {right}

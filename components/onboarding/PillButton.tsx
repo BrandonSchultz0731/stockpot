@@ -27,7 +27,10 @@ export default function PillButton({
         selected && !isDiet && 'bg-berry-pale',
         !selected && 'bg-white border border-line',
       )}
-      onPress={onPress}>
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected }}>
       <AppText
         className={clsx(
           'text-sm',

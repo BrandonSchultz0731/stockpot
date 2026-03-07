@@ -32,7 +32,7 @@ export default function EmptyState({
         </AppText>
       ) : null}
       {actionLabel && onAction ? (
-        <Pressable onPress={onAction}>
+        <Pressable onPress={onAction} accessibilityRole="button" accessibilityLabel={actionLabel}>
           <AppText className="text-[14px] text-terra font-semibold">
             {actionLabel}
           </AppText>

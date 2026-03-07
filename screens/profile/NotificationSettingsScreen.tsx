@@ -89,6 +89,7 @@ function NotificationSettingsForm({ initial }: { initial: NotificationPrefs }) {
             onValueChange={setExpiringItems}
             trackColor={{ false: colors.dust, true: colors.terra.DEFAULT }}
             thumbColor="white"
+            accessibilityLabel="Toggle expiring items notifications"
           />
         </View>
 
@@ -107,6 +108,7 @@ function NotificationSettingsForm({ initial }: { initial: NotificationPrefs }) {
             onValueChange={setMealReminders}
             trackColor={{ false: colors.dust, true: colors.terra.DEFAULT }}
             thumbColor="white"
+            accessibilityLabel="Toggle dinner reminders"
           />
         </View>
 
@@ -120,6 +122,8 @@ function NotificationSettingsForm({ initial }: { initial: NotificationPrefs }) {
               <Pressable
                 onPress={() => setShowTimePicker(!showTimePicker)}
                 className="bg-terra-pale py-1.5 px-3 rounded-lg"
+                accessibilityRole="button"
+                accessibilityLabel="Change reminder time"
               >
                 <AppText font="sansSemiBold" className="text-[13px] text-terra">
                   {formatTimeDisplay(mealReminderTime)}
@@ -155,6 +159,7 @@ function NotificationSettingsForm({ initial }: { initial: NotificationPrefs }) {
             onValueChange={setMealPlanNudge}
             trackColor={{ false: colors.dust, true: colors.terra.DEFAULT }}
             thumbColor="white"
+            accessibilityLabel="Toggle weekly meal plan nudge"
           />
         </View>
 

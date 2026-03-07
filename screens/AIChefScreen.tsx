@@ -74,6 +74,8 @@ export default function AIChefScreen() {
             onPress={handleShowHistory}
             className="h-9 w-9 items-center justify-center rounded-full"
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Conversation history"
           >
             <MessageSquare size={20} color={colors.espresso} />
           </Pressable>
@@ -87,6 +89,8 @@ export default function AIChefScreen() {
             onPress={startNewConversation}
             className="h-9 w-9 items-center justify-center rounded-full"
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="New conversation"
           >
             <SquarePen size={20} color={colors.espresso} />
           </Pressable>

@@ -25,7 +25,10 @@ export default function StorageLocationPills({
               isSelected
                 ? 'bg-espresso'
                 : 'bg-cream border border-line'
-            }`}>
+            }`}
+            accessibilityRole="button"
+            accessibilityLabel={loc}
+            accessibilityState={{ selected: isSelected }}>
             <AppText
               className={`text-[13px] ${
                 isSelected ? 'text-white font-semibold' : 'text-espresso'

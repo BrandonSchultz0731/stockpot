@@ -58,7 +58,7 @@ export default function EditItemScreen() {
           title="Edit Item"
           centerTitle
           rightAction={
-            <Pressable onPress={handleDelete}>
+            <Pressable onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete item">
               <Trash2 size={22} color={colors.berry.DEFAULT} />
             </Pressable>
           }
